@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle"></title>
+    <!-- Essential JS -->
+    <script>
+      const lang = <%- JSON.stringify(language) %>
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+  </head>
+
+  <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+    <!-- Main container to center the content -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+      <div class="w-full max-w-md">
+        <div class="bg-white rounded-xl shadow-lg p-8">
+          <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800" data-translate="Login.Title"></h1>
+            <p class="text-gray-600 mt-2" data-translate="Login.Welcome"></p>
+          </div>
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label for="username" class="block text-sm font-medium text-gray-700" data-translate="Login.Username"></label>
+              <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700" data-translate="Login.Password"></label>
+              <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <span data-translate="Login.Submit"></span>
+            </button>
+          </form>
+          <div id="form-feedback" class="mt-4 text-center text-red-500"></div>
+
+          <!-- Link to registration page -->
+          <div class="text-center mt-6">
+            <p class="text-sm text-gray-600" data-translate="Login.RegisterText">
+              <a href="/register" class="font-medium text-blue-600 hover:text-blue-500" data-translate="Login.Register"></a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <%- html_content.footer %>
+
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.getElementById("login-form");
+        const feedbackDiv = document.getElementById("form-feedback");
+
+        /**
+         * Handles the submission of the login form.
+         */
+        async function handleLoginSubmit(event) {
+          event.preventDefault();
+          const submitButton = loginForm.querySelector('button[type="submit"]');
+
+          submitButton.disabled = true;
+          submitButton.textContent = i18next.t("Login.Submitting");
+          feedbackDiv.textContent = "";
+
+          try {
+            const response = await fetch("/api/v1/auth/login", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                username: loginForm.username.value,
+                password: loginForm.password.value,
+              }),
+            });
+
+            if (response.ok) {
+              const responseData = await response.json();
+              console.log("Login successful:", responseData);
+              localStorage.setItem("token", responseData.token);
+              localStorage.setItem("uuid", responseData.uuid);
+              localStorage.setItem("username", responseData.username);
+              localStorage.setItem("email", responseData.email);
+              localStorage.setItem("permissions", JSON.stringify(responseData.permissions));
+              localStorage.setItem("language", responseData.language);
+
+              window.location.href = "/";
+            } else {
+              if(response.status === 401) {
+                throw new Error(i18next.t("Login.InvalidCredentials"));
+              } else {
+                throw new Error(i18next.t("Login.UnknownError"));
+              }
+            }
+          } catch (error) {
+            feedbackDiv.textContent = error.message;
+            submitButton.disabled = false;
+            submitButton.textContent = i18next.t("Login.Submit");
+          }
+        }
+
+        loginForm.addEventListener("submit", handleLoginSubmit);
+      });
+    </script>
+  </body>
+</html>

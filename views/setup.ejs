@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle"></title>
+    <!-- Essential JS -->
+    <script>
+      const lang = <%- JSON.stringify(language) %>
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+  </head>
+
+ <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+      <div id="setup-container" class="w-full max-w-md">
+        <div class="text-center text-gray-500">
+        </div>
+      </div>
+    </main>
+
+    <%- html_content.footer %>
+
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const setupContainer = document.getElementById("setup-container");
+
+        /**
+         * Checks if any users exist, if no users are found setup is displayed.
+         */
+        async function checkUserStatus() {
+          try {
+            const response = await fetch("/api/v1/users/hasUsers");
+            if (!response.ok) {
+              throw new Error(`Server responded with status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (data.hasUsers) {
+              renderNotAvailable();
+            } else {
+              renderSetupForm();
+            }
+          } catch (error) {
+            console.error("Error checking user status:", error);
+            setupContainer.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                            <h1 class="text-2xl font-bold text-red-600">${i18next.t("Setup.Error.Connection")}</h1>
+                            <p class="text-gray-600 mt-2">${i18next.t("Setup.Error.LoadUser")}</p>
+                        </div>`;
+          }
+        }
+
+        /**
+         * Renders the "Not Available" message.
+         */
+        function renderNotAvailable() {
+          setupContainer.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                        <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.NoAvailable")}</h1>
+                        <p class="text-gray-600 mt-2">${i18next.t("Setup.NoAvailableDescription")}</p>
+                    </div>`;
+        }
+
+        /**
+         * Renders the initial user setup form.
+         */
+        function renderSetupForm() {
+          setupContainer.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <div class="text-center mb-8">
+                            <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.Welcome")}</h1>
+                            <p class="text-gray-600 mt-2">${i18next.t("Setup.WelcomeDescription")}</p>
+                        </div>
+                        <form id="setup-form" class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Name")}</label>
+                                <input type="text" id="name" name="name" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Email")}</label>
+                                <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                             <div>
+                                <label for="username" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Username")}</label>
+                                <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Password")}</label>
+                                <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div id="ErrorLine"></div>
+                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                ${i18next.t("Setup.Form.Submit")}
+                            </button>
+                        </form>
+                        <div id="form-feedback" class="mt-4 text-center"></div>
+                    </div>`;
+
+          // Attach event listener to the newly created form
+          document.getElementById("setup-form").addEventListener("submit", handleFormSubmit);
+        }
+
+        /**
+         * Handles the submission of the setup form.
+         */
+        async function handleFormSubmit(event) {
+          event.preventDefault();
+          const form = event.target;
+          const feedbackDiv = document.getElementById("form-feedback");
+          const ErrorLine = document.getElementById("ErrorLine");
+          const submitButton = form.querySelector('button[type="submit"]');
+
+          submitButton.disabled = true;
+          feedbackDiv.innerHTML = "";
+
+          try {
+            const response = await fetch("/api/v1/users/admin", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: form.name.value,
+                email: form.email.value,
+                username: form.username.value,
+                password: form.password.value,
+              }),
+            });
+
+            const response_json = await response.json();
+
+            if (response.ok) {
+              setupContainer.innerHTML = `
+                            <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                                <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.AdminUserCreated")}</h1>
+                                <p class="text-gray-600 mt-2">${i18next.t("Setup.AdminUserCreatedDescription")}</p>
+                                <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Zum Login</a>
+                            </div>`;
+            } else {
+                if(response.status === 500) ErrorLine.innerHTML = response_json.error
+              if (typeof response_json.reason === "string") {
+                ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.${response_json.message}`) + "</div>";
+                return;
+              }
+              const input_name = response_json.reason[0].path[0];
+              const input_type = response_json.reason[0].type;
+              for (const key in keys) {
+                document.getElementById(keys[key]).classList.remove("is-invalid");
+              }
+
+              ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
+              document.getElementById(keys[input_name]).classList.add("is-invalid");
+            }
+          } catch (error) {
+            feedbackDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            submitButton.disabled = false;
+            submitButton.textContent = i18next.t("Setup.Form.Submit");
+          }
+        }
+
+        // Initial check when the page loads
+        checkUserStatus();
+      });
+    </script>
+  </body>
+</html>

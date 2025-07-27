@@ -4,7 +4,6 @@ const Database = require('better-sqlite3');
 
 const DB_PATH = 'application.db';
 const MIGRATIONS_DIR = 'migrations';
-const MIGRATIONS_TABLE = 'schema_migrations';
 
 function applyMigrations() {
     console.log('Starting database migration process...');
@@ -15,19 +14,19 @@ function applyMigrations() {
 
     try {
         db.exec(`
-            CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
+            CREATE TABLE IF NOT EXISTS schema_migrations (
                 version TEXT PRIMARY KEY NOT NULL,
                 applied_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
         `);
-        console.log(`Make sure '${MIGRATIONS_TABLE}' table exists.`);
+        console.log(`Make sure 'schema_migrations' table exists.`);
     } catch (err) {
         console.error(`Failed to create migrations table: ${err.message}`);
         db.close();
         process.exit(1);
     }
 
-    const getAppliedStmt = db.prepare(`SELECT version FROM ${MIGRATIONS_TABLE}`);
+    const getAppliedStmt = db.prepare(`SELECT version FROM schema_migrations`);
     const appliedRows = getAppliedStmt.all();
     const appliedVersions = new Set(appliedRows.map(row => row.version));
     console.log(`Found ${appliedVersions.size} applied migrations.`);
@@ -58,7 +57,7 @@ function applyMigrations() {
                     
                     db.exec(sql);
 
-                    const recordMigrationStmt = db.prepare(`INSERT INTO ${MIGRATIONS_TABLE} (version) VALUES (?)`);
+                    const recordMigrationStmt = db.prepare(`INSERT INTO schema_migrations (version) VALUES (?)`);
                     recordMigrationStmt.run(migrationFile);
 
                     console.log(`✅ Successfully applied migration: ${migrationFile}`);

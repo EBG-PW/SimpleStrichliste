@@ -134,4 +134,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-application.db
+
+# SQLite 3 Database Files
+*.db
+*.db-shm
+*.db-wal

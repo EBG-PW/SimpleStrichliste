@@ -1,0 +1,22 @@
+{
+    "NoAvailable": "Nicht Verfügbar",
+    "NoAvailableDescription": "Die Ersteinrichtung wurde bereits abgeschlossen.",
+    "Welcome": "Willkommen zur Strichlisten App!",
+    "WelcomeDescription": "Bitte erstellen Sie den ersten Administrator-Account.",
+    "UserCreated": "Benutzer-Account erfolgreich erstellt.",
+    "UserCreatedDescription": "Du kannst dich jetzt mit den erstellten Zugangsdaten anmelden.",
+    "AdminUserCreated": "Administrator-Account erfolgreich erstellt.",
+    "AdminUserCreatedDescription": "Du kannst dich jetzt mit den erstellten Zugangsdaten anmelden.",
+    "Form": {
+        "Name": "Voller Name",
+        "Email": "E-Mail",
+        "Username": "Benutzername",
+        "Password": "Passwort",
+        "Submit": "Erstelle Account"
+    },
+    "Error": {
+        "Connection": "Verbindungsfehler",
+        "LoadUser": "Fehler beim Laden der Daten, prüfe die Konsole für Details.",
+        "UserExists": "Ein Benutzer mit diesem Benutzernamen oder dieser E-Mail-Adresse existiert bereits."
+    }
+}

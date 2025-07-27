@@ -13,13 +13,16 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT NOT NULL UNIQUE,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    user_role TEXT NOT NULL DEFAULT 'unknown',
     balance INTEGER NOT NULL DEFAULT 0,
+    language TEXT DEFAULT null,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- item_categories: Defines categories for items
 CREATE TABLE IF NOT EXISTS item_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL UNIQUE,
     is_active INTEGER NOT NULL DEFAULT 1
 );
@@ -61,6 +64,7 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 CREATE TABLE IF NOT EXISTS websessions (
     session_id TEXT PRIMARY KEY NOT NULL,
     user_id INTEGER NOT NULL,
+    browser TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

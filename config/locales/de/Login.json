@@ -1,0 +1,12 @@
+{
+    "Welcome": "Willkommen zurück!",
+    "Title": "Anmelden",
+    "Username": "Benutzername",
+    "Password": "Passwort",
+    "Submit": "Anmelden",
+    "Register": "Jetzt registrieren",
+    "RegisterText": "Noch keinen Account?",
+    "Submitting": "Anmeldung läuft...",
+    "InvalidCredentials": "Ungültige Anmeldedaten",
+    "UnknownError": "Unbekannter Fehler"
+}
