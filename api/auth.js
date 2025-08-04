@@ -51,7 +51,13 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/check', verifyRequest('app.web.login'), async (req, res) => {
-    return res.json({ token: req.authorization, uuid: req.user.user_data.uuid, name: req.user.user_data.name, email: req.user.user_data.email, username: req.user.user_data.username, permissions: req.user.user_data.permissions, language: req.user.user_data.language });
+    return res.json({ token: req.authorization,
+        uuid: req.user.user_data.uuid,
+        name: req.user.user_data.name,
+        email: req.user.user_data.email,
+        username: req.user.user_data.username,
+        permissions: req.user.permissions,
+        language: req.user.user_data.language });
 });
 
 module.exports = {

@@ -1,6 +1,6 @@
-// const { verifyRequest } = require('@middleware/verifyRequest');
+const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, createUser, createAdminUser } = require('@lib/sqlite/users');
+const { countUsers, createUser, createAdminUser, getUser } = require('@lib/sqlite/users');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
 const HyperExpress = require('hyper-express');
@@ -19,6 +19,9 @@ const userSchema = Joi.object({
     password: Joi.string().min(8).max(56).required(),
 });
 
+/**
+ * Returns true if DB has more than 1 user
+ */
 router.get('/hasUsers', limiter(10), async (req, res) => {
     const usercount = await countUsers();
     if (usercount > 0) {
@@ -27,6 +30,9 @@ router.get('/hasUsers', limiter(10), async (req, res) => {
     return res.json({ hasUsers: false });
 });
 
+/**
+ * Generate a new Admin User, is only avaible on a empty DB
+ */
 router.post('/admin', limiter(20), async (req, res) => {
     const body = await userSchema.validateAsync(await req.json());
     const usercount = await countUsers();
@@ -47,20 +53,20 @@ router.post('/admin', limiter(20), async (req, res) => {
     }
 });
 
+/**
+ * Create a normal user
+ */
 router.post('/', limiter(20), async (req, res) => {
     const body = await userSchema.validateAsync(await req.json());
 
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
-    try {
         await createUser(body.name, body.email, body.username, password_hash);
         return res.status(201).json({ message: 'User created successfully' });
-    } catch (error) {
-        console.error('Error creating user:', error);
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return res.status(409).json({ error: 'Username or email already exists' });
-        }
-        throw error;
-    }
+});
+
+router.get('/', verifyRequest('web.user.read'), limiter(1), async (req, res) => {
+    const user_data = await getUser(req.user.user_data.id)
+    return res.json(user_data)
 });
 
 module.exports = {

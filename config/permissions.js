@@ -33,7 +33,7 @@ module.exports = {
         // The admin group is the default group for administrators.
         "admin": {
             "permissions": [
-                "web.admin.*",
+                "app.admin.*",
             ],
             "inherit": [
                 "user"

@@ -151,7 +151,7 @@ app.post('/*', (req, res) => {
 
 /* Handlers */
 app.set_error_handler((req, res, error) => {
-    if (process.env.LOG_LEVEL == 4) console.error(error)
+    if (process.env.LOG_LEVEL == 4) console.error("Global Error Handler:", error)
     const outError = {
         message: error.message || "",
         info: error.info || "",
@@ -171,12 +171,19 @@ app.set_error_handler((req, res, error) => {
 
     /* Returns 401 if the client is not authorized*/
     if (error.message === "Token not provided" || error.message === "Token Invalid") {
-        statusCode = 401;
+        outError.statusCode = 401;
     }
 
     /* Returns 403 if the client is not allowed to do something*/
     if (error.message === "NoPermissions" || error.message === "Permission Denied") {
-        statusCode = 403;
+        outError.statusCode = 403;
+    }
+
+    /* Returns 409 if a unique constraint is violeted in the DB*/
+    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        outError.statusCode = 409
+        outError.secret_reason = outError.message
+        outError.message = "DB Constraint violated"
     }
 
     /* Returns 429 if the client is ratelimited*/

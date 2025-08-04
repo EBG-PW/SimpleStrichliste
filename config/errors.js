@@ -13,7 +13,7 @@ module.exports = {
         "InvalidRouteInput": true,
         "PermissionsError": true,
         "OAuthError": true,
-        "SQLError": true,
+        "SqliteError": true,
         "DBError": true,
         "ValidationError": true,
         "TypeError": true,
