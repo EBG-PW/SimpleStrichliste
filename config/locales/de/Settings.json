@@ -1,0 +1,18 @@
+{
+    "Form": {
+        "Headline": "Kontoeinstellungen",
+        "Description": "Bearbeiten Sie Ihr Profil und die Anwendungseinstellungen.",
+        "PasswordHeadline": "Passwort ändern",
+        "PasswordDescription": "Aktualisieren Sie Ihr Passwort auf ein neues.",
+        "CurrentPassword": "Aktuelles Passwort",
+        "NewPassword": "Neues Passwort",
+        "ConfirmPassword": "Passwort bestätigen"
+    },
+    "Button": {
+        "Password": "Passwort ändern"
+    },
+    "PasswordsDoNotMatch": "Die Passwörter stimmen nicht überein.",
+    "PasswordChangedSuccessfully": "Passwort erfolgreich geändert.",
+    "CurrentPasswordIsIncorrect": "Das aktuelle Passwort ist inkorrekt.",
+    "PasswordUpdatedSuccessfully": "Passwort erfolgreich aktualisiert."
+}

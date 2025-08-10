@@ -3,4 +3,5 @@ module.exports = {
     "/login": ["Login", "Error", "Page"],
     "/register": ["Setup", "Error", "Page"],
     "/overview": ["Overview", "Error", "Page", "Navbar", "Categories"],
+    "/settings": ["Settings", "Error", "Page", "Setup", "Navbar", "Categories"],
 }

@@ -12,6 +12,7 @@
         "Email": "E-Mail",
         "Username": "Benutzername",
         "Password": "Passwort",
+        "Language": "Sprache",
         "Submit": "Erstelle Account"
     },
     "Error": {
