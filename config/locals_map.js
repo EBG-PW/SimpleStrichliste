@@ -4,4 +4,5 @@ module.exports = {
     "/register": ["Setup", "Error", "Page"],
     "/overview": ["Overview", "Error", "Page", "Navbar", "Categories"],
     "/settings": ["Settings", "Error", "Page", "Setup", "Navbar", "Categories"],
+    "/admin/index": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
 }

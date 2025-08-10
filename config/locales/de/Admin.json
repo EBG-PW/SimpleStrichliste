@@ -1,0 +1,18 @@
+{
+    "PageTitle": "Admin Dashboard",
+    "CardTitle": {
+        "Users": "Benutzerverwaltung",
+        "Categories": "Kategorienverwaltung",
+        "Items": "Artikelverwaltung",
+        "Statistics": "Statistiken",
+        "ShoppingLists": "Einkaufsliste"
+    },
+    "Card": {
+        "UsersCount_one": "{{count}} Benutzer",
+        "UsersCount_other": "{{count}} Benutzers",
+        "CategoriesCount_one": "{{count}} Kategorie",
+        "CategoriesCount_other": "{{count}} Kategorien",
+        "ItemsCount_one": "{{count}} Artikel",
+        "ItemsCount_other": "{{count}} Artikel"
+    }
+}

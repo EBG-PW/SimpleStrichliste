@@ -70,8 +70,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (checkPermission('app.admin.*').result) {
-            navbarmobile.innerHTML += `<a href="/admin" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
-            navbardesktop.innerHTML += `<a href="/admin" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
+            navbarmobile.innerHTML += `<a href="/admin/index" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
+            navbardesktop.innerHTML += `<a href="/admin/index" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
         }
     }
 });
