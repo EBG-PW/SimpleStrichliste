@@ -5,27 +5,54 @@ const path = require('path');
 const ejs = require('ejs');
 const { ViewRenderer } = require('@lib/template');
 const { getDBMigration } = require('@lib/sqlite/utils')
+const { execSync } = require('child_process');
+const { dbVersion } = require('@config/application');
+const { countUsers } = require('@lib/sqlite/users');
 const app = new HyperExpress.Server({
     fast_buffers: process.env.HE_FAST_BUFFERS == 'false' ? false : true || false,
 });
 
 const { log_errors } = require('@config/errors')
 
+let defaultRoute = '/overview';
 const dbMigration = getDBMigration();
 if (dbMigration === 0) {
     process.log.system(`No Database found. Entering setup mode`)
-    // ToDo: Run migration Code here
-    // Redirect root to setup
-    app.get('/', (req, res) => {
-        res.redirect('/setup');
-    });
+    try {
+        process.log.system('Running database migration script...');
+        execSync('node .\\migrate.js apply', { stdio: 'inherit' });
+        process.log.system('Database migration completed successfully.');
+    } catch (error) {
+        process.log.error('Failed to run database migration script:');
+        console.error(error);
+        process.exit(1);
+    }
+    defaultRoute = '/setup';
 } else {
-    // Redirect root to overview
-    app.get('/', (req, res) => {
-        res.redirect('/overview');
-    });
+    if (dbMigration < dbVersion) {
+        try {
+            process.log.system(`Database migration required. Current version: ${dbMigration}, Required version: ${dbVersion}`);
+            execSync('node .\\migrate.js apply', { stdio: 'inherit' });
+            process.log.system('Database migration completed successfully.');
+        } catch (error) {
+            process.log.error('Failed to run database migration script:');
+            console.error(error);
+            process.exit(1);
+        }
+    }
 }
-// ToDo: Check if its latest DB Version
+
+// Redirect root to setup
+app.get('/', (req, res) => {
+    // Reset to overview when a user was created
+    if (defaultRoute === '/setup') {
+        const currentUserCount = countUsers();
+        if (currentUserCount > 0) {
+            defaultRoute = '/overview';
+        }
+    }
+    res.redirect(defaultRoute);
+});
 
 // Needs to be moved and implemented into template rendering to remove the inline and use nonce or hash
 app.use(expressCspHeader({

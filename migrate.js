@@ -42,7 +42,11 @@ function applyMigrations() {
         .filter(file => file.endsWith('.sql'))
         .sort();
 
-    const pendingMigrations = allMigrationFiles.filter(file => !appliedVersions.has(file));
+    // Filter pending migrations by comparing timestamps, not full filenames
+    const pendingMigrations = allMigrationFiles.filter(file => {
+        const version = file.split('-')[0];
+        return !appliedVersions.has(version);
+    });
 
     if (pendingMigrations.length === 0) {
         console.log('Database is up to date. No new migrations to apply.');
@@ -57,8 +61,10 @@ function applyMigrations() {
                     
                     db.exec(sql);
 
+                    // Extract the timestamp to use as the version
+                    const version = migrationFile.split('-')[0];
                     const recordMigrationStmt = db.prepare(`INSERT INTO schema_migrations (version) VALUES (?)`);
-                    recordMigrationStmt.run(migrationFile);
+                    recordMigrationStmt.run(version);
 
                     console.log(`✅ Successfully applied migration: ${migrationFile}`);
                 } catch (err) {
