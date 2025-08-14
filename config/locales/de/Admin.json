@@ -9,7 +9,7 @@
     },
     "Card": {
         "UsersCount_one": "{{count}} Benutzer",
-        "UsersCount_other": "{{count}} Benutzers",
+        "UsersCount_other": "{{count}} Benutzer",
         "CategoriesCount_one": "{{count}} Kategorie",
         "CategoriesCount_other": "{{count}} Kategorien",
         "ItemsCount_one": "{{count}} Artikel",
