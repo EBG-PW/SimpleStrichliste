@@ -26,5 +26,6 @@
     },
     "required": "{{field}} ist erforderlich"
   },
+  "NetworkError": "Netzwerkfehler",
   "UnknownError": "Unbekannter Fehler"
 }
