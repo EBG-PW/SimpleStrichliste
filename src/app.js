@@ -43,10 +43,10 @@ if (dbMigration === 0) {
 }
 
 // Redirect root to setup
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     // Reset to overview when a user was created
     if (defaultRoute === '/setup') {
-        const currentUserCount = countUsers();
+        const currentUserCount = await countUsers();
         if (currentUserCount > 0) {
             defaultRoute = '/overview';
         }

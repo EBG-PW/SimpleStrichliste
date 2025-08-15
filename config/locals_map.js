@@ -6,4 +6,5 @@ module.exports = {
     "/settings": ["Settings", "Error", "Page", "Setup", "Navbar", "Categories"],
     "/admin/index": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
     "/admin/categories": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
+    "/admin/additems": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories", "Items"],
 }

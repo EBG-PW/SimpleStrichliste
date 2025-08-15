@@ -1,0 +1,24 @@
+{
+    "Loading": "Lade Artikel...",
+    "Create": {
+        "Headline": "Neuen Artikel erstellen",
+        "Description": "Füllen Sie die Details aus"
+    },
+    "Form": {
+        "Name": "Artikelname",
+        "Price": "Einzelpreis",
+        "Stock": "Lagerbestand",
+        "TargetStock": "Sollbestand",
+        "PackSize": "Packungsgröße",
+        "PackPrice": "Packungspreis",
+        "Category": "Kategorie",
+        "Image": "Bild",
+        "AdjustImage": "Bild anpassen",
+        "SelectCategory": "Bitte Kategorie auswählen"
+    },
+    "Button": {
+        "Create": "Artikel erstellen",
+        "Cancel": "Abbrechen",
+        "CropSave": "Zuschneiden & Bestätigen"
+    }
+}

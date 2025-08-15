@@ -19,7 +19,7 @@ const booleanSchema = Joi.object({
     enabled: Joi.boolean().required()
 });
 
-router.get('/', verifyRequest('web.user.categories.read'), limiter(4), async (req, res) => {
+router.get('/', verifyRequest('web.admin.categories.read'), limiter(4), async (req, res) => {
     const activeCategoriesList = await getActiveCategories();
 
     const activeCategorySet = new Set(activeCategoriesList.map(c => c.name));
@@ -35,11 +35,9 @@ router.get('/', verifyRequest('web.user.categories.read'), limiter(4), async (re
     res.json({ categories: allCategories });
 });
 
-router.patch('/:categoryName', verifyRequest('web.user.categories.write'), limiter(4), async (req, res) => {
+router.patch('/:categoryName', verifyRequest('web.admin.categories.write'), limiter(4), async (req, res) => {
     const params = await categoryNameSchema.validateAsync(req.params);
     const body = await booleanSchema.validateAsync(await req.json());
-
-    console.log(params, body);
 
     await updateCategoryStatus(params.categoryName, body.enabled);
     res.json({ success: true });

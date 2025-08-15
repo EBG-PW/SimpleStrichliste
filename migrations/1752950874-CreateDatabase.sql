@@ -33,7 +33,10 @@ CREATE TABLE IF NOT EXISTS items (
     uuid TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     stock INTEGER NOT NULL DEFAULT 0,
+    target_stock INTEGER NOT NULL DEFAULT 0,
     price INTEGER NOT NULL CHECK (price >= 0),
+    pack_size INTEGER NOT NULL DEFAULT 1,
+    pack_price INTEGER NOT NULL CHECK (pack_price >= 0),
     category_id INTEGER NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (category_id) REFERENCES item_categories(id) ON DELETE RESTRICT
