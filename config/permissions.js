@@ -34,6 +34,7 @@ module.exports = {
         "admin": {
             "permissions": [
                 "app.admin.*",
+                "web.admin.*"
             ],
             "inherit": [
                 "user"
