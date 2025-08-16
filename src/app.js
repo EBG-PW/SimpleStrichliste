@@ -80,13 +80,7 @@ app.use(expressCspHeader({
 const renderer = new ViewRenderer(app, path.join(__dirname, '..', 'views'));
 
 // Register the static routes and overwrite some filename paths internaly
-renderer.registerStaticRoutes(path.join(__dirname, '..', 'views'),
-    ["error-xxx.ejs", "sign-up-verify.ejs", "reset-password.ejs", "navbar.ejs", "footer.ejs", "navbar_template.ejs", "legal.ejs"],
-    {
-        "auth/sign-in.ejs": "/login",
-        "auth/sign-up.ejs": "/register",
-        "auth/reset-password-request.ejs": "/requestresetpassword",
-    });
+renderer.registerStaticRoutes(path.join(__dirname, '..', 'views'),["error-xxx.ejs", "navbar.ejs", "footer.ejs"],{});
 
 // Register the dynamic routes
 renderer.registerDynamicRoutes();

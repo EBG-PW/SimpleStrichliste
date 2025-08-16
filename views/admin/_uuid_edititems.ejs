@@ -2,10 +2,13 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title id="pageTitle"></title>
 
     <style>
+      /* Cropper.js CSS remains the same */
       .cropper-container {
         direction: ltr;
         font-size: 0;
@@ -274,7 +277,7 @@
         justify-content: center;
       }
       .cropper-modal-content {
-        background-color: white;
+        background-color: #fff;
         padding: 20px;
         border-radius: 8px;
         max-width: 90vw;
@@ -295,12 +298,14 @@
     <script>
       const lang = <%- JSON.stringify(language) %>;
     </script>
+
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
   </head>
+
   <body class="bg-gray-100">
     <%- html_content.navbar %>
-
     <main class="container mx-auto p-4">
       <div class="flex items-center mb-6">
         <a href="/admin/items" aria-label="Back to items list" class="text-gray-600 hover:text-gray-800 mr-4">
@@ -310,51 +315,35 @@
         </a>
         <h2 class="text-2xl font-bold text-gray-800" data-translate="Items.Title"></h2>
       </div>
-
+      
       <div class="w-full max-w-2xl mx-auto">
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
           <div class="p-8 md:p-12">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2" data-translate="Items.Create.Headline"></h1>
-            <p class="text-gray-500 mb-8" data-translate="Items.Create.Description"></p>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2" data-translate="Items.Edit.Headline"></h1>
 
-            <form id="create-item-form" class="space-y-6">
-              <div>
-                <label for="name" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Name"></label>
-                <input type="text" name="name" id="name" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+            <p class="text-gray-500 mb-8" data-translate="Items.Edit.Description"></p>
+
+            <form id="edit-item-form" class="space-y-6">
+              <div><label for="name" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Name"></label> <input type="text" name="name" id="name" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label for="packSize" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.PackSize"></label> <input type="number" name="packSize" id="packSize" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" /></div>
+
+                <div><label for="packPrice" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.PackPrice"></label> <input type="number" name="packPrice" id="packPrice" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" /></div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="packSize" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.PackSize"></label>
-                  <input type="number" name="packSize" id="packSize" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-                </div>
-                <div>
-                  <label for="packPrice" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.PackPrice"></label>
-                  <input type="number" name="packPrice" id="packPrice" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
-                </div>
+                <div><label for="price" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Price"></label> <input type="number" name="price" id="price" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="price" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Price"></label>
-                  <input type="number" name="price" id="price" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
-                </div>
-              </div>
+                <div><label for="stock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Stock"></label> <input type="number" name="stock" id="stock" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label for="stock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Stock"></label>
-                  <input type="number" name="stock" id="stock" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
-                </div>
-                <div>
-                  <label for="targetStock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.TargetStock"></label>
-                  <input type="number" name="targetStock" id="targetStock" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
-                </div>
+                <div><label for="targetStock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.TargetStock"></label> <input type="number" name="targetStock" id="targetStock" min="0" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
               </div>
 
               <div>
-                <label for="category-button" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Category"></label>
-                <input type="hidden" name="category" id="category" required />
+                <label for="category-button" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Category"></label> <input type="hidden" name="category" id="category" required />
                 <div class="relative mt-1">
                   <button type="button" id="category-button" class="relative w-full cursor-default rounded-lg bg-white py-3 pl-4 pr-10 text-left border-gray-300 border shadow-sm focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-300">
                     <span id="category-selected-display" class="block truncate" data-translate="Items.Form.SelectCategory"></span>
@@ -362,22 +351,18 @@
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     </span>
                   </button>
+
                   <ul id="category-options" class="absolute z-10 mt-1 hidden max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"></ul>
                 </div>
               </div>
 
               <div>
                 <label class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Image"></label>
-                <div class="mt-2 flex items-center gap-6">
-                  <img id="image-preview" src="" alt="Image preview" class="h-24 w-24 rounded-full object-cover" />
-                  <input type="file" name="image" id="image" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required />
-                </div>
+                <div class="mt-2 flex items-center gap-6"><img id="image-preview" src="/i/items/<%= params.uuid %>" alt="Image preview" class="h-24 w-24 rounded-full object-cover" /> <input type="file" name="image" id="image" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" /></div>
               </div>
 
               <div class="pt-6 flex justify-end">
-                <button type="submit" id="submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
-                  <span data-translate="Items.Button.Create"></span>
-                </button>
+                <button type="submit" id="submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300"><span data-translate="Items.Button.Save"></span></button>
               </div>
             </form>
           </div>
@@ -401,12 +386,14 @@
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/cropper.min.js?<%= curentUnixTime %>"></script>
+
     <script>
       let cropper;
       let croppedImageBlob = null;
 
-      // --- DOM Elements ---
-      const createItemForm = document.getElementById("create-item-form");
+      const apiEndpoint = `/api/v1/items/<%= params.uuid %>`;
+
+      const editItemForm = document.getElementById("edit-item-form");
       const categoryButton = document.getElementById("category-button");
       const categoryOptions = document.getElementById("category-options");
       const categorySelectedDisplay = document.getElementById("category-selected-display");
@@ -418,7 +405,6 @@
       const cropButton = document.getElementById("crop-button");
       const cancelCropButton = document.getElementById("cancel-crop-button");
       const submitButton = document.getElementById("submit-button");
-
       const packSizeInput = document.getElementById("packSize");
       const packPriceInput = document.getElementById("packPrice");
       const priceInput = document.getElementById("price");
@@ -525,63 +511,77 @@
         reader.readAsDataURL(file);
       }
 
-      /**
-       * Handles the main form submission with improved button feedback.
-       */
+      async function fetchAndPopulateItemData() {
+        try {
+          const response = await apiFetch(apiEndpoint);
+          if (!response.ok) {
+            // Handle item not found or other errors
+            document.querySelector("main").innerHTML = `<p class="text-center text-red-500">Item not found.</p>`;
+            throw new Error("Item not found");
+          }
+          const item = await response.json();
+
+          document.getElementById("name").value = item.name;
+          document.getElementById("price").value = item.price;
+          document.getElementById("packSize").value = item.pack_size;
+          document.getElementById("packPrice").value = item.pack_price;
+          document.getElementById("stock").value = item.stock;
+          document.getElementById("targetStock").value = item.target_stock;
+
+          if (item.imageUrl) {
+            imagePreview.src = item.imageUrl;
+          }
+
+          if (item.category_name) {
+            const categoryLi = categoryOptions.querySelector(`li[data-value="${item.category_name}"]`);
+            if (categoryLi) {
+              categoryLi.click();
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch item data:", error);
+        }
+      }
+
       async function handleFormSubmit(event) {
         event.preventDefault();
 
-        // Original state
         const originalButtonClasses = ["bg-indigo-600", "hover:bg-indigo-700"];
         const originalButtonHTML = submitButton.innerHTML;
 
-        // Saving state
         submitButton.disabled = true;
         submitButton.innerHTML = `<span>${i18next.t("Items.Button.Saving")}</span>`;
 
-        const formData = new FormData(createItemForm);
+        const formData = new FormData(editItemForm);
         if (croppedImageBlob) {
+          // A new image has been selected and cropped
           formData.set("image", croppedImageBlob, "cropped_image.png");
+        } else {
+          // No new image was selected, remove 'image'
+          formData.delete("image");
         }
 
         try {
-          const response = await apiFetch("/api/v1/items", {
-            method: "POST",
+          const response = await apiFetch(apiEndpoint, {
+            method: "PUT",
             body: formData,
           });
-
-          const result = await response.json();
 
           if (response.ok) {
             submitButton.classList.remove(...originalButtonClasses);
             submitButton.classList.add("bg-green-600");
-            submitButton.innerHTML = `<span>${i18next.t("Items.Button.Success")}</span>`;
-
-            createItemForm.reset();
-            // After reset, restore the category if it was pre-filled
-            const urlParams = new URLSearchParams(window.location.search);
-            const categoryFromUrl = urlParams.get("category");
-            if (categoryFromUrl) {
-              const categoryLi = categoryOptions.querySelector(`li[data-value="${decodeURIComponent(categoryFromUrl)}"]`);
-              if (categoryLi) categoryLi.click();
-            } else {
-              // Clear the visual selection display if no category was in the URL
-              categorySelectedDisplay.innerHTML = `<span data-translate="Items.Form.SelectCategory"></span>`;
-            }
-
-            imagePreview.src = "";
-            croppedImageBlob = null;
+            submitButton.innerHTML = `<span>${i18next.t("Items.Response.SuccessSave")}</span>`;
           } else {
+            const result = await response.json();
             submitButton.classList.remove(...originalButtonClasses);
             submitButton.classList.add("bg-red-600");
-            if (response.status === 409) {
-              submitButton.innerHTML = `<span>${i18next.t("Items.Response.DBUNIQUE")}</span>`;
-            } else {
-              submitButton.innerHTML = `<span>${response.message}</span>`;
-            }
+            submitButton.innerHTML = `<span>${result.message || "Error"}</span>`;
           }
         } catch (error) {
           console.error("Submission failed:", error);
+          submitButton.classList.remove(...originalButtonClasses);
+          submitButton.classList.add("bg-red-600");
+          submitButton.innerHTML = `<span>${error.message}</span>`;
         } finally {
           setTimeout(() => {
             submitButton.disabled = false;
@@ -592,13 +592,14 @@
         }
       }
 
-      // --- Event Listeners ---
-      document.addEventListener("DOMContentLoaded", () => {
-        populateCategories();
+      document.addEventListener("DOMContentLoaded", async () => {
+        await populateCategories();
+        await fetchAndPopulateItemData();
+
         packSizeInput.addEventListener("input", calculateItemPrice);
         packPriceInput.addEventListener("input", calculateItemPrice);
         imageInput.addEventListener("change", handleImageSelection);
-        createItemForm.addEventListener("submit", handleFormSubmit);
+        editItemForm.addEventListener("submit", handleFormSubmit);
         cropButton.addEventListener("click", () => {
           if (!cropper) return;
 

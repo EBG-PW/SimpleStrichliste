@@ -1,8 +1,13 @@
 {
+    "Title": "Artikel Verwaltung",
     "Loading": "Lade Artikel...",
     "Create": {
         "Headline": "Neuen Artikel erstellen",
-        "Description": "Füllen Sie die Details aus"
+        "Description": "Fülle die Details aus"
+    },
+    "Edit": {
+        "Headline": "Artikel bearbeiten",
+        "Description": "Ändere die Details des Artikels"
     },
     "Form": {
         "Name": "Artikelname",
@@ -18,11 +23,13 @@
     },
     "Button": {
         "Create": "Artikel erstellen",
+        "Save": "Anderungen speichern",
         "Cancel": "Abbrechen",
         "CropSave": "Zuschneiden & Bestätigen"
     },
     "Response": {
         "Success": "Artikel erfolgreich erstellt",
+        "SuccessSave": "Artikel erfolgreich gespeichert",
         "DBUNIQUE": "Artikel mit diesem Namen existiert bereits",
         "Error": "Fehler"
     }
