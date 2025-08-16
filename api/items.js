@@ -15,14 +15,18 @@ const PluginName = 'Items'; //This plugins name
 const PluginRequirements = []; //Put your Requirements and version here <Name, not file name>|Version
 const PluginVersion = '0.0.1'; //This plugins version
 
+const searchSchema = Joi.object({
+    query: Joi.fullysanitizedString().min(3).max(100).default('')
+});
+
 const newItemSchema = Joi.object({
-    name: Joi.string().min(3).max(100).required(),
+    name: Joi.fullysanitizedString().min(3).max(100).required(),
     price: Joi.number().positive().required(),
     stock: Joi.number().integer().min(0).required(),
     targetStock: Joi.number().integer().min(0).required(),
     packSize: Joi.number().integer().min(1).required(),
     packPrice: Joi.number().integer().min(1).required(),
-    category: Joi.string().valid(...Object.keys(gategories_conf)).required()
+    category: Joi.fullysanitizedString().valid(...Object.keys(gategories_conf)).required()
 });
 
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
@@ -38,7 +42,8 @@ router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limit
 });
 
 router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
-    const flatItemsAndCategories = await getItemsAndCategories();
+    const query = await searchSchema.validateAsync(req.query);
+    const flatItemsAndCategories = await getItemsAndCategories(query.query);
 
     const groupedItems = flatItemsAndCategories.reduce((acc, currentItem) => {
         const category = currentItem.category_name;

@@ -74,7 +74,12 @@
         categoriesContainer.innerHTML = `<p class="text-center text-gray-500" data-translate="Items.Loading"></p>`;
 
         try {
-          const response = await apiFetch("/api/v1/items/grouped");
+          const response = await apiFetch("/api/v1/items/grouped", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
           if (!response.ok) throw new Error("Failed to fetch items");
 

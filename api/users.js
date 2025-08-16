@@ -13,14 +13,14 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const userSchema = Joi.object({
-    name: Joi.string().min(1).max(100).required(),
+    name: Joi.fullysanitizedString().min(1).max(100).required(),
     email: Joi.string().email().required(),
-    username: Joi.string().min(3).max(30).required(),
+    username: Joi.fullysanitizedString().min(3).max(30).required(),
     password: Joi.string().min(8).max(56).required(),
 });
 
 const userNameSchema = Joi.object({
-    name: Joi.string().min(1).max(100).required(),
+    name: Joi.fullysanitizedString().min(1).max(100).required(),
 });
 
 const userEmailSchema = Joi.object({
@@ -28,7 +28,7 @@ const userEmailSchema = Joi.object({
 });
 
 const userUsernameSchema = Joi.object({
-    username: Joi.string().min(3).max(30).required(),
+    username: Joi.fullysanitizedString().min(3).max(30).required(),
 });
 
 const userPasswordSchema = Joi.object({
@@ -37,7 +37,7 @@ const userPasswordSchema = Joi.object({
 });
 
 const userLanguageSchema = Joi.object({
-    language: Joi.string().min(2).max(2).required()
+    language: Joi.fullysanitizedString().min(2).max(2).required()
 });
 
 /**

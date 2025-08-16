@@ -18,7 +18,7 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const loginSchema = Joi.object({
-    username: Joi.string().min(3).max(30).required(),
+    username: Joi.fullysanitizedString().min(3).max(30).required(),
     password: Joi.string().min(8).max(56).required(),
 });
 
