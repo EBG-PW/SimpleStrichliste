@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS items (
     pack_price INTEGER NOT NULL CHECK (pack_price >= 0),
     category_id INTEGER NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (category_id) REFERENCES item_categories(id) ON DELETE RESTRICT
+    FOREIGN KEY (category_id) REFERENCES item_categories(id) ON DELETE RESTRICT,
+    UNIQUE (name, category_id)
 );
 
 -- transactions: A log of every single item taken by a user.

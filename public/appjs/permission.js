@@ -94,4 +94,31 @@ const checkSession = async () => {
   }
 }
 
+// in a file like /appjs/api.js
+
+/**
+ * Wrapping fetch requests with automatic token handling.
+ * @param {string} url The URL to fetch.
+ * @param {object} options The options object for the fetch call.
+ * @returns {Promise<Response>} A promise that resolves with the fetch Response.
+ */
+const apiFetch = (url, options = {}) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    options.headers = {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`,
+    };
+  }
+
+  return fetch(url, options).then(response => {
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      window.location.replace("/login");
+      throw new Error("Unauthorized");
+    }
+    return response;
+  });
+};
+
 checkSession();

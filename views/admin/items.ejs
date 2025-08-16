@@ -67,9 +67,7 @@
         categoriesContainer.innerHTML = `<p class="text-center text-gray-500" data-translate="Items.Loading"></p>`;
 
         try {
-          const response = await fetch("/api/v1/items/grouped", {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          });
+          const response = await apiFetch("/api/v1/items/grouped");
 
           if (!response.ok) throw new Error("Failed to fetch items");
 

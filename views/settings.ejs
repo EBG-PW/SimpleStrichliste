@@ -242,12 +242,8 @@
         }
 
         try {
-            const response = await fetch('/api/v1/users/password', {
+            const response = await apiFetch('/api/v1/users/password', {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
                 body: JSON.stringify({ currentPassword, newPassword }),
             });
 
@@ -271,7 +267,7 @@
       // --- Initial Load ---
       document.addEventListener("DOMContentLoaded", () => {
         loadUserData();
-        passwordForm.addEventListener('submit', changePassword); 
+        passwordForm.addEventListener('submit', changePassword);
       });
     </script>
   </body>

@@ -157,13 +157,7 @@
           if (category === "overview") {
             itemsGrid.innerHTML = '<p class="col-span-full text-center">Lade Artikel...</p>';
             try {
-              const response = await fetch(`/api/v1/store/overview`, {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              });
+              const response = await apiFetch(`/api/v1/store/overview`);
               const response_data = await response.json();
 
               // Display Balance

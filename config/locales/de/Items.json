@@ -20,5 +20,10 @@
         "Create": "Artikel erstellen",
         "Cancel": "Abbrechen",
         "CropSave": "Zuschneiden & Bestätigen"
+    },
+    "Response": {
+        "Success": "Artikel erfolgreich erstellt",
+        "DBUNIQUE": "Artikel mit diesem Namen existiert bereits",
+        "Error": "Fehler"
     }
 }

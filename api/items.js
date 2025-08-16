@@ -1,7 +1,7 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
-const { createItem, getItemsGroupedByCategory } = require('@lib/sqlite/items');
+const { createItem, getItemsAndCategories } = require('@lib/sqlite/items');
 const Joi = require('@lib/sanitizer');
 const { writeImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, convertToWebp } = require('@lib/utils');
@@ -38,13 +38,17 @@ router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limit
 });
 
 router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
-    const flatItems = await getItemsGroupedByCategory();
-    const groupedItems = flatItems.reduce((acc, currentItem) => {
+    const flatItemsAndCategories = await getItemsAndCategories();
+
+    const groupedItems = flatItemsAndCategories.reduce((acc, currentItem) => {
         const category = currentItem.category_name;
 
         if (!acc[category]) acc[category] = [];
-        delete currentItem.category_name;
-        acc[category].push(currentItem);
+
+        if (currentItem.uuid) {
+            const { category_name, ...itemData } = currentItem;
+            acc[category].push(itemData);
+        }
 
         return acc;
     }, {});

@@ -97,13 +97,7 @@
     <script>
         async function fetchAdminData() {
             try {
-                const response = await fetch('/api/v1/admin/overview', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
-                    }
-                });
+                const response = await apiFetch('/api/v1/admin/overview');
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
                 
