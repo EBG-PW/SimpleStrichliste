@@ -1,6 +1,9 @@
 {
     "Title": "Artikel Verwaltung",
     "Loading": "Lade Artikel...",
+    "NoResults": "Keine Artikel gefunden.",
+    "LoadFailed": "Fehler beim Laden der Artikel.",
+    "SearchPlaceholder": "Artikel suchen...",
     "Create": {
         "Headline": "Neuen Artikel erstellen",
         "Description": "Fülle die Details aus"

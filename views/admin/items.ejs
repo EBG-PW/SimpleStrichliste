@@ -32,9 +32,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </a>
-        <h1 class="text-2xl font-bold" data-translate="Items.Title">Artikel verwalten</h1>
+        <h1 class="text-2xl font-bold" data-translate="Items.Title"></h1>
       </div>
 
+      <div class="mb-6">
+        <input type="search" id="search-input" data-translate-placeholder="Items.SearchPlaceholder" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+      </div>
       <div id="categories-container"></div>
     </main>
 
@@ -45,36 +48,51 @@
 
       const createItemCard = (item) => {
         return `
-            <a href="/admin/${item.uuid}/edititems" class="block">
-              <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center text-center">
-                <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-24 h-24 object-cover rounded-full mb-4">
-                <h3 class="font-bold text-lg text-gray-800 flex-grow">${item.name}</h3>
-                <p class="text-green-600 font-semibold text-md mt-2">${item.price.toFixed(2).replace(".", ",")} €</p>
-                <p class="text-xs text-gray-400 mt-2">Lager: ${item.stock}</p>
-              </div>
-            </a>
-          `;
+          <a href="/admin/${item.uuid}/edititems" class="block">
+            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center text-center">
+              <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-24 h-24 object-cover rounded-full mb-4">
+              <h3 class="font-bold text-lg text-gray-800 flex-grow">${item.name}</h3>
+              <p class="text-green-600 font-semibold text-md mt-2">${item.price.toFixed(2).replace(".", ",")} €</p>
+              <p class="text-xs text-gray-400 mt-2">Lager: ${item.stock}</p>
+            </div>
+          </a>
+        `;
       };
 
       const createAddItemCard = (categoryName) => {
         const createUrl = `/admin/additems?category=${encodeURIComponent(categoryName)}`;
         return `
-            <a href="${createUrl}" class="block h-full">
-              <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300 hover:border-blue-500 hover:text-blue-500 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span class="mt-2 font-semibold text-sm" data-translate="Items.Button.Create"></span>
-              </div>
-            </a>
-          `;
+          <a href="${createUrl}" class="block h-full">
+            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300 hover:border-blue-500 hover:text-blue-500 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span class="mt-2 font-semibold text-sm" data-translate="Items.Button.Create">Neuer Artikel</span>
+            </div>
+          </a>
+        `;
       };
 
-      const loadAndRenderItems = async () => {
-        categoriesContainer.innerHTML = `<p class="text-center text-gray-500" data-translate="Items.Loading"></p>`;
+      let debounceTimer;
+      const debounce = (callback, time) => {
+        return (...args) => {
+          window.clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            callback(...args);
+          }, time);
+        };
+      };
+
+      const loadAndRenderItems = async (searchQuery = "") => {
+        categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t('Items.Loading')}</p>`;
 
         try {
-          const response = await apiFetch("/api/v1/items/grouped", {
+          const url = new URL(`${window.location.origin}/api/v1/items/grouped`);
+          if (searchQuery && searchQuery.trim() !== "") {
+            url.searchParams.append("query", searchQuery.trim());
+          }
+
+          const response = await apiFetch(url.toString(), {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -86,32 +104,45 @@
           const groupedItems = await response.json();
           categoriesContainer.innerHTML = "";
 
-          for (const categoryName in groupedItems) {
-            const items = groupedItems[categoryName];
+          // Handle case where no items are found
+          if (Object.keys(groupedItems).length === 0) {
+            categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t('Items.NoResults')}</p>`;
+          } else {
+            for (const categoryName in groupedItems) {
+              const items = groupedItems[categoryName];
 
-            const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${categoryName}</h2>`;
-            const gridContainer = document.createElement("div");
-            gridContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
+              const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${categoryName}</h2>`;
+              const gridContainer = document.createElement("div");
+              gridContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
 
-            let cardsHtml = "";
-            items.forEach((item) => {
-              cardsHtml += createItemCard(item);
-            });
+              let cardsHtml = "";
+              items.forEach((item) => {
+                cardsHtml += createItemCard(item);
+              });
 
-            cardsHtml += createAddItemCard(categoryName);
+              cardsHtml += createAddItemCard(categoryName);
+              gridContainer.innerHTML = cardsHtml;
 
-            gridContainer.innerHTML = cardsHtml;
-
-            categoriesContainer.innerHTML += categoryHeader;
-            categoriesContainer.appendChild(gridContainer);
+              categoriesContainer.innerHTML += categoryHeader;
+              categoriesContainer.appendChild(gridContainer);
+            }
           }
+
         } catch (error) {
           console.error("Failed to load items:", error);
-          categoriesContainer.innerHTML = `<p class="text-red-500 text-center">Fehler beim Laden der Artikel.</p>`;
+          categoriesContainer.innerHTML = `<p class="text-red-500 text-center">${i18next.t('Items.LoadFailed')}</p>`;
         }
       };
 
       document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("search-input");
+        const debouncedLoad = debounce(loadAndRenderItems, 300);
+
+        // Add event listener to the search input
+        searchInput.addEventListener("input", (event) => {
+          debouncedLoad(event.target.value);
+        });
+
         loadAndRenderItems();
       });
     </script>

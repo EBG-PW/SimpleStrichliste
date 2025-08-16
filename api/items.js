@@ -16,7 +16,7 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const searchSchema = Joi.object({
-    query: Joi.fullysanitizedString().min(3).max(100).default('')
+    query: Joi.fullysanitizedString().min(1).max(100).default('')
 });
 
 const newItemSchema = Joi.object({
