@@ -47,31 +47,38 @@
       const categoriesContainer = document.getElementById("categories-container");
 
       const createItemCard = (item) => {
+        const stockColor = item.stock < item.target_stock * 0.25 ? "text-red-500" : item.stock < item.target_stock * 0.5 ? "text-orange-500" : item.stock < item.target_stock * 0.75 ? "text-yellow-500" : "text-green-500";
         return `
-          <a href="/admin/${item.uuid}/edititems" class="block">
-            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center text-center">
-              <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-24 h-24 object-cover rounded-full mb-4">
-              <h3 class="font-bold text-lg text-gray-800 flex-grow">${item.name}</h3>
-              <p class="text-green-600 font-semibold text-md mt-2">${item.price.toFixed(2).replace(".", ",")} €</p>
-              <p class="text-xs text-gray-400 mt-2">Lager: ${item.stock}</p>
+        <a href="/admin/${item.uuid}/edititems" class="block">
+            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex items-center gap-4 transition-transform transform hover:scale-105">
+                <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0">
+                
+                <div class="flex-grow flex flex-col">
+                    <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
+                    
+                    <div class="mt-2 flex items-baseline gap-4 flex-wrap">
+                        <p class="text-green-600 font-semibold text-md">${item.price.toFixed(2).replace(".", ",")} €</p>
+                        <p class="text-sm ${stockColor}">Lager: ${item.stock} / ${item.target_stock}</p>
+                    </div>
+                </div>
             </div>
-          </a>
-        `;
-      };
+        </a>
+      `};
 
       const createAddItemCard = (categoryName) => {
         const createUrl = `/admin/additems?category=${encodeURIComponent(categoryName)}`;
         return `
-          <a href="${createUrl}" class="block h-full">
-            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300 hover:border-blue-500 hover:text-blue-500 text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span class="mt-2 font-semibold text-sm" data-translate="Items.Button.Create">Neuer Artikel</span>
+        <a href="${createUrl}" class="block h-full">
+            <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex items-center justify-start gap-4 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:text-blue-500 text-gray-400 transition-colors">
+                <div class="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-gray-50 rounded-lg flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                </div>
+                <span class="font-semibold text-lg" data-translate="Items.Button.Create">Neuer Artikel</span>
             </div>
-          </a>
-        `;
-      };
+        </a>
+      `};
 
       let debounceTimer;
       const debounce = (callback, time) => {
@@ -84,7 +91,7 @@
       };
 
       const loadAndRenderItems = async (searchQuery = "") => {
-        categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t('Items.Loading')}</p>`;
+        categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t("Items.Loading")}</p>`;
 
         try {
           const url = new URL(`${window.location.origin}/api/v1/items/grouped`);
@@ -106,7 +113,7 @@
 
           // Handle case where no items are found
           if (Object.keys(groupedItems).length === 0) {
-            categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t('Items.NoResults')}</p>`;
+            categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t("Items.NoResults")}</p>`;
           } else {
             for (const categoryName in groupedItems) {
               const items = groupedItems[categoryName];
@@ -127,10 +134,9 @@
               categoriesContainer.appendChild(gridContainer);
             }
           }
-
         } catch (error) {
           console.error("Failed to load items:", error);
-          categoriesContainer.innerHTML = `<p class="text-red-500 text-center">${i18next.t('Items.LoadFailed')}</p>`;
+          categoriesContainer.innerHTML = `<p class="text-red-500 text-center">${i18next.t("Items.LoadFailed")}</p>`;
         }
       };
 
