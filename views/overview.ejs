@@ -56,22 +56,22 @@
           if (!isFirstCategory) {
             contentElement.classList.add("hidden");
           } else {
-            this.activeCategoryKey = key; // Set the first category as active
+            this.activeCategoryKey = key;
           }
 
           this._renderButton(name, key, icon, isFirstCategory);
         }
 
         selectCategory(key) {
-          if (this.activeCategoryKey === key) return; // Do nothing if already active
+          if (this.activeCategoryKey === key) return;
 
           this.activeCategoryKey = key;
 
           // Update button styles
           this.navElement.querySelectorAll("button").forEach((btn) => {
             const isActive = btn.dataset.categoryKey === key;
-            btn.classList.toggle("text-gray-900", isActive); // Active color
-            btn.classList.toggle("text-gray-400", !isActive); // Inactive color
+            btn.classList.toggle("text-gray-900", isActive);
+            btn.classList.toggle("text-gray-400", !isActive);
           });
 
           // Show/hide content views
@@ -120,7 +120,7 @@
 
           button.innerHTML = `
             ${icon}
-            <span class="text-xs mt-1">${name}</span>
+            <span class="text-xs mt-1">${i18next.t(`Categories.${name}`)}</span>
         `;
           this.navElement.appendChild(button);
         }
@@ -182,7 +182,7 @@
                 const ElementIcon = item.icon;
                 const ElementContent = document.createElement("div");
                 ElementContent.id = "content-drinks";
-                ElementContent.innerHTML = `<h1 class="text-2xl font-bold mb-4">${item.name}</h1>
+                ElementContent.innerHTML = `<h1 class="text-2xl font-bold mb-4">${i18next.t(`Categories.${item.name}`)}</h1>
                                   <ul class="list-disc pl-5 bg-white p-4 rounded-xl shadow-lg" id=""></ul>`;
                 document.getElementById("main-content-container").appendChild(ElementContent);
                 navBar.addCategory(item.name, item.name, ElementIcon, ElementContent);

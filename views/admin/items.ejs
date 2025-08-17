@@ -111,7 +111,7 @@
             for (const categoryName in groupedItems) {
               const items = groupedItems[categoryName];
 
-              const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${categoryName}</h2>`;
+              const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${i18next.t(`Categories.${categoryName}`)}</h2>`;
               const gridContainer = document.createElement("div");
               gridContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
 

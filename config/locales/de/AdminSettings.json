@@ -1,0 +1,34 @@
+{
+  "PageTitle": "Einstellungen",
+  "Stats": {
+    "Title": "Systemstatistiken",
+    "Version": "Version",
+    "DBSize": "Datenbankgröße",
+    "Uptime": "Betriebszeit",
+    "MemRss": "Arbeitsspeicher (Gesamt)",
+    "MemHeap": "Heap-Speicher (Nutzung/Gesamt)",
+    "MemHeapExternalBuffer": "Speicher für C++ | Buffers",
+    "Storage": "Speicher"
+  },
+  "REGCode": {
+    "Title": "Registrierungs Code",
+    "Description": "Aktiviere diese Funktion wenn sich nur Benutzer mit diesem Code registrieren sollen.",
+    "ToggleLabel": "Code aktivieren",
+    "Button": "Code als QR-Code anzeigen",
+    "RegenerateButton": "Code regenerieren",
+    "RegenerateError": "Fehler beim Regenerieren des Codes",
+    "ModalTitle": "Registrierungs QR-Code",
+    "ModalDescription": "Gib diesen Code zu allen Nutzern, scanne ihn mit der Kamera um zur Registrierung zu gelangen."
+},
+  "UserShoppinglist": {
+    "Title": "Einkaufslisten für Benutzer",
+    "Description": "Aktiviere diese Funktion um Benutzern zu erlauben, die Einkaufsliste nutzen zu können.",
+    "ToggleLabel": "Einkaufslisten für normale Benutzer aktivieren"
+  },
+  "DBAutoVaccum": {
+    "Title": "Automatische DB-Vakuumierung",
+    "Description": "Aktiviere diese Funktion um das automatische Vacuum der Datenbank zu ermöglichen, dies reduziert die Fragmentierung und verbessert die Leistung.",
+    "ToggleLabel": "Automatisches Vacuum aktivieren",
+    "Button": "Jetzt ausführen"
+  }
+}

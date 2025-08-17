@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- user_favorites: A many-to-many table linking users to their favorite items.
+CREATE TABLE IF NOT EXISTS user_favorites (
+    user_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    PRIMARY KEY (user_id, item_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+);
+
 -- item_categories: Defines categories for items
 CREATE TABLE IF NOT EXISTS item_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,13 +64,11 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE RESTRICT
 );
 
--- user_favorites: A many-to-many table linking users to their favorite items.
-CREATE TABLE IF NOT EXISTS user_favorites (
-    user_id INTEGER NOT NULL,
-    item_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, item_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+-- app_settings: Stores application-wide settings.
+CREATE TABLE IF NOT EXISTS app_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key TEXT NOT NULL UNIQUE,
+    setting_value TEXT NOT NULL
 );
 
 -- websessions: Stores active web sessions for logged-in users.

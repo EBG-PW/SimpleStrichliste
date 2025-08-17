@@ -4,6 +4,29 @@ const Database = require('better-sqlite3');
 
 const DB_PATH = 'application.db';
 const MIGRATIONS_DIR = 'migrations';
+const SEEDER_FILE = 'seeder.sql';
+
+/**
+ * Applies data from the seeder file.
+ * @param {Database.Database} db The database instance.
+ */
+function applySeeder(db) {
+    if (!fs.existsSync(SEEDER_FILE)) {
+        console.log(`Seeder file '${SEEDER_FILE}' not found, skipping.`);
+        return;
+    }
+
+    console.log(`Applying data from seeder file: ${SEEDER_FILE}...`);
+    try {
+        const sql = fs.readFileSync(SEEDER_FILE, 'utf8');
+        db.exec(sql);
+        console.log(`✅ Successfully applied seeder data.`);
+    } catch (err) {
+        console.error(`❌ FAILED to apply seeder file '${SEEDER_FILE}'.`);
+        throw err;
+    }
+}
+
 
 function applyMigrations() {
     console.log('Starting database migration process...');
@@ -26,6 +49,22 @@ function applyMigrations() {
         process.exit(1);
     }
 
+    try {
+         db.exec(`
+            CREATE TABLE IF NOT EXISTS app_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                setting_key TEXT NOT NULL UNIQUE,
+                setting_value TEXT NOT NULL
+            );
+        `);
+        console.log(`Make sure 'app_settings' table exists for seeder.`);
+    } catch (err) {
+        console.error(`Failed to create app_settings table: ${err.message}`);
+        db.close();
+        process.exit(1);
+    }
+
+
     const getAppliedStmt = db.prepare(`SELECT version FROM schema_migrations`);
     const appliedRows = getAppliedStmt.all();
     const appliedVersions = new Set(appliedRows.map(row => row.version));
@@ -33,23 +72,22 @@ function applyMigrations() {
 
     if (!fs.existsSync(MIGRATIONS_DIR)) {
         console.log(`Migrations directory '${MIGRATIONS_DIR}' not found. Nothing to do.`);
-        db.close();
-        return;
     }
 
 
-    const allMigrationFiles = fs.readdirSync(MIGRATIONS_DIR)
-        .filter(file => file.endsWith('.sql'))
-        .sort();
+    const allMigrationFiles = fs.existsSync(MIGRATIONS_DIR)
+        ? fs.readdirSync(MIGRATIONS_DIR)
+            .filter(file => file.endsWith('.sql'))
+            .sort()
+        : [];
 
-    // Filter pending migrations by comparing timestamps, not full filenames
     const pendingMigrations = allMigrationFiles.filter(file => {
         const version = file.split('-')[0];
         return !appliedVersions.has(version);
     });
 
     if (pendingMigrations.length === 0) {
-        console.log('Database is up to date. No new migrations to apply.');
+        console.log('Database schema is up to date. No new migrations to apply.');
     } else {
         console.log(`Found ${pendingMigrations.length} pending migrations to apply.`);
 
@@ -58,10 +96,9 @@ function applyMigrations() {
                 try {
                     const migrationPath = path.join(MIGRATIONS_DIR, migrationFile);
                     const sql = fs.readFileSync(migrationPath, 'utf8');
-                    
+
                     db.exec(sql);
 
-                    // Extract the timestamp to use as the version
                     const version = migrationFile.split('-')[0];
                     const recordMigrationStmt = db.prepare(`INSERT INTO schema_migrations (version) VALUES (?)`);
                     recordMigrationStmt.run(version);
@@ -83,7 +120,15 @@ function applyMigrations() {
         }
     }
 
-    console.log('Migration process finished successfully.');
+    try {
+        applySeeder(db);
+    } catch (err) {
+        console.error(`Seeding failed: ${err.message}`);
+        db.close();
+        process.exit(1);
+    }
+
+    console.log('Migration and seeding process finished successfully.');
     db.close();
 }
 
@@ -125,8 +170,8 @@ function main() {
             break;
         default:
             console.log('Usage:');
-            console.log('  node migrate.js apply          - Applies pending database migrations.');
-            console.log('  node migrate.js create <Name>  - Creates a new, empty migration file.');
+            console.log('  node migrate.js apply           - Applies pending migrations and seeds data.');
+            console.log('  node migrate.js create <Name>   - Creates a new, empty migration file.');
             process.exit(1);
     }
 }

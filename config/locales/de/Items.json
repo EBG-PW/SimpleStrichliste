@@ -26,9 +26,10 @@
     },
     "Button": {
         "Create": "Artikel erstellen",
-        "Save": "Anderungen speichern",
+        "Save": "Änderungen speichern",
         "Cancel": "Abbrechen",
-        "CropSave": "Zuschneiden & Bestätigen"
+        "CropSave": "Zuschneiden & Bestätigen",
+        "Saving": "Speichern..."
     },
     "Response": {
         "Success": "Artikel erfolgreich erstellt",

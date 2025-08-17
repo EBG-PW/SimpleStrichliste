@@ -555,7 +555,7 @@
           if (response.ok) {
             submitButton.classList.remove(...originalButtonClasses);
             submitButton.classList.add("bg-green-600");
-            submitButton.innerHTML = `<span>${i18next.t("Items.Button.Success")}</span>`;
+            submitButton.innerHTML = `<span>${i18next.t("Items.Response.Success")}</span>`;
 
             createItemForm.reset();
             // After reset, restore the category if it was pre-filled

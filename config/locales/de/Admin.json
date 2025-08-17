@@ -5,7 +5,8 @@
         "Categories": "Kategorienverwaltung",
         "Items": "Artikelverwaltung",
         "Statistics": "Statistiken",
-        "ShoppingLists": "Einkaufsliste"
+        "ShoppingLists": "Einkaufsliste",
+        "Settings": "Einstellungen"
     },
     "Card": {
         "UsersCount_one": "{{count}} Benutzer",
@@ -13,6 +14,7 @@
         "CategoriesCount_one": "{{count}} Kategorie",
         "CategoriesCount_other": "{{count}} Kategorien",
         "ItemsCount_one": "{{count}} Artikel",
-        "ItemsCount_other": "{{count}} Artikel"
+        "ItemsCount_other": "{{count}} Artikel",
+        "AppVersion": "Version: {{version}}"
     }
 }
