@@ -1,14 +1,14 @@
 const crypto = require('node:crypto')
+const path = require('node:path');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const package = require('../package.json');
-const { getDBSize, vacuumDB} = require('@lib/sqlite');
+const { getDBSize, vacuumDB, backupDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
 const { getSystemStats } = require('@lib/stats');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
 const router = new HyperExpress.Router();
-
 
 /* Plugin info*/
 const PluginName = 'Settings'; //This plugins name
@@ -48,6 +48,27 @@ router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async 
     await vacuumDB();
     const dbSize_after = getDBSize();
     return res.json({ success: true, dbSize_before, dbSize_after });
+});
+
+router.post('/backupdb', verifyRequest('app.admin.db.read'), limiter(20), async (req, res) => {
+    let backupPath = '';
+    try {
+        backupPath = await backupDB();
+        const filename = path.basename(backupPath);
+        res.download(backupPath, filename, (err) => {
+            if (err) {
+                console.error(`Error during file transfer stream for ${filename}:`, err);
+            } else {
+                console.log(`Successfully sent backup file: ${filename}`);
+            }
+        });
+
+    } catch (error) {
+        console.error("Backup creation failed:", error);
+        if (!res.sent) {
+            res.status(500).json({ success: false, error: "Failed to create backup" });
+        }
+    }
 });
 
 module.exports = {

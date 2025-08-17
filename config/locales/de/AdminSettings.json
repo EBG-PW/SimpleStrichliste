@@ -32,5 +32,10 @@
     "Description": "Aktiviere diese Funktion um das automatische Vacuum der Datenbank zu ermöglichen, dies reduziert die Fragmentierung und verbessert die Leistung.",
     "ToggleLabel": "Automatisches Vacuum aktivieren",
     "Button": "Jetzt ausführen"
+  },
+  "DBBackup": {
+    "Title": "Datenbank-Backup",
+    "Description": "Aktiviere diese Funktion um regelmäßige Backups der Datenbank zu erstellen.",
+    "Button": "Jetzt Backup erstellen"
   }
 }

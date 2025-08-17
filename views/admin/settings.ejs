@@ -122,6 +122,14 @@
           </div>
           <button id="trigger-db-vacuum-btn" onclick="sendVaccumrequest()" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed" data-translate="AdminSettings.DBAutoVaccum.Button"></button>
         </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col h-full">
+          <div>
+            <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.DBBackup.Title"></h2>
+            <p class="text-gray-600 text-sm mb-2" data-translate="AdminSettings.DBBackup.Description"></p>
+          </div>
+          <button id="trigger-db-backup-btn" onclick="sendBackupRequest()" class="w-full mt-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed" data-translate="AdminSettings.DBBackup.Button"></button>
+        </div>
       </div>
 
       <div id="qr-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
@@ -222,7 +230,7 @@
 
           qrImageContainer.innerHTML = "";
 
-          if(regCode === "DEFAULT_REG_CODE") {
+          if (regCode === "DEFAULT_REG_CODE") {
             qrImageContainer.innerHTML = `<p class="text-red-500">${i18next.t("AdminSettings.REGCode.DefaultError")}</p>`;
             return;
           }
@@ -265,7 +273,7 @@
 
           const data = await response.json();
           regCode = data.new_reg_code;
-          closeQRCodeModal()
+          closeQRCodeModal();
         } catch (error) {
           regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateError");
           console.error("Error regenerating code:", error);
@@ -330,6 +338,34 @@
             console.error("Error sending vacuum request:", error);
           });
       }
+
+      // Make new Backup and store the returned File IT IS NOT A JSON RESPONSE!!!!!
+      function sendBackupRequest() {
+        apiFetch("/api/v1/settings/backupdb", {
+          method: "POST"
+        })
+          .then((response) => {
+            if (response.ok) {
+              return response.blob();
+            }
+            throw new Error("Network response was not ok");
+          })
+          .then((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_${crypto.randomUUID()}.sql`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            loadSystemStats();
+          })
+          .catch((error) => {
+            console.error("Error sending backup request:", error);
+          });
+      }
+
 
       /**
        * Updates the disabled state of QR code buttons based on the toggle's status.
