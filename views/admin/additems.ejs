@@ -497,7 +497,7 @@
 
         if (packSize > 0 && packPrice > 0) {
           const itemPrice = packPrice / packSize;
-          priceInput.value = itemPrice.toFixed(2);
+          priceInput.value = (Math.ceil(itemPrice * 100) / 100).toFixed(2); // Make sure to round up to the nearest cent
         }
       }
 
