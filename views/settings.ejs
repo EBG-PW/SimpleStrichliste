@@ -166,7 +166,7 @@
           formContainer.classList.remove("hidden");
         } catch (error) {
           console.error("Error loading user data:", error);
-          loadingSpinner.innerHTML = `<p class="text-red-500">Could not load user data. Please try again later.</p>`;
+          loadingSpinner.innerHTML = `<p class="text-red-500">${i18next.t("Settings.ErrorLoadingUserData")}</p>`;
         }
       }
       /**
@@ -190,11 +190,10 @@
 
           const response_json = await response.json();
           if (response.ok) {
-            showMessage(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully.`);
-
+            showMessage(i18next.t("Settings.SettingsUpdatedSuccsess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
             inputField.classList.add("ring-2", "ring-green-500");
 
-            setTimeout(() => {
+              setTimeout(() => {
               inputField.classList.remove("ring-2", "ring-green-500");
             }, 5000);
           } else {

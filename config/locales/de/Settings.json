@@ -11,6 +11,8 @@
     "Button": {
         "Password": "Passwort ändern"
     },
+    "SettingsUpdatedSuccsess": "{{Setting}} erfolgreich aktualisiert.",
+    "ErrorLoadingUserData": "Fehler beim Laden der Benutzerdaten.",
     "PasswordsDoNotMatch": "Die Passwörter stimmen nicht überein.",
     "PasswordChangedSuccessfully": "Passwort erfolgreich geändert.",
     "CurrentPasswordIsIncorrect": "Das aktuelle Passwort ist inkorrekt.",

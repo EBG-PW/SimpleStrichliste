@@ -2,7 +2,8 @@
   "PageTitle": "Einstellungen",
   "Stats": {
     "Title": "Systemstatistiken",
-    "Version": "Version",
+    "TitleVersion": "Systemstatistiken (v{{version}})",
+    "CPUNutzung": "CPU-Nutzung",
     "DBSize": "Datenbankgröße",
     "Uptime": "Betriebszeit",
     "MemRss": "Arbeitsspeicher (Gesamt)",
