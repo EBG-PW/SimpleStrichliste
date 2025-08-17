@@ -540,6 +540,7 @@
         submitButton.innerHTML = `<span>${i18next.t("Items.Button.Saving")}</span>`;
 
         const formData = new FormData(createItemForm);
+
         if (croppedImageBlob) {
           formData.set("image", croppedImageBlob, "cropped_image.png");
         }
@@ -550,7 +551,7 @@
             body: formData,
           });
 
-          const result = await response.json();
+          const response_json = await response.json();
 
           if (response.ok) {
             submitButton.classList.remove(...originalButtonClasses);
@@ -576,9 +577,10 @@
             submitButton.classList.add("bg-red-600");
             if (response.status === 409) {
               submitButton.innerHTML = `<span>${i18next.t("Items.Response.DBUNIQUE")}</span>`;
-            } else {
-              submitButton.innerHTML = `<span>${response.message}</span>`;
             }
+            const input_name = response_json.reason[0].path[0];
+            const input_type = response_json.reason[0].type;
+            submitButton.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Items.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
           }
         } catch (error) {
           console.error("Submission failed:", error);

@@ -25,7 +25,7 @@ const newItemSchema = Joi.object({
     stock: Joi.number().integer().min(0).required(),
     targetStock: Joi.number().integer().min(0).required(),
     packSize: Joi.number().integer().min(1).required(),
-    packPrice: Joi.number().integer().min(1).required(),
+    packPrice: Joi.number().positive().min(1).required(),
     category: Joi.fullysanitizedString().valid(...Object.keys(gategories_conf)).required()
 });
 
