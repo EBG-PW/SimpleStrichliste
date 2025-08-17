@@ -17,8 +17,9 @@
     "Button": "Code als QR-Code anzeigen",
     "RegenerateButton": "Code regenerieren",
     "RegenerateError": "Fehler beim Regenerieren des Codes",
+    "DefaultError": "Bitte generiere einen neuen Code.",
     "ModalTitle": "Registrierungs QR-Code",
-    "ModalDescription": "Gib diesen Code zu allen Nutzern, scanne ihn mit der Kamera um zur Registrierung zu gelangen."
+    "ModalDescription": "Gib diesen Code allen Nutzern, scanne ihn mit der Kamera um zur Registrierung zu gelangen."
 },
   "UserShoppinglist": {
     "Title": "Einkaufslisten für Benutzer",

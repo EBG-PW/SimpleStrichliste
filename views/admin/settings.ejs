@@ -165,7 +165,6 @@
         const sDisplay = s > 0 ? s + (s == 1 ? " Sek" : " Sek") : "";
 
         let result = (dDisplay + hDisplay + mDisplay + sDisplay).trim();
-        console.log("Formatted uptime:", result);
         if (result.endsWith(",")) result = result.slice(0, -1);
         return result || "...";
       }
@@ -223,11 +222,16 @@
 
           qrImageContainer.innerHTML = "";
 
+          if(regCode === "DEFAULT_REG_CODE") {
+            qrImageContainer.innerHTML = `<p class="text-red-500">${i18next.t("AdminSettings.REGCode.DefaultError")}</p>`;
+            return;
+          }
+
           // Generate QR Code
           const typeNumber = 4;
           const errorCorrectionLevel = "L";
           const qr = qrcode(typeNumber, errorCorrectionLevel);
-          qr.addData(regCode);
+          qr.addData(`<%= domain %>/register?REGCODE=${regCode}`);
           qr.make();
 
           qrImageContainer.innerHTML = qr.createImgTag(6, 8);
@@ -334,7 +338,6 @@
         const displayBtn = document.getElementById("display-qr-code-btn");
         const regenerateBtn = document.getElementById("regenerate-reg-code-btn");
 
-        // Assumes the toggle's 'checked' property is already set from your getSettings() call
         const isActive = regCodeToggle.checked;
 
         if (isActive) {
@@ -343,19 +346,13 @@
         } else {
           displayBtn.disabled = true;
           regenerateBtn.disabled = true;
-          // Also hide the QR code if the setting is disabled
-          document.getElementById("qr-code-container").classList.add("hidden");
         }
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        loadSystemStats();
-        getSettings();
-        updateRegCodeButtonsState();
-
-        const regCodeToggle = document.getElementById("reg-code-toggle");
-        const showQrBtn = document.getElementById("show-qr-btn");
-        const qrCodeContainer = document.getElementById("qr-code-container");
+      document.addEventListener("DOMContentLoaded", async () => {
+        await loadSystemStats();
+        await getSettings();
+        await updateRegCodeButtonsState();
       });
     </script>
   </body>

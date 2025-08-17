@@ -12,12 +12,16 @@
         "Email": "E-Mail",
         "Username": "Benutzername",
         "Password": "Passwort",
+        "PasswordRepeat": "Passwort wiederholen",
         "Language": "Sprache",
-        "Submit": "Erstelle Account"
+        "Submit": "Erstelle Account",
+        "RegCode": "Registrierungs-Code"
     },
     "Error": {
         "Connection": "Verbindungsfehler",
         "LoadUser": "Fehler beim Laden der Daten, prüfe die Konsole für Details.",
+        "PasswordMismatch": "Die Passwörter stimmen nicht überein.",
+        "InvalidRegCode": "Du benötigst einen gültigen Registrierungs-Code um dich zu registrieren. Wende dich an den Administrator.",
         "UserExists": "Ein Benutzer mit diesem Benutzernamen oder dieser E-Mail-Adresse existiert bereits."
     }
 }

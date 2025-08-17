@@ -1,6 +1,7 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
+const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
 const HyperExpress = require('hyper-express');
@@ -13,6 +14,7 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const userSchema = Joi.object({
+    reg_code: Joi.fullysanitizedString().allow('').min(32).max(32),
     name: Joi.fullysanitizedString().min(1).max(100).required(),
     email: Joi.string().email().required(),
     username: Joi.fullysanitizedString().min(3).max(30).required(),
@@ -79,6 +81,13 @@ router.post('/admin', limiter(20), async (req, res) => {
  */
 router.post('/', limiter(20), async (req, res) => {
     const body = await userSchema.validateAsync(await req.json());
+
+    if (await checkIfSettingTrue('REG_CODE_ACTIVE')) {
+        const regCode = await getSetting('REG_CODE');
+        if (body.reg_code !== regCode) {
+            return res.status(403).json({ error: 'Invalid registration code' });
+        }
+    }
 
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
         await createUser(body.name, body.email, body.username, password_hash);
