@@ -404,6 +404,10 @@
         await loadSystemStats();
         await getSettings();
         await updateRegCodeButtonsState();
+
+        setInterval(() => {
+          loadSystemStats();
+        }, 5000);
       });
     </script>
   </body>

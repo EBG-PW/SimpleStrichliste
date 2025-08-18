@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, getUserByUUID, getUsers, updateBalance, updateUserNameByUUID, } = require('@lib/sqlite/users');
+const { countUsers, getUserByUUID, getUsers, updateBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID } = require('@lib/sqlite/users');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
