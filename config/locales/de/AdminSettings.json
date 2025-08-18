@@ -17,6 +17,7 @@
     "ToggleLabel": "Code aktivieren",
     "Button": "Code als QR-Code anzeigen",
     "RegenerateButton": "Code regenerieren",
+    "RegenerateSuccess": "Code erfolgreich regeneriert",
     "RegenerateError": "Fehler beim Regenerieren des Codes",
     "DefaultError": "Bitte generiere einen neuen Code.",
     "ModalTitle": "Registrierungs QR-Code",

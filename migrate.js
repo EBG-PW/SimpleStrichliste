@@ -49,22 +49,6 @@ function applyMigrations() {
         process.exit(1);
     }
 
-    try {
-         db.exec(`
-            CREATE TABLE IF NOT EXISTS app_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                setting_key TEXT NOT NULL UNIQUE,
-                setting_value TEXT NOT NULL
-            );
-        `);
-        console.log(`Make sure 'app_settings' table exists for seeder.`);
-    } catch (err) {
-        console.error(`Failed to create app_settings table: ${err.message}`);
-        db.close();
-        process.exit(1);
-    }
-
-
     const getAppliedStmt = db.prepare(`SELECT version FROM schema_migrations`);
     const appliedRows = getAppliedStmt.all();
     const appliedVersions = new Set(appliedRows.map(row => row.version));

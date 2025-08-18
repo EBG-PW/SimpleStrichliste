@@ -273,13 +273,27 @@
 
           const data = await response.json();
           regCode = data.new_reg_code;
-          closeQRCodeModal();
+          regenerateBtn.classList.add("bg-green-500");
+          regenerateBtn.classList.add("hover:bg-green-600");
+          regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateSuccess");
+          setTimeout(() => {
+            regenerateBtn.classList.remove("bg-green-500");
+            regenerateBtn.classList.remove("hover:bg-green-600");
+          }, 2000);
         } catch (error) {
+          regenerateBtn.classList.add("bg-red-500");
+          regenerateBtn.classList.add("hover:bg-red-600");
           regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateError");
+          setTimeout(() => {
+            regenerateBtn.classList.remove("bg-red-500");
+            regenerateBtn.classList.remove("hover:bg-red-600");
+          }, 2000);
           console.error("Error regenerating code:", error);
         } finally {
-          regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateButton");
           regenerateBtn.disabled = false;
+          setTimeout(() => {
+            regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateButton");
+          }, 2000);
         }
       }
 
