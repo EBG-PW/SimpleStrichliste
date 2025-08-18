@@ -8,5 +8,7 @@ module.exports = {
     "/admin/items": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories", "Items"],
     "/admin/categories": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
     "/admin/additems": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories", "Items"],
-    "/admin/settings": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminSettings"]
+    "/admin/settings": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminSettings"],
+    "/admin/users": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminUsers"],
+    "/admin/edituser": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminUser"],
 }

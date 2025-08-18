@@ -1,0 +1,19 @@
+{
+    "PageTitle": "Benutzerverwaltung",
+    "SearchPlaceholder": "Benutzer suchen...",
+    "Table": {
+        "Name": "Name",
+        "Username": "Benutzername",
+        "Role": "Rolle",
+        "Balance": "Kontostand"
+    },
+    "BalanceModal": {
+        "Title": "Guthaben hinzufügen",
+        "Editing": "Guthaben von:",
+        "Saving": "Guthaben wird hinzugefügt...",
+        "SaveButton": "Guthaben hinzufügen"
+    },
+    "Pagination": {
+        "PageInfo": "Nutzer {{startUser}} bis {{endUser}} von {{totalUsers}}"
+    }
+}

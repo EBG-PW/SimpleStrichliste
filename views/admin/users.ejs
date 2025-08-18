@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle">Benutzerliste</title>
+    <script>
+      const lang = <%- JSON.stringify(language) %>;
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <style>
+      #balance-modal-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      #balance-modal-overlay.active #balance-modal-content {
+        transform: scale(1);
+      }
+      
+      .sortable-header {
+        cursor: pointer;
+        user-select: none;
+      }
+      .sortable-header:hover {
+        background-color: #f9fafb;
+      }
+      .sort-icon {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        margin-left: 0.25rem;
+        opacity: 0.5;
+        vertical-align: middle;
+      }
+      .sortable-header.active .sort-icon {
+        opacity: 1;
+      }
+      .pagination-btn {
+        min-width: 2.5rem;
+      }
+      .pagination-btn.active {
+        z-index: 10;
+        color: #ffffff;
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100 font-sans">
+    <%- html_content.navbar %>
+
+    <main class="container mx-auto p-4 md:p-6">
+      <header class="flex items-center mb-6">
+        <a href="/admin/index" aria-label="Go back" class="text-gray-500 hover:text-gray-800 mr-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800" data-translate="AdminUsers.PageTitle"></h1>
+      </header>
+
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="mb-4">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <input type="text" id="search-input" onkeyup="handleSearch(event)" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search for users..." data-translate-placeholder="AdminUsers.SearchPlaceholder" />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" onclick="handleSort('name')">
+                  <span data-translate="AdminUsers.Table.Name"></span>
+                  <span class="sort-icon" data-sort-key="name"></span>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" onclick="handleSort('username')">
+                  <span data-translate="AdminUsers.Table.Username"></span>
+                  <span class="sort-icon" data-sort-key="username"></span>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" onclick="handleSort('user_role')">
+                  <span data-translate="AdminUsers.Table.Role"></span>
+                  <span class="sort-icon" data-sort-key="user_role"></span>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" onclick="handleSort('balance')">
+                  <span data-translate="AdminUsers.Table.Balance"></span>
+                  <span class="sort-icon" data-sort-key="balance"></span>
+                </th>
+                <th scope="col" class="relative px-6 py-3">
+                  <span class="sr-only"></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="user-list-body" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+
+        <div id="pagination-container" class="flex items-center justify-between mt-4"></div>
+      </div>
+    </main>
+
+    <div id="balance-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
+      <div id="balance-modal-content" class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center relative transform scale-95 transition-transform duration-300">
+        <button onclick="closeBalanceModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+        <h2 class="text-xl font-bold text-gray-800 mb-4" data-translate="AdminUsers.BalanceModal.Title"></h2>
+        <p class="mb-4 text-gray-700">
+          <span data-translate="AdminUsers.BalanceModal.Editing"></span> <span id="modal-user-name" class="font-semibold"></span>
+        </p>
+        <input type="number" id="balance-input" class="w-full text-center text-2xl font-bold p-2 border-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
+        <div class="grid grid-cols-4 gap-2 my-4">
+          <button onclick="addToBalance(5)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg transition">+5</button>
+          <button onclick="addToBalance(10)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg transition">+10</button>
+          <button onclick="addToBalance(20)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg transition">+20</button>
+          <button onclick="addToBalance(50)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg transition">+50</button>
+        </div>
+        <button id="save-balance-btn" onclick="saveBalance()" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition" data-translate="AdminUsers.BalanceModal.SaveButton"></button>
+      </div>
+    </div>
+
+    <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+      let searchQuery = "", sortColumn = "name", sortDirection = "asc", searchTimeout = null, currentEditingUser = null;
+      let currentPage = 1, totalPages = 1, totalUsers = 0;
+      const usersPerPage = 5;
+
+      function formatCurrency(amount) { return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount); }
+      const sortIconAsc = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>`;
+      const sortIconDesc = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>`;
+
+      async function fetchUsers() {
+        const tableBody = document.getElementById("user-list-body");
+        tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">${i18next.t("AdminUsers.Table.Loading")}</td></tr>`;
+        try {
+          const params = new URLSearchParams({ search: searchQuery, sort: sortColumn, dir: sortDirection, page: currentPage, limit: usersPerPage });
+          const response = await apiFetch(`/api/v1/admin/users?${params.toString()}`);
+          if (!response.ok) throw new Error("Network response was not ok");
+          const result = await response.json();
+          totalPages = result.pagination.totalPages;
+          totalUsers = result.pagination.totalItems;
+          renderUserTable(result.data);
+          renderPaginationControls();
+        } catch (error) {
+          console.error("Error fetching users:", error);
+          tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">${i18next.t("AdminUsers.Table.Error")}</td></tr>`;
+        }
+      }
+
+      function renderUserTable(users) {
+        const tableBody = document.getElementById("user-list-body");
+        tableBody.innerHTML = "";
+        if (!users || users.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">${i18next.t("AdminUsers.Table.NoResults")}</td></tr>`;
+          return;
+        }
+        users.forEach(user => {
+          const row = document.createElement("tr");
+          row.className = "hover:bg-gray-50 cursor-pointer";
+          row.onclick = () => (window.location.href = `/admin/${user.uuid}/edituser`);
+          row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.name}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.username}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.user_role}</td>`;
+          
+          const balanceCell = document.createElement("td");
+          balanceCell.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-500";
+          balanceCell.innerHTML = `<div class="flex items-center space-x-2"><span class="font-mono">${formatCurrency(user.balance)}</span><button title="Edit Balance" class="p-1 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h1.5M12 12.75a.75.75 0 000-1.5.75.75 0 000 1.5z" /></svg></button></div>`;
+          balanceCell.querySelector('button').onclick = e => { e.stopPropagation(); openBalanceModal(user); };
+          row.appendChild(balanceCell);
+
+          const actionsCell = document.createElement("td");
+          actionsCell.className = "px-6 py-4 whitespace-nowrap text-right text-sm font-medium";
+          actionsCell.innerHTML = `<button title="Edit User" class="p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg></button>`;
+          actionsCell.querySelector('button').onclick = e => { e.stopPropagation(); window.location.href = `/admin/${user.uuid}/edituser`; };
+          row.appendChild(actionsCell);
+          
+          tableBody.appendChild(row);
+        });
+        updateSortIndicators();
+      }
+
+      function renderPaginationControls() {
+        const container = document.getElementById('pagination-container');
+        container.innerHTML = '';
+        if (totalUsers === 0) return;
+
+        const infoText = document.createElement('span');
+        infoText.className = 'text-sm text-gray-700';
+        const startUser = (currentPage - 1) * usersPerPage + 1;
+        const endUser = Math.min(currentPage * usersPerPage, totalUsers);
+        infoText.textContent = i18next.t("AdminUsers.Pagination.PageInfo", { startUser, endUser, totalUsers });
+        
+        const nav = document.createElement('nav');
+        nav.className = 'relative z-0 inline-flex rounded-md shadow-sm -space-x-px';
+        
+        const pageNumbers = getPaginationNumbers();
+        
+        const prevBtn = createPaginationButton('«', currentPage > 1, () => goToPage(currentPage - 1));
+        nav.appendChild(prevBtn);
+
+        pageNumbers.forEach(page => {
+            if (page === '...') {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
+                ellipsis.textContent = '...';
+                nav.appendChild(ellipsis);
+            } else {
+                const btn = createPaginationButton(page, true, () => goToPage(page));
+                if (page === currentPage) btn.classList.add('active');
+                nav.appendChild(btn);
+            }
+        });
+
+        const nextBtn = createPaginationButton('»', currentPage < totalPages, () => goToPage(currentPage + 1));
+        nav.appendChild(nextBtn);
+
+        container.appendChild(infoText);
+        container.appendChild(nav);
+      }
+
+      function createPaginationButton(text, enabled, onClick) {
+          const btn = document.createElement('button');
+          btn.className = 'pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed';
+          btn.textContent = text;
+          btn.disabled = !enabled;
+          if (enabled) btn.onclick = onClick;
+          return btn;
+      }
+
+      function getPaginationNumbers() {
+          const delta = 1;
+          const range = [];
+          for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+              range.push(i);
+          }
+          if (currentPage - delta > 2) range.unshift('...');
+          if (currentPage + delta < totalPages - 1) range.push('...');
+          range.unshift(1);
+          if (totalPages > 1) range.push(totalPages);
+          return [...new Set(range)];
+      }
+
+      function updateSortIndicators() {
+          document.querySelectorAll(".sortable-header").forEach(h => h.classList.remove("active"));
+          document.querySelectorAll(".sort-icon").forEach(i => i.innerHTML = '');
+          const activeHeader = document.querySelector(`.sortable-header[onclick="handleSort('${sortColumn}')"]`);
+          const activeIcon = document.querySelector(`.sort-icon[data-sort-key='${sortColumn}']`);
+          if(activeHeader && activeIcon) {
+              activeHeader.classList.add("active");
+              activeIcon.innerHTML = sortDirection === 'asc' ? sortIconAsc : sortIconDesc;
+          }
+      }
+
+      function handleSearch(event) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchQuery = event.target.value;
+          goToPage(1);
+        }, 300); 
+      }
+
+      function handleSort(columnKey) {
+        sortDirection = (sortColumn === columnKey && sortDirection === "asc") ? "desc" : "asc";
+        sortColumn = columnKey;
+        goToPage(1);
+      }
+      
+      function goToPage(pageNumber) {
+        if (pageNumber < 1 || pageNumber > totalPages) return;
+        currentPage = pageNumber;
+        fetchUsers();
+      }
+
+      function openBalanceModal(user) {
+        currentEditingUser = user;
+        document.getElementById("modal-user-name").textContent = user.name;
+        document.getElementById("balance-input").value = 0;
+        document.getElementById("balance-modal-overlay").classList.add("active");
+      }
+
+      function closeBalanceModal() {
+        document.getElementById("balance-modal-overlay").classList.remove("active");
+        currentEditingUser = null;
+      }
+
+      function addToBalance(amount) {
+        const input = document.getElementById("balance-input");
+        input.value = (parseFloat(input.value) || 0) + amount;
+      }
+
+      async function saveBalance() {
+        if (!currentEditingUser) return;
+        const saveBtn = document.getElementById("save-balance-btn");
+        saveBtn.disabled = true;
+        saveBtn.textContent = i18next.t("AdminUsers.BalanceModal.Saving");
+        try {
+          const response = await apiFetch(`/api/v1/admin/users/balance`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uuid: currentEditingUser.uuid, add: parseFloat(document.getElementById("balance-input").value) }),
+          });
+          if (!response.ok) throw new Error((await response.json()).message || "Failed to save balance.");
+          closeBalanceModal();
+          fetchUsers();
+        } catch (error) {
+          console.error("Error saving balance:", error);
+          alert("Error: " + error.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = i18next.t("AdminUsers.BalanceModal.SaveButton");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchUsers);
+    </script>
+  </body>
+</html>
