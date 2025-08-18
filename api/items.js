@@ -1,7 +1,7 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
-const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories } = require('@lib/sqlite/items');
+const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue } = require('@lib/sqlite/items');
 const Joi = require('@lib/sanitizer');
 const { writeImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, convertToWebp } = require('@lib/utils');
@@ -44,6 +44,7 @@ router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limit
 router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
     const query = await searchSchema.validateAsync(req.query);
     const flatItemsAndCategories = await getItemsAndCategories(query.query);
+    const totalInventoryValue = await getTotalInventoryValue();
 
     const groupedItems = flatItemsAndCategories.reduce((acc, currentItem) => {
         const category = currentItem.category_name;
@@ -58,7 +59,7 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
         return acc;
     }, {});
 
-    res.json(groupedItems);
+    res.json({groupedItems, totalInventoryValue});
 });
 
 router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {

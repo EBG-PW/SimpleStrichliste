@@ -1,9 +1,10 @@
 {
     "Form": {
         "Headline": "Kontoeinstellungen",
-        "Description": "Bearbeiten Sie Ihr Profil und die Anwendungseinstellungen.",
+        "Description": "Bearbeite dein Profil und die Anwendungseinstellungen.",
+        "OtherDescription": "Bearbeite das Profil des Nutzers",
         "PasswordHeadline": "Passwort ändern",
-        "PasswordDescription": "Aktualisieren Sie Ihr Passwort auf ein neues.",
+        "PasswordDescription": "Aktualisiere dein Passwort auf ein neues.",
         "CurrentPassword": "Aktuelles Passwort",
         "NewPassword": "Neues Passwort",
         "ConfirmPassword": "Passwort bestätigen"

@@ -1,12 +1,12 @@
 {
-    "PageTitle": "Kategorien",
-    "Description": "Aktiviere oder deaktiviere Kategorien, die du in der Strichliste verwenden möchtest.",
-    "Drinks": "Getränke",
-    "Snacks": "Snacks",
-    "Meals": "Mahlzeiten",
-    "Fruits": "Obst",
-    "Icecream": "Eiscreme",
-    "Alcoholic": "Alkoholische Getränke",
-    "Tools": "Werkzeuge",
-    "None": "Keine Kategorien Verfügbar"
+  "PageTitle": "Kategorien",
+  "Description": "Aktiviere oder deaktiviere Kategorien, die du in der Strichliste verwenden möchtest.",
+  "Drinks": "Getränke{{cost, cost}}",
+  "Snacks": "Snacks{{cost, cost}}",
+  "Meals": "Mahlzeiten{{cost, cost}}",
+  "Fruits": "Obst{{cost, cost}}",
+  "Icecream": "Eiscreme{{cost, cost}}",
+  "Alcoholic": "Alkoholische Getränke{{cost, cost}}",
+  "Tools": "Werkzeuge{{cost, cost}}",
+  "None": "Keine Kategorien Verfügbar"
 }

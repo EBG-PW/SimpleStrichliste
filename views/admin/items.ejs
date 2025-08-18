@@ -32,7 +32,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
         </a>
-        <h1 class="text-3xl font-bold text-gray-800" data-translate="Items.PageTitle"></h1>
+        <h1 class="text-3xl font-bold text-gray-800" id="page-title" data-translate="Items.PageTitle"></h1>
       </header>
 
       <div class="mb-6">
@@ -108,24 +108,29 @@
 
           if (!response.ok) throw new Error("Failed to fetch items");
 
-          const groupedItems = await response.json();
+          const response_json = await response.json();
           categoriesContainer.innerHTML = "";
 
+          document.getElementById("page-title").innerText = i18next.t("Items.PageTitle", { cost: response_json.totalInventoryValue.toFixed(2).replace(".", ",") });
+
           // Handle case where no items are found
-          if (Object.keys(groupedItems).length === 0) {
+          if (Object.keys(response_json.groupedItems).length === 0) {
             categoriesContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t("Items.NoResults")}</p>`;
           } else {
-            for (const categoryName in groupedItems) {
-              const items = groupedItems[categoryName];
+            for (const categoryName in response_json.groupedItems) {
+              const items = response_json.groupedItems[categoryName];
 
-              const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${i18next.t(`Categories.${categoryName}`)}</h2>`;
               const gridContainer = document.createElement("div");
               gridContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4";
 
               let cardsHtml = "";
+              let categoryTotalCost = 0;
               items.forEach((item) => {
                 cardsHtml += createItemCard(item);
+                categoryTotalCost += item.price * item.stock;
               });
+
+              const categoryHeader = `<h2 class="text-2xl font-bold mt-8 mb-4">${i18next.t(`Categories.${categoryName}`, { cost: categoryTotalCost.toFixed(2).replace(".", ",") })}</h2>`;
 
               cardsHtml += createAddItemCard(categoryName);
               gridContainer.innerHTML = cardsHtml;

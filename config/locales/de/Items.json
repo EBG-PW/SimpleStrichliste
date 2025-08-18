@@ -1,12 +1,12 @@
 {
-    "PageTitle": "Artikel Verwaltung",
+    "PageTitle": "Artikel Verwaltung {{cost, cost}}",
     "Loading": "Lade Artikel...",
     "NoResults": "Keine Artikel gefunden.",
     "LoadFailed": "Fehler beim Laden der Artikel.",
     "SearchPlaceholder": "Artikel suchen...",
     "Create": {
         "Headline": "Neuen Artikel erstellen",
-        "Description": "Fülle die Details aus"
+        "Description": "Fülle alle Felder aus"
     },
     "Edit": {
         "Headline": "Artikel bearbeiten",
