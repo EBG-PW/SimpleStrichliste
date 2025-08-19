@@ -1,6 +1,7 @@
 {
   "PageTitle": "Kategorien",
   "Description": "Aktiviere oder deaktiviere Kategorien, die du in der Strichliste verwenden möchtest.",
+  "Overview": "Übersicht",
   "Drinks": "Getränke{{cost, cost}}",
   "Snacks": "Snacks{{cost, cost}}",
   "Meals": "Mahlzeiten{{cost, cost}}",

@@ -4,6 +4,7 @@
     "NoResults": "Keine Artikel gefunden.",
     "LoadFailed": "Fehler beim Laden der Artikel.",
     "SearchPlaceholder": "Artikel suchen...",
+    "InStock": "Auf Lager {{stock, stock}}",
     "Create": {
         "Headline": "Neuen Artikel erstellen",
         "Description": "Fülle alle Felder aus"
