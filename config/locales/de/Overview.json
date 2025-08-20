@@ -1,4 +1,9 @@
 {
     "Current_Balance": "Aktuelles Guthaben",
-    "Favorites": "Favoriten"
+    "Favorites": "Favoriten",
+    "Balance": "{{price, price}}",
+    "PricePerItem": "{{price, price}} / Stück",
+    "Price": "{{price, price}}",
+    "BuyConfirm": "Kaufen für {{price, price}}",
+    "PurchaseSuccess": "Kauf erfolgreich!"
 }

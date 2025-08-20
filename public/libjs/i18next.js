@@ -10,6 +10,7 @@ document.cookie = `language=${localLang}; path=/`;
             lng: localLang,
             fallbackLng: 'de',
             debug: true,
+            compatibilityJSON: 'v3',
             resources: {
                 [localLang]: {
                     translation: lang
@@ -26,18 +27,19 @@ document.cookie = `language=${localLang}; path=/`;
                         const formattedCost = parseFloat(value).toFixed(2).replace('.', ',');
                         return ` (${formattedCost} €)`;
                     }
+                    if (format === 'price') {
+                        if (value === undefined || value === null) {
+                            return '';
+                        }
+                        const formattedCost = parseFloat(value).toFixed(2).replace('.', ',');
+                        return ` ${formattedCost} €`;
+                    }
                     if (format === 'date') {
                         if (value === undefined || value === null) {
                             return '';
                         }
                         const date = new Date(value);
                         return date.toLocaleDateString(lng, { year: 'numeric', month: '2-digit', day: '2-digit' });
-                    }
-                    if (format === 'stock') {
-                        if (value === undefined || value === null) {
-                            return '';
-                        }
-                        return value
                     }
                     return value;
                 }

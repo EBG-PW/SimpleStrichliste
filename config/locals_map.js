@@ -4,6 +4,7 @@ module.exports = {
     "/register": ["Setup", "Error", "Page"],
     "/overview": ["Overview", "Error", "Page", "Navbar", "Categories", "Items"],
     "/settings": ["Settings", "Error", "Page", "Setup", "Navbar", "Categories"],
+    "/transaction_history": ["Items", "Error", "Page", "Navbar", "Items"],
     "/admin/index": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
     "/admin/items": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories", "Items"],
     "/admin/categories": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],

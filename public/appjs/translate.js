@@ -59,9 +59,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         navbarmobile.innerHTML += `<a href="/" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Overview')}</a>`
         navbardesktop.innerHTML += `<a href="/" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Overview')}</a>`
 
-        if (checkPermission('app.user.purchase.history.*').result) {
-            navbarmobile.innerHTML += `<a href="/purchase_history" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_History')}</a>`
-            navbardesktop.innerHTML += `<a href="/purchase_history" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_History')}</a>`
+        if (checkPermission('app.user.history.*').result) {
+            navbarmobile.innerHTML += `<a href="/transaction_history" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_history')}</a>`
+            navbardesktop.innerHTML += `<a href="/transaction_history" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_history')}</a>`
         }
 
         if (checkPermission('app.user.settings.*').result) {

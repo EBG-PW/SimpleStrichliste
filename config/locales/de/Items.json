@@ -1,10 +1,16 @@
 {
     "PageTitle": "Artikel Verwaltung {{cost, cost}}",
+    "HistoryHeader": "Artikelverlauf",
     "Loading": "Lade Artikel...",
     "NoResults": "Keine Artikel gefunden.",
     "LoadFailed": "Fehler beim Laden der Artikel.",
     "SearchPlaceholder": "Artikel suchen...",
-    "InStock": "Auf Lager {{stock, stock}}",
+    "InStock": "{{count}} Stück auf Lager",
+    "InStock_plural": "{{count}} Stücke auf Lager",
+    "PurchaseTitle": "{{count}} x {{name}} gekauft",
+    "HistoryAmmount": "{{sign}}{{amount}} €",
+    "SystemTransaction": "Systemtransaktion",
+    "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
     "Create": {
         "Headline": "Neuen Artikel erstellen",
         "Description": "Fülle alle Felder aus"
@@ -36,6 +42,7 @@
         "Success": "Artikel erfolgreich erstellt",
         "SuccessSave": "Artikel erfolgreich gespeichert",
         "DBUNIQUE": "Artikel mit diesem Namen existiert bereits",
-        "Error": "Fehler"
+        "Error": "Fehler",
+        "ErrorLoading": "Fehler beim Laden der Daten"
     }
 }

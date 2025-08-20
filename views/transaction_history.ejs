@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle"></title>
+    <script>
+      const lang = <%- JSON.stringify(language) %>;
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <style>
+        body {
+            padding-bottom: 80px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .transaction-item {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <%- html_content.navbar %>
+
+    <div id="app-container" class="max-w-2xl mx-auto p-4">
+
+        <header class="flex items-center justify-between mb-6">
+            <a href="/store" class="p-2 rounded-md hover:bg-gray-200 transition-colors" aria-label="Back to store">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 id="pageHeader" class="text-2xl font-bold text-gray-800"></h1>
+            <div class="w-8"></div>
+        </header>
+
+        <main id="transactions-container"></main>
+        
+        <div id="loading-indicator" class="hidden">
+            <div class="loader"></div>
+        </div>
+
+    </div>
+    
+    <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const transactionsContainer = document.getElementById('transactions-container');
+            const loadingIndicator = document.getElementById('loading-indicator');
+
+            document.getElementById('pageHeader').textContent = i18next.t('Items.HistoryHeader');
+
+            let currentPage = 1;
+            const ITEMS_PER_PAGE = 20;
+            let isLoading = false;
+            let hasMoreData = true;
+
+            const formatTimestamp = (isoString) => {
+                const date = new Date(isoString);
+                const locale = i18next.language === 'de' ? 'de-DE' : 'en-US';
+                return {
+                    date: date.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' }),
+                    time: date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+                };
+            };
+
+            const createTransactionHTML = (tx) => {
+                const { time } = formatTimestamp(tx.transaction_timestamp);
+                const isPurchase = tx.item_id !== 1; // Item_id is System Transaction by an Admin
+                const totalAmount = tx.price_at_transaction * tx.quantity;
+
+                const sign = isPurchase ? '-' : '+';
+                const amountColor = isPurchase ? 'text-red-600' : 'text-green-600';
+                const title = isPurchase ? i18next.t('Items.PurchaseTitle', { count: tx.quantity, name: tx.item_name }) : i18next.t('Items.SystemTransaction');
+
+                const iconOrImage = isPurchase
+                    ? `<img src="/i/items/${tx.item_uuid}" alt="${tx.item_name}" class="w-12 h-12 object-cover rounded-full">`
+                    : `<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                       </div>`;
+
+                return `
+                    <div class="transaction-item flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div class="flex items-center gap-4 min-w-0">
+                            ${iconOrImage}
+                            <div class="min-w-0">
+                                <p class="font-semibold text-gray-800 truncate">${title}</p>
+                                <p class="text-xs text-gray-400">${i18next.t('Items.AuthorizedBy', { name: tx.initiator_name, username: tx.initiator_username, time})}</p>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <p class="font-bold text-lg ${amountColor}">${i18next.t('Items.HistoryAmmount', { amount: totalAmount.toFixed(2), sign: sign })}</p>
+                        </div>
+                    </div>
+                `;
+            };
+            
+            const loadTransactions = async () => {
+                if (isLoading || !hasMoreData) return;
+                isLoading = true;
+                
+                if (currentPage === 1) {
+                    transactionsContainer.innerHTML = '<div class="loader"></div>';
+                } else {
+                    loadingIndicator.classList.remove('hidden');
+                }
+
+                try {
+                    const response = await apiFetch(`/api/v1/transactions?page=${currentPage}&limit=${ITEMS_PER_PAGE}`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const result = await response.json();
+                    let newTransactions;
+
+                    if (result && Array.isArray(result.transactions)) {
+                        newTransactions = result.transactions;
+                    } else {
+                        console.error("API response is not in the expected format:", result);
+                        newTransactions = [];
+                    }
+
+                    if (currentPage === 1) {
+                        transactionsContainer.innerHTML = '';
+                    }
+
+                    if (newTransactions.length === 0 && currentPage === 1) {
+                        transactionsContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t('History.NoTransactions')}</p>`;
+                        hasMoreData = false;
+                        return;
+                    }
+
+                    if (newTransactions.length < ITEMS_PER_PAGE) {
+                        hasMoreData = false;
+                    }
+
+                    const groupedByDay = newTransactions.reduce((acc, tx) => {
+                        const { date } = formatTimestamp(tx.transaction_timestamp);
+                        if (!acc[date]) acc[date] = [];
+                        acc[date].push(tx);
+                        return acc;
+                    }, {});
+
+                    for (const date in groupedByDay) {
+                        let dayGroupContainer = transactionsContainer.querySelector(`.day-group[data-date="${date}"]`);
+                        if (!dayGroupContainer) {
+                            const dayGroupHtml = `
+                                <div class="day-group mb-6" data-date="${date}">
+                                    <h2 class="text-lg font-bold text-gray-700 my-3 px-1">${date}</h2>
+                                    <div class="transactions-for-day flex flex-col gap-3"></div>
+                                </div>`;
+                            transactionsContainer.insertAdjacentHTML('beforeend', dayGroupHtml);
+                            dayGroupContainer = transactionsContainer.querySelector(`.day-group[data-date="${date}"]`);
+                        }
+                        const listElement = dayGroupContainer.querySelector('.transactions-for-day');
+                        const newItemsHtml = groupedByDay[date].map(createTransactionHTML).join('');
+                        listElement.insertAdjacentHTML('beforeend', newItemsHtml);
+                    }
+                    
+                    currentPage++;
+
+                } catch (error) {
+                    console.error("Failed to load transactions:", error);
+                    transactionsContainer.innerHTML = `<p class="text-center text-red-500">${i18next.t('History.Error')}</p>`;
+                } finally {
+                    isLoading = false;
+                    loadingIndicator.classList.add('hidden');
+                }
+            };
+
+            window.addEventListener('scroll', () => {
+                const isNearBottom = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300;
+                if (isNearBottom) {
+                    loadTransactions();
+                }
+            });
+
+            // Initial load
+            loadTransactions();
+        });
+    </script>
+</body>
+</html>

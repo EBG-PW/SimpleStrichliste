@@ -120,7 +120,7 @@ router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async
 router.post('/users/balance', verifyRequest('app.admin.users.balance.write'), limiter(1), async (req, res) => {
     const body = await updateUserBalanceSchema.validateAsync(await req.json());
 
-    await updateBalance(body.uuid, body.add);
+    await updateBalance(body.uuid, body.add, req.user.user_data.id);
 
     res.json({ success: true });
 });

@@ -57,10 +57,12 @@ CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     item_id INTEGER NOT NULL,
+    initiator_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
     price_at_transaction INTEGER NOT NULL,
     transaction_timestamp TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE RESTRICT
 );
 

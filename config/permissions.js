@@ -24,7 +24,7 @@ module.exports = {
             "permissions": [
                 "group.user",
                 "web.user.*",
-                "app.user.settings.*",
+                "app.user.*",
             ],
             "inherit": [
                 "app"

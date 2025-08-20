@@ -9,12 +9,12 @@
         "Settings": "Einstellungen"
     },
     "Card": {
-        "UsersCount_one": "{{count}} Benutzer",
-        "UsersCount_other": "{{count}} Benutzer",
-        "CategoriesCount_one": "{{count}} Kategorie",
-        "CategoriesCount_other": "{{count}} Kategorien",
-        "ItemsCount_one": "{{count}} Artikel",
-        "ItemsCount_other": "{{count}} Artikel",
+        "UsersCount": "{{count}} Benutzer",
+        "UsersCount_plural": "{{count}} Benutzer",
+        "CategoriesCount": "{{count}} Kategorie",
+        "CategoriesCount_plural": "{{count}} Kategorien",
+        "ItemsCount": "{{count}} Artikel",
+        "ItemsCount_plural": "{{count}} Artikel",
         "AppVersion": "Version: {{version}}"
     }
 }
