@@ -8,11 +8,14 @@ const { getDBMigration } = require('@lib/sqlite/utils')
 const { execSync } = require('child_process');
 const { dbVersion } = require('@config/application');
 const { countUsers } = require('@lib/sqlite/users');
+const { backfillStatistics } = require('@lib/sqlite/stats');
 const app = new HyperExpress.Server({
     fast_buffers: process.env.HE_FAST_BUFFERS == 'false' ? false : true || false,
 });
 
 const { log_errors } = require('@config/errors')
+
+backfillStatistics(); // Backfill statistics data
 
 let defaultRoute = '/overview';
 const dbMigration = getDBMigration();

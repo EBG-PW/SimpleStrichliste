@@ -1,3 +1,3 @@
 module.exports = {
-    dbVersion: 1752950874, // Minimum database version
+    dbVersion: 1755730047, // Minimum database version
 }
