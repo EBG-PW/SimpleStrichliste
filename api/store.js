@@ -58,8 +58,7 @@ router.post('/item/:uuid/favorite', verifyRequest('web.user.favorite.write'), li
 router.post('/buy', verifyRequest('web.user.store.write'), limiter(4), async (req, res) => {
     const { uuid, quantity } = await buySchema.validateAsync(await req.json());
 
-    // Simulate a purchase
-    purchaseItem(req.user.user_data.uuid, uuid, quantity, req.user.user_data.id);
+    await purchaseItem(req.user.user_data.uuid, uuid, quantity, req.user.user_data.id);
     return res.json({ success: true });
 });
 

@@ -5,5 +5,8 @@
     "PricePerItem": "{{price, price}} / Stück",
     "Price": "{{price, price}}",
     "BuyConfirm": "Kaufen für {{price, price}}",
-    "PurchaseSuccess": "Kauf erfolgreich!"
+    "PurchaseSuccess": "Kauf erfolgreich!",
+    "PurchaseErrorFunds": "Nicht genügend Guthaben",
+    "PurchaseErrorStock": "Nicht genügend auf Lager",
+    "PurchaseError": "Ein Fehler ist aufgetreten"
 }
