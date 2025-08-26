@@ -1,9 +1,9 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
-const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue } = require('@lib/sqlite/items');
+const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem } = require('@lib/sqlite/items');
 const Joi = require('@lib/sanitizer');
-const { writeImage } = require('@lib/imageStore');
+const { writeImage, deleteImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, convertToWebp } = require('@lib/utils');
 const { InvalidRouteInput } = require('@lib/errors');
 const HyperExpress = require('hyper-express');
@@ -61,6 +61,15 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
 
     res.json({groupedItems, totalInventoryValue});
 });
+
+router.delete('/uuid', verifyRequest('web.admin.items.write'), limiter(4), async (req, res) => {
+    const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);
+    const db_delete_restult = await deleteItem(uuid);
+    if(db_delete_restult) deleteImage('items', uuid, 'webp');
+
+    res.json({message: "Succsess"})
+});
+
 
 router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
     const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);

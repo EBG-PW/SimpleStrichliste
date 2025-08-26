@@ -36,7 +36,8 @@
         "Save": "Änderungen speichern",
         "Cancel": "Abbrechen",
         "CropSave": "Zuschneiden & Bestätigen",
-        "Saving": "Speichern..."
+        "Saving": "Speichern...",
+        "Delete": "Artikel löschen"
     },
     "Response": {
         "Success": "Artikel erfolgreich erstellt",

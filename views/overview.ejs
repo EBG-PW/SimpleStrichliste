@@ -69,6 +69,10 @@
       </div>
     </div>
 
+    <div id="message-box-container" class="fixed bottom-5 right-5 w-full max-w-xs z-[9999]">
+      <div id="message-box" class="hidden mt-4 p-4 rounded-lg shadow-lg"></div>
+    </div>
+
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script>
@@ -147,6 +151,21 @@
             }
           });
         }
+      }
+
+      const messageBox = document.getElementById("message-box");
+      /**
+       * Shows a message to the user.
+       * @param {string} text - The message to display.
+       * @param {('success'|'error')} type - The type of message.
+       */
+      function showMessage(text, type = "success") {
+        messageBox.textContent = text;
+        messageBox.className = `mt-4 p-4 rounded-lg ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`;
+        messageBox.classList.remove("hidden");
+        setTimeout(() => {
+          messageBox.classList.add("hidden");
+        }, 4000);
       }
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -431,21 +450,35 @@
         document.getElementById("popup-buy-confirm").addEventListener("click", async () => {
           const uuid = popupContent.dataset.uuid;
           const quantity = popupContent.dataset.quantity;
-          console.log(`Confirming purchase for ${quantity} of item ${uuid}`);
           try {
-            await apiFetch("/api/v1/store/buy", { method: "POST", body: JSON.stringify({ uuid, quantity }) });
+            const response = await apiFetch("/api/v1/store/buy", { method: "POST", body: JSON.stringify({ uuid, quantity }) });
             // Show success message and color the button green
             const buyBtn = document.getElementById("popup-buy-confirm");
-            buyBtn.classList.add("bg-green-500");
-            buyBtn.classList.add("hover:bg-green-600");
-            buyBtn.textContent = i18next.t("Overview.PurchaseSuccess");
-            reloadData();
-
-            setTimeout(() => {
-              buyBtn.classList.remove("bg-green-500");
-              buyBtn.classList.remove("hover:bg-green-600");
-              closeBuyPopup();
-            }, 2500);
+            if (response.ok) {
+              buyBtn.classList.add("bg-green-500");
+              buyBtn.classList.add("hover:bg-green-600");
+              buyBtn.textContent = i18next.t("Overview.PurchaseSuccess");
+              reloadData();
+              setTimeout(() => {
+                buyBtn.classList.remove("bg-green-500");
+                buyBtn.classList.remove("hover:bg-green-600");
+                closeBuyPopup();
+              }, 2500);
+            } else {
+              const errorData = await response.json();
+              buyBtn.classList.add("bg-red-500");
+              buyBtn.classList.add("hover:bg-red-600");
+              setTimeout(() => {
+                buyBtn.classList.remove("bg-red-500");
+                buyBtn.classList.remove("hover:bg-red-600");
+                closeBuyPopup();
+              }, 2500);
+              if (response.status === 400) {
+                buyBtn.textContent = i18next.t(`Overview.${errorData.message}`);
+              } else {
+                buyBtn.textContent = i18next.t(`Overview.PurchaseError`);
+              }
+            }
           } catch (error) {
             alert(`Fehler beim Kauf: ${error.message}`);
           }
