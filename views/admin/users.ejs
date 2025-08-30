@@ -18,7 +18,7 @@
       #balance-modal-overlay.active #balance-modal-content {
         transform: scale(1);
       }
-      
+
       .sortable-header {
         cursor: pointer;
         user-select: none;
@@ -76,7 +76,7 @@
 
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-gray-50 hidden md:table-header-group">
               <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable-header" onclick="handleSort('name')">
                   <span data-translate="AdminUsers.Table.Name"></span>
@@ -111,9 +111,7 @@
       <div id="balance-modal-content" class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center relative transform scale-95 transition-transform duration-300">
         <button onclick="closeBalanceModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
         <h2 class="text-xl font-bold text-gray-800 mb-4" data-translate="AdminUsers.BalanceModal.Title"></h2>
-        <p class="mb-4 text-gray-700">
-          <span data-translate="AdminUsers.BalanceModal.Editing"></span> <span id="modal-user-name" class="font-semibold"></span>
-        </p>
+        <p class="mb-4 text-gray-700"><span data-translate="AdminUsers.BalanceModal.Editing"></span> <span id="modal-user-name" class="font-semibold"></span></p>
         <input type="number" id="balance-input" class="w-full text-center text-2xl font-bold p-2 border-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
         <div class="grid grid-cols-4 gap-2 my-4">
           <button onclick="addToBalance(5)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg transition">+5</button>
@@ -128,11 +126,19 @@
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script>
-      let searchQuery = "", sortColumn = "name", sortDirection = "asc", searchTimeout = null, currentEditingUser = null;
-      let currentPage = 1, totalPages = 1, totalUsers = 0;
+      let searchQuery = "",
+        sortColumn = "name",
+        sortDirection = "asc",
+        searchTimeout = null,
+        currentEditingUser = null;
+      let currentPage = 1,
+        totalPages = 1,
+        totalUsers = 0;
       const usersPerPage = 5;
 
-      function formatCurrency(amount) { return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount); }
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount);
+      }
       const sortIconAsc = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>`;
       const sortIconDesc = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>`;
 
@@ -161,62 +167,100 @@
           tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">${i18next.t("AdminUsers.Table.NoResults")}</td></tr>`;
           return;
         }
-        users.forEach(user => {
-          const row = document.createElement("tr");
-          row.className = "hover:bg-gray-50 cursor-pointer";
-          row.onclick = () => (window.location.href = `/admin/${user.uuid}/edituser`);
-          row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.name}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.username}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.user_role}</td>`;
-          
-          const balanceCell = document.createElement("td");
-          balanceCell.className = "px-6 py-4 whitespace-nowrap text-sm text-gray-500";
-          balanceCell.innerHTML = `<div class="flex items-center space-x-2"><span class="font-mono">${formatCurrency(user.balance)}</span><button title="Edit Balance" class="p-1 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h1.5M12 12.75a.75.75 0 000-1.5.75.75 0 000 1.5z" /></svg></button></div>`;
-          balanceCell.querySelector('button').onclick = e => { e.stopPropagation(); openBalanceModal(user); };
-          row.appendChild(balanceCell);
 
-          const actionsCell = document.createElement("td");
-          actionsCell.className = "px-6 py-4 whitespace-nowrap text-right text-sm font-medium";
-          actionsCell.innerHTML = `<button title="Edit User" class="p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg></button>`;
-          actionsCell.querySelector('button').onclick = e => { e.stopPropagation(); window.location.href = `/admin/${user.uuid}/edituser`; };
-          row.appendChild(actionsCell);
-          
+        users.forEach((user) => {
+          const row = document.createElement("tr");
+          // On mobile, each row is a block with a border. On desktop, it's a normal table row.
+          row.className = "block mb-4 border rounded-lg shadow-sm md:table-row md:mb-0 md:border-none md:shadow-none hover:bg-gray-50 cursor-pointer";
+          row.onclick = () => (window.location.href = `/admin/${user.uuid}/edituser`);
+
+          // We build the cell content with mobile-only labels and responsive display classes.
+          row.innerHTML = `
+            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <div class="flex justify-between items-center">
+                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Name")}</span>
+                <span class="text-sm font-medium text-gray-900 text-right">${user.name}</span>
+              </div>
+            </td>
+            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <div class="flex justify-between items-center">
+                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Username")}</span>
+                <span class="text-sm text-gray-500 text-right">${user.username}</span>
+              </div>
+            </td>
+            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <div class="flex justify-between items-center">
+                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Role")}</span>
+                <span class="text-sm text-gray-500 text-right">${user.user_role}</span>
+              </div>
+            </td>
+            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <div class="flex justify-between items-center">
+                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Balance")}</span>
+                <div class="flex items-center space-x-2">
+                  <span class="font-mono text-sm text-gray-500">${formatCurrency(user.balance)}</span>
+                  <button title="${i18next.t("AdminUsers.Table.EditBalanceTitle")}" class="balance-edit-btn p-1 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h1.5M12 12.75a.75.75 0 000-1.5.75.75 0 000 1.5z" /></svg>
+                  </button>
+                </div>
+              </div>
+            </td>
+            <td class="block p-3 md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap text-right">
+              <button title="${i18next.t("AdminUsers.Table.EditUserTitle")}" class="user-edit-btn p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg>
+              </button>
+            </td>
+          `;
+
+          row.querySelector(".balance-edit-btn").onclick = (e) => {
+            e.stopPropagation();
+            openBalanceModal(user);
+          };
+
+          row.querySelector(".user-edit-btn").onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = `/admin/${user.uuid}/edituser`;
+          };
+
           tableBody.appendChild(row);
         });
+
         updateSortIndicators();
       }
 
       function renderPaginationControls() {
-        const container = document.getElementById('pagination-container');
-        container.innerHTML = '';
+        const container = document.getElementById("pagination-container");
+        container.innerHTML = "";
         if (totalUsers === 0) return;
 
-        const infoText = document.createElement('span');
-        infoText.className = 'text-sm text-gray-700';
+        const infoText = document.createElement("span");
+        infoText.className = "text-sm text-gray-700";
         const startUser = (currentPage - 1) * usersPerPage + 1;
         const endUser = Math.min(currentPage * usersPerPage, totalUsers);
         infoText.textContent = i18next.t("AdminUsers.Pagination.PageInfo", { startUser, endUser, totalUsers });
-        
-        const nav = document.createElement('nav');
-        nav.className = 'relative z-0 inline-flex rounded-md shadow-sm -space-x-px';
-        
+
+        const nav = document.createElement("nav");
+        nav.className = "relative z-0 inline-flex rounded-md shadow-sm -space-x-px";
+
         const pageNumbers = getPaginationNumbers();
-        
-        const prevBtn = createPaginationButton('«', currentPage > 1, () => goToPage(currentPage - 1));
+
+        const prevBtn = createPaginationButton("«", currentPage > 1, () => goToPage(currentPage - 1));
         nav.appendChild(prevBtn);
 
-        pageNumbers.forEach(page => {
-            if (page === '...') {
-                const ellipsis = document.createElement('span');
-                ellipsis.className = 'relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700';
-                ellipsis.textContent = '...';
-                nav.appendChild(ellipsis);
-            } else {
-                const btn = createPaginationButton(page, true, () => goToPage(page));
-                if (page === currentPage) btn.classList.add('active');
-                nav.appendChild(btn);
-            }
+        pageNumbers.forEach((page) => {
+          if (page === "...") {
+            const ellipsis = document.createElement("span");
+            ellipsis.className = "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700";
+            ellipsis.textContent = "...";
+            nav.appendChild(ellipsis);
+          } else {
+            const btn = createPaginationButton(page, true, () => goToPage(page));
+            if (page === currentPage) btn.classList.add("active");
+            nav.appendChild(btn);
+          }
         });
 
-        const nextBtn = createPaginationButton('»', currentPage < totalPages, () => goToPage(currentPage + 1));
+        const nextBtn = createPaginationButton("»", currentPage < totalPages, () => goToPage(currentPage + 1));
         nav.appendChild(nextBtn);
 
         container.appendChild(infoText);
@@ -224,36 +268,36 @@
       }
 
       function createPaginationButton(text, enabled, onClick) {
-          const btn = document.createElement('button');
-          btn.className = 'pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed';
-          btn.textContent = text;
-          btn.disabled = !enabled;
-          if (enabled) btn.onclick = onClick;
-          return btn;
+        const btn = document.createElement("button");
+        btn.className = "pagination-btn relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed";
+        btn.textContent = text;
+        btn.disabled = !enabled;
+        if (enabled) btn.onclick = onClick;
+        return btn;
       }
 
       function getPaginationNumbers() {
-          const delta = 1;
-          const range = [];
-          for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
-              range.push(i);
-          }
-          if (currentPage - delta > 2) range.unshift('...');
-          if (currentPage + delta < totalPages - 1) range.push('...');
-          range.unshift(1);
-          if (totalPages > 1) range.push(totalPages);
-          return [...new Set(range)];
+        const delta = 1;
+        const range = [];
+        for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+          range.push(i);
+        }
+        if (currentPage - delta > 2) range.unshift("...");
+        if (currentPage + delta < totalPages - 1) range.push("...");
+        range.unshift(1);
+        if (totalPages > 1) range.push(totalPages);
+        return [...new Set(range)];
       }
 
       function updateSortIndicators() {
-          document.querySelectorAll(".sortable-header").forEach(h => h.classList.remove("active"));
-          document.querySelectorAll(".sort-icon").forEach(i => i.innerHTML = '');
-          const activeHeader = document.querySelector(`.sortable-header[onclick="handleSort('${sortColumn}')"]`);
-          const activeIcon = document.querySelector(`.sort-icon[data-sort-key='${sortColumn}']`);
-          if(activeHeader && activeIcon) {
-              activeHeader.classList.add("active");
-              activeIcon.innerHTML = sortDirection === 'asc' ? sortIconAsc : sortIconDesc;
-          }
+        document.querySelectorAll(".sortable-header").forEach((h) => h.classList.remove("active"));
+        document.querySelectorAll(".sort-icon").forEach((i) => (i.innerHTML = ""));
+        const activeHeader = document.querySelector(`.sortable-header[onclick="handleSort('${sortColumn}')"]`);
+        const activeIcon = document.querySelector(`.sort-icon[data-sort-key='${sortColumn}']`);
+        if (activeHeader && activeIcon) {
+          activeHeader.classList.add("active");
+          activeIcon.innerHTML = sortDirection === "asc" ? sortIconAsc : sortIconDesc;
+        }
       }
 
       function handleSearch(event) {
@@ -261,15 +305,15 @@
         searchTimeout = setTimeout(() => {
           searchQuery = event.target.value;
           goToPage(1);
-        }, 300); 
+        }, 300);
       }
 
       function handleSort(columnKey) {
-        sortDirection = (sortColumn === columnKey && sortDirection === "asc") ? "desc" : "asc";
+        sortDirection = sortColumn === columnKey && sortDirection === "asc" ? "desc" : "asc";
         sortColumn = columnKey;
         goToPage(1);
       }
-      
+
       function goToPage(pageNumber) {
         if (pageNumber < 1 || pageNumber > totalPages) return;
         currentPage = pageNumber;
