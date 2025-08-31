@@ -140,3 +140,5 @@ dist
 *.db-shm
 *.db-wal
 /storage
+key.pem
+cert.pem

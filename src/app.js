@@ -9,13 +9,25 @@ const { execSync } = require('child_process');
 const { dbVersion } = require('@config/application');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
+
+let options = {};
+
+if (fs.existsSync(path.join(__dirname, '..', 'cert.pem')) && fs.existsSync(path.join(__dirname, '..', 'key.pem'))) {
+    options = {
+        key_file_name: path.join(process.cwd(), 'key.pem'),
+        cert_file_name: path.join(process.cwd(), 'cert.pem'),
+    };
+}
+
 const app = new HyperExpress.Server({
     fast_buffers: process.env.HE_FAST_BUFFERS == 'false' ? false : true || false,
+    ...options
 });
 
 const { log_errors } = require('@config/errors')
 
 backfillStatistics(); // Backfill statistics data
+
 
 let defaultRoute = '/overview';
 const dbMigration = getDBMigration();
@@ -70,7 +82,7 @@ app.use(expressCspHeader({
             "data:",
             "blob:"
         ],
-        'worker-src': [NONE],
+        'worker-src': [SELF],
         'connect-src': [
             SELF,
             `ws://${process.env.WebSocketURL}`,
@@ -83,7 +95,7 @@ app.use(expressCspHeader({
 const renderer = new ViewRenderer(app, path.join(__dirname, '..', 'views'));
 
 // Register the static routes and overwrite some filename paths internaly
-renderer.registerStaticRoutes(path.join(__dirname, '..', 'views'),["error-xxx.ejs", "navbar.ejs", "footer.ejs"],{});
+renderer.registerStaticRoutes(path.join(__dirname, '..', 'views'), ["error-xxx.ejs", "navbar.ejs", "footer.ejs", "manifest.ejs"], {});
 
 // Register the dynamic routes
 renderer.registerDynamicRoutes();
