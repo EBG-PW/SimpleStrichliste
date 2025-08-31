@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "update": "npx npm-check-updates -u",
     "dev": "nodemon -e js,ejs,json .\\index.js"
   },
   "_moduleAliases": {

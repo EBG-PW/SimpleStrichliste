@@ -5,23 +5,28 @@ const { readImage } = require('@lib/imageStore');
 const sharp = require('sharp')
 const router = new HyperExpress.Router();
 
-// Generate Clean 512x512 with black circle in center
+// Generate 512x512 gray image with question mark
 const defaultImage = sharp({
     create: {
         width: 512,
         height: 512,
         channels: 4,
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
+        background: { r: 128, g: 128, b: 128, alpha: 1 }
     }
-    })
-    .composite([{
+})
+.composite([
+    {
         input: Buffer.from(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><circle cx="256" cy="256" r="256" fill="black" /></svg>'
+            `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+                <rect width="512" height="512" fill="gray"/>
+                <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="320" fill="white" font-family="Arial, Helvetica, sans-serif">?</text>
+            </svg>`
         ),
         blend: 'over'
-    }])
-    .webp({ quality: 70 })
-    .toBuffer();
+    }
+])
+.webp({ quality: 70 })
+.toBuffer();
 
 const uuidCheck = Joi.object({
     route: Joi.string().valid('items').required(),
