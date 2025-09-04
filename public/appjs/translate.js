@@ -76,6 +76,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+const t = (key, options) => {
+    if (typeof i18next !== 'undefined' && i18next.t) {
+        return i18next.t(key, options);
+    }
+    return key;
+};
+
 const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }

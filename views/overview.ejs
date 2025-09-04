@@ -2,7 +2,7 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale-1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle"></title>
     <%- html_content.manifest %>
     <script>
@@ -31,6 +31,9 @@
       #buy-popup {
         transition: transform 0.3s ease-in-out;
       }
+      #restocking-popup-wrapper {
+        transition: visibility 0s, opacity 0.3s ease-in-out;
+      }
     </style>
   </head>
 
@@ -39,9 +42,17 @@
 
     <main id="main-content-container" class="container mx-auto p-4">
       <div id="overview-content" class="category-content">
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 class="text-sm font-medium text-gray-500" data-translate="Overview.Current_Balance"></h2>
-          <p id="balance-display" class="text-4xl font-bold text-gray-800 mt-1">...</p>
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6 flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-medium text-gray-500" data-translate="Overview.Current_Balance"></h2>
+            <p id="balance-display" class="text-4xl font-bold text-gray-800 mt-1">...</p>
+          </div>
+          <button id="open-restock-popup-btn" class="hidden flex-shrink-0 flex items-center gap-2 bg-orange-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-orange-600 transition-colors shadow text-sm" data-translate="Overview.Restock_Items">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M5.293 9.293a8 8 0 11-1.093-3.235" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12H4.5M9 12V7.5M9 12l-4.5-4.5" />
+            </svg>
+          </button>
         </div>
         <h2 class="text-xl font-bold mb-4 text-gray-700" data-translate="Overview.Favorites"></h2>
         <div id="items-grid" class="category-item-list flex flex-col gap-4"></div>
@@ -72,6 +83,26 @@
 
     <div id="message-box-container" class="fixed bottom-5 right-5 w-full max-w-xs z-[9999]">
       <div id="message-box" class="hidden mt-4 p-4 rounded-lg shadow-lg"></div>
+    </div>
+    
+    <div id="restocking-popup-wrapper" class="fixed inset-0 z-60 invisible opacity-0 flex items-center justify-center p-4">
+        <div id="restocking-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div id="restocking-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800" data-translate="Overview.Popup.Title"></h2>
+                    <p class="text-sm text-gray-500" data-translate="Overview.Popup.Description"></p>
+                </div>
+                <button id="restock-close-button" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div id="restocking-items-list" class="flex-grow p-2 overflow-y-auto">
+            </div>
+            <div class="p-4 border-t">
+                 <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.Popup.ConfirmButton"></button>
+            </div>
+        </div>
     </div>
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
@@ -140,7 +171,7 @@
           button.dataset.categoryKey = key;
           button.innerHTML = `
                   ${icon}
-                  <span class="text-xs mt-1">${i18next.t(`Categories.${name}`)}</span>
+                  <span class="text-xs mt-1">${t(`Categories.${name}`)}</span>
                 `;
           this.navElement.appendChild(button);
         }
@@ -155,11 +186,6 @@
       }
 
       const messageBox = document.getElementById("message-box");
-      /**
-       * Shows a message to the user.
-       * @param {string} text - The message to display.
-       * @param {('success'|'error')} type - The type of message.
-       */
       function showMessage(text, type = "success") {
         messageBox.textContent = text;
         messageBox.className = `mt-4 p-4 rounded-lg ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`;
@@ -173,6 +199,8 @@
         const mainContainer = document.getElementById("main-content-container");
         const ITEMS_PER_PAGE = 10;
         let itemCache = {};
+        
+        let restockingItemsData = [];
 
         const getCurrentBalance = async () => {
           const response = await apiFetch("/api/v1/store/balance");
@@ -181,11 +209,12 @@
             return null;
           }
           const data = await response.json();
-          document.getElementById("balance-display").textContent = i18next.t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
+          document.getElementById("balance-display").textContent = t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
         };
 
         const reloadData = () => {
           getCurrentBalance();
+          loadRestockingItems();
           const currentCategory = navBar.activeCategoryKey;
 
           if (!currentCategory) {
@@ -199,11 +228,9 @@
             const listElement = document.getElementById(`item-list-${currentCategory}`);
             if (listElement) {
               listElement.innerHTML = "";
-
               listElement.dataset.page = "1";
               listElement.dataset.loading = "false";
               listElement.dataset.hasMore = "true";
-
               loadData(currentCategory, 1);
             } else {
               console.error(`Could not find list element for category to reload: ${currentCategory}`);
@@ -255,20 +282,18 @@
           if (favoriteItems.includes(uuid)) {
             return `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6 text-yellow-400"><path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.007z" clip-rule="evenodd" /></svg>`;
           }
-          return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"  class="w-6 h-6 text-gray-400" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>`;
+          return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-6 h-6 text-gray-400" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>`;
         };
 
         const createItemCardHTML = (item) => {
-          // Determine the color for the stock level text
           const stockColor = item.stock < item.target_stock * 0.25 ? "text-red-500" : item.stock < item.target_stock * 0.5 ? "text-orange-500" : item.stock < item.target_stock * 0.75 ? "text-yellow-500" : "text-green-500";
-
-          // Render Edit Button only when Admin
-          const adminSettingsButton = checkPermission("app.admin")
+          
+          const adminSettingsButton = (typeof checkPermission === 'function' && checkPermission("app.admin"))
             ? `
           <a href="/admin/${item.uuid}/edititems"
              class="p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors"
              aria-label="Artikel bearbeiten">
-             <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
           </a>`
             : "";
 
@@ -279,8 +304,8 @@
               <div class="flex-grow flex flex-col min-w-0 pointer-events-none">
                 <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
                 <div class="mt-2 flex items-baseline gap-4 flex-wrap">
-                  <p class="text-green-600 font-semibold text-md">${i18next.t("Overview.Price", { price: item.price.toFixed(2) })}</p>
-                  <p class="text-sm ${stockColor}">${i18next.t("Items.InStock", { count: item.stock })}</p>
+                  <p class="text-green-600 font-semibold text-md">${t("Overview.Price", { price: item.price.toFixed(2) })}</p>
+                  <p class="text-sm ${stockColor}">${t("Items.InStock", { count: item.stock })}</p>
                 </div>
               </div>
             </div>
@@ -307,13 +332,13 @@
         const loadData = async (category = "overview", page = 1) => {
           if (category === "overview") {
             const overviewItemsGrid = document.getElementById("items-grid");
-            overviewItemsGrid.innerHTML = `<p class="col-span-full text-center">${i18next.t("Items.Loading")}</p>`;
+            overviewItemsGrid.innerHTML = `<p class="col-span-full text-center">${t("Items.Loading")}</p>`;
             try {
               const response = await apiFetch(`/api/v1/store/overview`);
               const data = await response.json();
               const sortedFavorites = sortItems(data.favorites);
               data.favorites.forEach((item) => (itemCache[item.uuid] = item));
-              document.getElementById("balance-display").textContent = i18next.t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
+              document.getElementById("balance-display").textContent = t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
               overviewItemsGrid.innerHTML = "";
               sortedFavorites.forEach((item) => {
                 favoriteItems.push(item.uuid);
@@ -326,9 +351,9 @@
                 catContent.id = `content-${cat.name}`;
                 catContent.className = "category-content";
                 catContent.innerHTML = `
-                              <h1 class="text-2xl font-bold px-1">${i18next.t(`Categories.${cat.name}`)}</h1>
-                              <div class="category-item-list flex flex-col gap-4" id="item-list-${cat.name}"
-                                      data-page="1" data-loading="false" data-has-more="true"></div>`;
+                  <h1 class="text-2xl font-bold px-1">${t(`Categories.${cat.name}`)}</h1>
+                  <div class="category-item-list flex flex-col gap-4" id="item-list-${cat.name}"
+                         data-page="1" data-loading="false" data-has-more="true"></div>`;
                 mainContainer.appendChild(catContent);
                 const itemList = catContent.querySelector(".category-item-list");
                 itemList.addEventListener("scroll", () => {
@@ -340,7 +365,7 @@
               });
             } catch (error) {
               console.error("Error loading overview data:", error);
-              overviewItemsGrid.innerHTML = `<p class="col-span-full text-center">${i18next.t("Items.ErrorLoading")}</p>`;
+              overviewItemsGrid.innerHTML = `<p class="col-span-full text-center">${t("Items.ErrorLoading")}</p>`;
             }
           } else {
             const listElement = document.getElementById(`item-list-${category}`);
@@ -362,7 +387,7 @@
               }
             } catch (error) {
               console.error("Error loading category data:", error);
-              listElement.innerHTML = `<p class="col-span-full text-center">${i18next.t("Items.ErrorLoading")}</p>`;
+              listElement.innerHTML = `<p class="col-span-full text-center">${t("Items.ErrorLoading")}</p>`;
             } finally {
               listElement.dataset.loading = "false";
             }
@@ -376,25 +401,20 @@
           if (favoriteButton) toggleFavorite(favoriteButton.dataset.uuid, favoriteButton);
         });
 
-        // --- Popup Logic ---
         const popupWrapper = document.getElementById("popup-wrapper");
         const popupContent = document.getElementById("buy-popup");
 
         const openBuyPopup = (uuid) => {
           const item = itemCache[uuid];
           if (!item) return;
-
           popupContent.dataset.uuid = uuid;
           popupContent.dataset.price = item.price;
           popupContent.dataset.stock = item.stock;
-
           document.getElementById("popup-item-image").src = `/i/items/${uuid}`;
           document.getElementById("popup-item-name").textContent = item.name;
-          document.getElementById("popup-item-price-single").textContent = `${i18next.t("Overview.PricePerItem", { price: item.price.toFixed(2) })}`;
+          document.getElementById("popup-item-price-single").textContent = t("Overview.PricePerItem", { price: item.price.toFixed(2) });
           document.getElementById("popup-stock-info").textContent = `Lager: ${item.stock}`;
-
           updatePopupQuantity(item.stock > 0 ? 1 : 0);
-
           popupWrapper.classList.add("active");
           popupWrapper.classList.remove("invisible", "opacity-0");
           popupContent.classList.remove("translate-y-full");
@@ -404,15 +424,11 @@
           popupWrapper.classList.remove("active");
           popupWrapper.classList.add("opacity-0");
           popupContent.classList.add("translate-y-full");
-          popupWrapper.addEventListener(
-            "transitionend",
-            () => {
-              if (!popupWrapper.classList.contains("active")) {
-                popupWrapper.classList.add("invisible");
-              }
-            },
-            { once: true }
-          );
+          popupWrapper.addEventListener("transitionend", () => {
+            if (!popupWrapper.classList.contains("active")) {
+              popupWrapper.classList.add("invisible");
+            }
+          }, { once: true });
         };
 
         const updatePopupQuantity = (newQuantity) => {
@@ -420,25 +436,19 @@
           const plusBtn = document.getElementById("quantity-plus");
           const minusBtn = document.getElementById("quantity-minus");
           const buyBtn = document.getElementById("popup-buy-confirm");
-
           const basePrice = parseFloat(popupContent.dataset.price);
           const maxStock = parseInt(popupContent.dataset.stock, 10);
-
           let quantity = Math.max(0, newQuantity);
           quantity = Math.min(quantity, maxStock);
-
           popupContent.dataset.quantity = quantity;
           quantityDisplay.textContent = quantity;
-
           const totalPrice = basePrice * quantity;
-          document.getElementById("popup-buy-confirm").textContent = i18next.t("Overview.BuyConfirm", { price: totalPrice });
-
+          buyBtn.textContent = t("Overview.BuyConfirm", { price: totalPrice });
           minusBtn.disabled = quantity <= 1;
           plusBtn.disabled = quantity >= maxStock;
           buyBtn.disabled = quantity === 0;
         };
 
-        // Popup Event Listeners
         document.getElementById("popup-backdrop").addEventListener("click", closeBuyPopup);
         document.getElementById("quantity-minus").addEventListener("click", () => {
           let currentQuantity = parseInt(popupContent.dataset.quantity || "1", 10);
@@ -453,31 +463,26 @@
           const quantity = popupContent.dataset.quantity;
           try {
             const response = await apiFetch("/api/v1/store/buy", { method: "POST", body: JSON.stringify({ uuid, quantity }) });
-            // Show success message and color the button green
             const buyBtn = document.getElementById("popup-buy-confirm");
             if (response.ok) {
-              buyBtn.classList.add("bg-green-500");
-              buyBtn.classList.add("hover:bg-green-600");
-              buyBtn.textContent = i18next.t("Overview.PurchaseSuccess");
+              buyBtn.classList.add("bg-green-500", "hover:bg-green-600");
+              buyBtn.textContent = t("Overview.PurchaseSuccess");
               reloadData();
               setTimeout(() => {
-                buyBtn.classList.remove("bg-green-500");
-                buyBtn.classList.remove("hover:bg-green-600");
+                buyBtn.classList.remove("bg-green-500", "hover:bg-green-600");
                 closeBuyPopup();
               }, 2500);
             } else {
               const errorData = await response.json();
-              buyBtn.classList.add("bg-red-500");
-              buyBtn.classList.add("hover:bg-red-600");
+              buyBtn.classList.add("bg-red-500", "hover:bg-red-600");
               setTimeout(() => {
-                buyBtn.classList.remove("bg-red-500");
-                buyBtn.classList.remove("hover:bg-red-600");
+                buyBtn.classList.remove("bg-red-500", "hover:bg-red-600");
                 closeBuyPopup();
               }, 2500);
               if (response.status === 400) {
-                buyBtn.textContent = i18next.t(`Overview.${errorData.message}`);
+                buyBtn.textContent = t(`Overview.${errorData.message}`);
               } else {
-                buyBtn.textContent = i18next.t(`Overview.PurchaseError`);
+                buyBtn.textContent = t(`Overview.PurchaseError`);
               }
             }
           } catch (error) {
@@ -497,10 +502,9 @@
             buttonElement.innerHTML = getStarIconHTML(uuid);
             favoriteItemsCache[uuid] = null;
             const overviewItemsGrid = document.getElementById("items-grid");
-            overviewItemsGrid.innerHTML = ""; // Clear the grid
-            // Iterate over favoriteItemsCache keys
-            for (const uuid in favoriteItemsCache) {
-              const item = favoriteItemsCache[uuid];
+            overviewItemsGrid.innerHTML = "";
+            for (const uuid_key in favoriteItemsCache) {
+              const item = favoriteItemsCache[uuid_key];
               if (item) {
                 overviewItemsGrid.innerHTML += createItemCardHTML(item);
               }
@@ -511,6 +515,126 @@
           }
         };
 
+        const restockingPopupWrapper = document.getElementById('restocking-popup-wrapper');
+        const restockingItemsList = document.getElementById('restocking-items-list');
+        const restockConfirmButton = document.getElementById('restock-confirm-button');
+        const restockCloseButton = document.getElementById('restock-close-button');
+        const restockingPopupBackdrop = document.getElementById('restocking-popup-backdrop');
+        const openRestockBtn = document.getElementById('open-restock-popup-btn');
+        
+        const displayRestockingPopup = (items) => {
+            restockingItemsList.innerHTML = '';
+            items.forEach(item => {
+                const itemHTML = `
+                    <div class="restock-item flex items-center p-3 border-b border-gray-200" data-uuid="${item.uuid}">
+                        <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0 mr-4">
+                        <div class="flex-grow min-w-0">
+                            <p class="font-semibold text-gray-800 truncate">${item.name}</p>
+                            <p class="text-sm text-gray-500">Amount: <span class="font-medium">${item.amount_to_buy}</span></p>
+                        </div>
+                        <button class="restock-bought-button ml-4 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors flex-shrink-0">Mark as Bought</button>
+                    </div>
+                `;
+                restockingItemsList.insertAdjacentHTML('beforeend', itemHTML);
+            });
+            restockingPopupWrapper.classList.remove('invisible', 'opacity-0');
+        };
+
+        const closeRestockingPopup = () => {
+            restockingPopupWrapper.classList.add('opacity-0');
+            restockingPopupWrapper.addEventListener('transitionend', () => {
+                restockingPopupWrapper.classList.add('invisible');
+            }, { once: true });
+        };
+        
+        restockingItemsList.addEventListener('click', (e) => {
+            const boughtButton = e.target.closest('.restock-bought-button');
+            if (!boughtButton) return;
+            const itemElement = boughtButton.closest('.restock-item');
+            const isBought = itemElement.dataset.bought === 'true';
+            if (isBought) {
+                itemElement.dataset.bought = 'false';
+                boughtButton.textContent = 'Mark as Bought';
+                boughtButton.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600');
+                boughtButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            } else {
+                itemElement.dataset.bought = 'true';
+                boughtButton.textContent = 'Bought';
+                boughtButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                boughtButton.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
+            }
+        });
+
+        restockConfirmButton.addEventListener('click', async () => {
+            const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
+            const boughtUuids = Array.from(boughtItems).map(item => item.dataset.uuid);
+            if (boughtUuids.length === 0) {
+                showMessage('No items were marked as bought.', 'error');
+                return;
+            }
+            restockConfirmButton.disabled = true;
+            restockConfirmButton.textContent = 'Saving...';
+            try {
+                const response = await apiFetch('/api/v1/items/restocking/complete', {
+                    method: 'POST',
+                    body: JSON.stringify({ uuids: boughtUuids })
+                });
+                if (!response.ok) {
+                   throw new Error('Server responded with an error.');
+                }
+                showMessage('Restocking transaction saved successfully!', 'success');
+                closeRestockingPopup();
+                reloadData();
+            } catch (error) {
+                console.error("Error saving restocking transaction:", error);
+                showMessage('Failed to save restocking transaction.', 'error');
+            } finally {
+                restockConfirmButton.disabled = false;
+                restockConfirmButton.textContent = 'Lock & Save Transaction';
+            }
+        });
+
+        restockCloseButton.addEventListener('click', closeRestockingPopup);
+        restockingPopupBackdrop.addEventListener('click', closeRestockingPopup);
+        
+        openRestockBtn.addEventListener('click', () => {
+          if (restockingItemsData.length > 0) {
+            displayRestockingPopup(restockingItemsData);
+          }
+        });
+        
+        const loadRestockingItems = async () => {
+          const openRestockBtn = document.getElementById('open-restock-popup-btn');
+          try {
+            const response = await apiFetch("/api/v1/items/restocking/list");
+
+            if (response.status === 503) {
+              openRestockBtn.classList.add('hidden');
+              console.warn("Restocking service unavailable (503).");
+              return;
+            }
+
+            if (!response.ok) {
+              openRestockBtn.classList.add('hidden');
+              console.error("Failed to fetch restocking items, status:", response.status);
+              return;
+            }
+            
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+              restockingItemsData = data;
+              openRestockBtn.classList.remove('hidden');
+            } else {
+              openRestockBtn.classList.add('hidden');
+            }
+          } catch (error) {
+            openRestockBtn.classList.add('hidden');
+            console.error("Error fetching restocking items:", error);
+          }
+        };
+
+        loadRestockingItems();
         loadData("overview");
       });
     </script>

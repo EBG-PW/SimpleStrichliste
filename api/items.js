@@ -1,7 +1,9 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
-const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem } = require('@lib/sqlite/items');
+const { checkPermission } = require('@lib/permissions');
+const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking } = require('@lib/sqlite/items');
+const { checkIfSettingTrue } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const { writeImage, deleteImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, convertToWebp } = require('@lib/utils');
@@ -59,15 +61,15 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
         return acc;
     }, {});
 
-    res.json({groupedItems, totalInventoryValue});
+    res.json({ groupedItems, totalInventoryValue });
 });
 
 router.delete('/uuid', verifyRequest('web.admin.items.write'), limiter(4), async (req, res) => {
     const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);
     const db_delete_restult = await deleteItem(uuid);
-    if(db_delete_restult) deleteImage('items', uuid, 'webp');
+    if (db_delete_restult) deleteImage('items', uuid, 'webp');
 
-    res.json({message: "Succsess"})
+    res.json({ message: "Succsess" })
 });
 
 
@@ -96,6 +98,23 @@ router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), l
     await updateItemByUUID(uuid, body);
 
     res.status(200).json(uuid);
+});
+
+/**
+ * User route to get all items that need restocking, only if the restocking feature is enabled
+ */
+router.get('/restocking/list', verifyRequest('web.user.restock.read'), limiter(4), async (req, res) => {
+    const hasPermission = checkPermission(req.user.permissions, 'web.admin.restock.read');
+    if (hasPermission.result) {
+        const restockingItems = await getItemsRestocking();
+        res.json(restockingItems);
+    } else {
+        const restockingEnabled = await checkIfSettingTrue('USER_SHOPPINGLIST_ACTIVE');
+        if (!restockingEnabled) return res.status(503).json({ error: 'Restocking feature is disabled' });
+
+        const restockingItems = await getItemsRestocking();
+        res.json(restockingItems);
+    }
 });
 
 module.exports = {
