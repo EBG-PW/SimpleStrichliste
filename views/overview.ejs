@@ -47,7 +47,7 @@
             <h2 class="text-sm font-medium text-gray-500" data-translate="Overview.Current_Balance"></h2>
             <p id="balance-display" class="text-4xl font-bold text-gray-800 mt-1">...</p>
           </div>
-          <button id="open-restock-popup-btn" class="hidden flex-shrink-0 flex items-center gap-2 bg-orange-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-orange-600 transition-colors shadow text-sm" data-translate="Overview.Restock_Items">
+          <button id="open-restock-popup-btn" class="hidden flex-shrink-0 flex items-center gap-2 bg-orange-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-orange-600 transition-colors shadow text-sm" data-translate="Overview.RestockItemsOpen">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M5.293 9.293a8 8 0 11-1.093-3.235" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12H4.5M9 12V7.5M9 12l-4.5-4.5" />
@@ -90,8 +90,8 @@
         <div id="restocking-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
             <div class="p-4 border-b flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800" data-translate="Overview.Popup.Title"></h2>
-                    <p class="text-sm text-gray-500" data-translate="Overview.Popup.Description"></p>
+                    <h2 class="text-xl font-bold text-gray-800" data-translate="Overview.RestockItems.Title"></h2>
+                    <p class="text-sm text-gray-500" data-translate="Overview.RestockItems.Description"></p>
                 </div>
                 <button id="restock-close-button" class="text-gray-400 hover:text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -100,7 +100,8 @@
             <div id="restocking-items-list" class="flex-grow p-2 overflow-y-auto">
             </div>
             <div class="p-4 border-t">
-                 <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.Popup.ConfirmButton"></button>
+                <div id="restock-total-container" class="text-right mb-2 text-lg font-medium text-gray-700"></div>
+                <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.RestockItems.CompleteButton"></button>
             </div>
         </div>
     </div>
@@ -170,9 +171,9 @@
           button.classList.add(isActive ? "text-gray-900" : "text-gray-400");
           button.dataset.categoryKey = key;
           button.innerHTML = `
-                  ${icon}
-                  <span class="text-xs mt-1">${t(`Categories.${name}`)}</span>
-                `;
+                      ${icon}
+                      <span class="text-xs mt-1">${t(`Categories.${name}`)}</span>
+                    `;
           this.navElement.appendChild(button);
         }
         _attachEventListeners() {
@@ -291,15 +292,15 @@
           const adminSettingsButton = (typeof checkPermission === 'function' && checkPermission("app.admin"))
             ? `
           <a href="/admin/${item.uuid}/edititems"
-             class="p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors"
-             aria-label="Artikel bearbeiten">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
+              class="p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors"
+              aria-label="Artikel bearbeiten">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
           </a>`
             : "";
 
           return `
           <div class="relative">
-            <div class="buy-overlay-trigger item-card bg-white rounded-xl shadow-lg p-4 h-full flex items-center gap-4 transition-all duration-200 will-change-transform hover:shadow-xl cursor-pointer" data-uuid="${item.uuid}">
+            <div class="buy-overlay-trigger item-card bg-white rounded-xl shadow-lg p-5 h-full flex items-center gap-4 transition-all duration-200 will-change-transform hover:shadow-xl cursor-pointer" data-uuid="${item.uuid}">
               <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0 pointer-events-none">
               <div class="flex-grow flex flex-col min-w-0 pointer-events-none">
                 <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
@@ -310,7 +311,7 @@
               </div>
             </div>
             <div class="absolute top-2 right-2 flex flex-col items-center gap-2">
-              <button class="favorite-button p-1.5 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors" data-uuid="${item.uuid}" data-is-favorite="${item.is_favorite}" aria-label="Als Favorit markieren">
+              <button class="favorite-button p-1.5 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors" data-uuid="${item.uuid}" data-is-favorite="${item.is_favorite}" aria-label="Mark Favorit">
                 ${getStarIconHTML(item.uuid)}
               </button>
               ${adminSettingsButton}
@@ -353,7 +354,7 @@
                 catContent.innerHTML = `
                   <h1 class="text-2xl font-bold px-1">${t(`Categories.${cat.name}`)}</h1>
                   <div class="category-item-list flex flex-col gap-4" id="item-list-${cat.name}"
-                         data-page="1" data-loading="false" data-has-more="true"></div>`;
+                        data-page="1" data-loading="false" data-has-more="true"></div>`;
                 mainContainer.appendChild(catContent);
                 const itemList = catContent.querySelector(".category-item-list");
                 itemList.addEventListener("scroll", () => {
@@ -522,22 +523,41 @@
         const restockingPopupBackdrop = document.getElementById('restocking-popup-backdrop');
         const openRestockBtn = document.getElementById('open-restock-popup-btn');
         
+        const updateRestockTotal = () => {
+            const totalContainer = document.getElementById('restock-total-container');
+            const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
+            
+            let total = 0;
+            const boughtUuids = Array.from(boughtItems).map(item => item.dataset.uuid);
+
+            boughtUuids.forEach(uuid => {
+                const itemData = restockingItemsData.find(d => d.uuid === uuid);
+                if (itemData) {
+                    total += itemData.amount_to_buy * itemData.pack_price;
+                }
+            });
+            
+            totalContainer.textContent = t("Overview.RestockItems.TotalPrice", { price: total.toFixed(2) });
+        };
+        
         const displayRestockingPopup = (items) => {
             restockingItemsList.innerHTML = '';
             items.forEach(item => {
                 const itemHTML = `
-                    <div class="restock-item flex items-center p-3 border-b border-gray-200" data-uuid="${item.uuid}">
-                        <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0 mr-4">
-                        <div class="flex-grow min-w-0">
-                            <p class="font-semibold text-gray-800 truncate">${item.name}</p>
-                            <p class="text-sm text-gray-500">Amount: <span class="font-medium">${item.amount_to_buy}</span></p>
+                        <div class="restock-item flex items-center p-3 border-b border-gray-200" data-uuid="${item.uuid}">
+                            <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0 mr-4">
+                            <div class="flex-grow min-w-0">
+                                <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
+                                <p class="font-semibold text-gray-800 truncate">${t("Overview.RestockItems.ItemPack", { count: item.pack_size })}</p>
+                                <p class="text-sm text-gray-500"><span class="font-medium">${t("Overview.RestockItems.Amount", { count: item.amount_to_buy, price: item.pack_price })}</span></p>
+                            </div>
+                            <button class="restock-bought-button ml-4 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors flex-shrink-0">${t("Overview.RestockItems.ConfirmButtonBuy")}</button>
                         </div>
-                        <button class="restock-bought-button ml-4 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors flex-shrink-0">Mark as Bought</button>
-                    </div>
                 `;
                 restockingItemsList.insertAdjacentHTML('beforeend', itemHTML);
             });
             restockingPopupWrapper.classList.remove('invisible', 'opacity-0');
+            updateRestockTotal();
         };
 
         const closeRestockingPopup = () => {
@@ -554,43 +574,45 @@
             const isBought = itemElement.dataset.bought === 'true';
             if (isBought) {
                 itemElement.dataset.bought = 'false';
-                boughtButton.textContent = 'Mark as Bought';
+                boughtButton.textContent = t("Overview.RestockItems.ConfirmButtonBuy");
                 boughtButton.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600');
                 boughtButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
             } else {
                 itemElement.dataset.bought = 'true';
-                boughtButton.textContent = 'Bought';
+                boughtButton.textContent = t("Overview.RestockItems.ConfirmButton");
                 boughtButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
                 boughtButton.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
             }
+            updateRestockTotal();
         });
 
         restockConfirmButton.addEventListener('click', async () => {
             const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
             const boughtUuids = Array.from(boughtItems).map(item => item.dataset.uuid);
             if (boughtUuids.length === 0) {
-                showMessage('No items were marked as bought.', 'error');
+                showMessage(t("Overview.RestockItems.NoMarkedItems"), 'error');
                 return;
             }
             restockConfirmButton.disabled = true;
-            restockConfirmButton.textContent = 'Saving...';
+            restockConfirmButton.textContent = t("Overview.RestockItems.Processing");
             try {
                 const response = await apiFetch('/api/v1/items/restocking/complete', {
                     method: 'POST',
-                    body: JSON.stringify({ uuids: boughtUuids })
+                    body: JSON.stringify({ items: boughtUuids })
                 });
                 if (!response.ok) {
-                   throw new Error('Server responded with an error.');
+                  throw new Error('Server responded with an error.');
                 }
-                showMessage('Restocking transaction saved successfully!', 'success');
+                showMessage(t("Overview.RestockItems.Success"), 'success');
                 closeRestockingPopup();
                 reloadData();
             } catch (error) {
                 console.error("Error saving restocking transaction:", error);
-                showMessage('Failed to save restocking transaction.', 'error');
+                showMessage(t("Overview.RestockItems.Error"), 'error');
+                alert(error.message);
             } finally {
                 restockConfirmButton.disabled = false;
-                restockConfirmButton.textContent = 'Lock & Save Transaction';
+                restockConfirmButton.textContent = t("Overview.RestockItems.CompleteButton");
             }
         });
 

@@ -2,7 +2,7 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
 const { checkPermission } = require('@lib/permissions');
-const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking } = require('@lib/sqlite/items');
+const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking, updateItemsBought } = require('@lib/sqlite/items');
 const { checkIfSettingTrue } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const { writeImage, deleteImage } = require('@lib/imageStore');
@@ -29,6 +29,10 @@ const newItemSchema = Joi.object({
     packSize: Joi.number().integer().min(1).required(),
     packPrice: Joi.number().positive().min(1).required(),
     category: Joi.fullysanitizedString().valid(...Object.keys(gategories_conf)).required()
+});
+
+const uuidItemArraySchema = Joi.object({
+    items: Joi.array().items(Joi.string().uuid()).min(1).required()
 });
 
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
@@ -114,6 +118,21 @@ router.get('/restocking/list', verifyRequest('web.user.restock.read'), limiter(4
 
         const restockingItems = await getItemsRestocking();
         res.json(restockingItems);
+    }
+});
+
+router.post('restocking/complete', verifyRequest('web.user.restock.write'), limiter(4), async (req, res) => {
+    const body = await uuidItemArraySchema.validateAsync(await req.json());
+    const hasPermission = checkPermission(req.user.permissions, 'web.admin.restock.write');
+    if (hasPermission.result) {
+        const {awardedAmount, totalAwardedPrice} = updateItemsBought(body.items, req.user.user_data.uuid);
+        res.json({ message: 'Items marked as restocked', awardedAmount, finalBalance: totalAwardedPrice });
+    } else {
+        const restockingEnabled = await checkIfSettingTrue('USER_SHOPPINGLIST_ACTIVE');
+        if (!restockingEnabled) return res.status(503).json({ error: 'Restocking feature is disabled' });
+
+        const {awardedAmount, totalAwardedPrice} = updateItemsBought(body.items, req.user.user_data.uuid);
+        res.json({ message: 'Items marked as restocked', awardedAmount, finalBalance: totalAwardedPrice });
     }
 });
 

@@ -8,5 +8,20 @@
     "PurchaseSuccess": "Kauf erfolgreich!",
     "PurchaseErrorFunds": "Nicht genügend Guthaben",
     "PurchaseErrorStock": "Nicht genügend auf Lager",
-    "PurchaseError": "Ein Fehler ist aufgetreten"
+    "PurchaseError": "Ein Fehler ist aufgetreten",
+    "RestockItemsOpen": "Artikel kaufen",
+    "RestockItems": {
+        "Title": "Artikel kaufen",
+        "Description": "Hier kannst du Artikel eintragen, die du gekauft hast.",
+        "ItemPack": "Packungsgröße: {{count}}",
+        "Amount": "Packungen: {{count}} (Preis: {{price, price}})",
+        "ConfirmButtonBuy": "🛒",
+        "ConfirmButton": "✅",
+        "CompleteButton": "Einkauf abschließen",
+        "NoMarkedItems": "Keine Artikel zum Kaufen markiert.",
+        "Success": "Einkauf erfolgreich gespeichert!",
+        "Error": "Fehler beim Speichern des Einkaufs.",
+        "Processing": "Speichern...",
+        "TotalPrice": "Gesamtpreis: {{price, price}}"
+    }
 }
