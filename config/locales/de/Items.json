@@ -10,6 +10,7 @@
     "PurchaseTitle": "{{count}} x {{name}} gekauft",
     "HistoryAmmount": "{{sign}}{{amount}} €",
     "SystemTransaction": "Systemtransaktion",
+    "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
     "Create": {
         "Headline": "Neuen Artikel erstellen",

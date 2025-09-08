@@ -152,8 +152,13 @@ function main() {
         case 'create':
             createMigration(argument);
             break;
+        case 'seed':
+            applySeeder(new Database(DB_PATH));
+            break;
         default:
             console.log('Usage:');
+            console.log('  node migrate.js <command> [args]');
+            console.log('  node migrate.js seed            - Applies data from the seeder file.');
             console.log('  node migrate.js apply           - Applies pending migrations and seeds data.');
             console.log('  node migrate.js create <Name>   - Creates a new, empty migration file.');
             process.exit(1);
