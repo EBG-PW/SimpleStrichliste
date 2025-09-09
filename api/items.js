@@ -32,7 +32,10 @@ const newItemSchema = Joi.object({
 });
 
 const uuidItemArraySchema = Joi.object({
-    items: Joi.array().items(Joi.string().uuid()).min(1).required()
+    items: Joi.array().items(Joi.object({
+        uuid: Joi.string().uuid().required(),
+        amount: Joi.number().integer().min(1).required()
+    })).min(1).required()
 });
 
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {

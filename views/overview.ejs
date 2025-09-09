@@ -585,8 +585,15 @@
 
         restockConfirmButton.addEventListener('click', async () => {
             const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
-            const boughtUuids = Array.from(boughtItems).map(item => item.dataset.uuid);
-            if (boughtUuids.length === 0) {
+            const itemsPayload = Array.from(boughtItems).map(itemEl => {
+                const uuid = itemEl.dataset.uuid;
+                const itemData = restockingItemsData.find(d => d.uuid === uuid);
+                return {
+                    uuid: uuid,
+                    amount: itemData.amount_to_buy
+                };
+            });
+            if (itemsPayload.length === 0) {
                 showMessage(t("Overview.RestockItems.NoMarkedItems"), 'error');
                 return;
             }
@@ -595,7 +602,7 @@
             try {
                 const response = await apiFetch('/api/v1/items/restocking/complete', {
                     method: 'POST',
-                    body: JSON.stringify({ items: boughtUuids })
+                    body: JSON.stringify({ items: itemsPayload })
                 });
                 if (!response.ok) {
                   throw new Error('Server responded with an error.');
