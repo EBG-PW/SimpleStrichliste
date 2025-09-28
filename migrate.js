@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const Database = require('better-sqlite3');
 
-const DB_PATH = 'application.db';
+const DB_PATH = './storage/application.db';
 const MIGRATIONS_DIR = 'migrations';
 const SEEDER_FILE = 'seeder.sql';
 
