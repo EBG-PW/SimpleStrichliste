@@ -32,7 +32,7 @@ if (dbMigration === 0) {
     process.log.system(`No Database found. Entering setup mode`)
     try {
         process.log.system('Running database migration script...');
-        execSync('node .\\migrate.js apply', { stdio: 'inherit' });
+        execSync('node migrate.js apply', { stdio: 'inherit' });
         process.log.system('Database migration completed successfully.');
     } catch (error) {
         process.log.error('Failed to run database migration script:');
@@ -44,7 +44,7 @@ if (dbMigration === 0) {
     if (dbMigration < dbVersion) {
         try {
             process.log.system(`Database migration required. Current version: ${dbMigration}, Required version: ${dbVersion}`);
-            execSync('node .\\migrate.js apply', { stdio: 'inherit' });
+            execSync('node migrate.js apply', { stdio: 'inherit' });
             process.log.system('Database migration completed successfully.');
         } catch (error) {
             process.log.error('Failed to run database migration script:');
