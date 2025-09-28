@@ -1,40 +1,28 @@
-# ---- Stage 1: Build ----
-FROM node:22 AS builder
+# Dockerfile
+FROM node:22-bookworm-slim
 
-WORKDIR /usr/src/app
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
 
-RUN npm ci
+# Install dependencies
+RUN npm ci --only=production
 
+# Copy application code
 COPY . .
 
-# ---- Stage 2: Production ----
-FROM node:22-slim
+# Create storage directory for persistence (will be mounted over)
+RUN mkdir -p /app/storage
 
-# Set the working directory
-WORKDIR /usr/src/app
-
-# Set the node environment to production
-ENV NODE_ENV=production
-
-# Copy the built node_modules from the 'builder' stage.
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-
-# Copy the application code from the 'builder' stage.
-COPY --from=builder /usr/src/app .
-
-# Install only the production dependencies.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3 make g++ && \
-    npm rebuild better-sqlite3 megahash && \
-    apt-get purge -y --auto-remove python3 make g++ && \
-    rm -rf /var/lib/apt/lists/*
-
-# Define volumes for persistent data.
-VOLUME ["/usr/src/app/storage"]
-
+# Expose port
 EXPOSE 3000
 
-# The command to start your application.
-CMD [ "node", "./index.js" ]
-
+# Run the application
+CMD ["node", "index.js"]

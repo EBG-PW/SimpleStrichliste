@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Mount single volume for all persistent data
+      - ./storage:/app/storage
+    restart: unless-stopped
