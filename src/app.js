@@ -26,9 +26,6 @@ const app = new HyperExpress.Server({
 
 const { log_errors } = require('@config/errors')
 
-backfillStatistics(); // Backfill statistics data
-
-
 let defaultRoute = '/overview';
 const dbMigration = getDBMigration();
 if (dbMigration === 0) {
@@ -56,6 +53,8 @@ if (dbMigration === 0) {
         }
     }
 }
+
+backfillStatistics(); // Backfill statistics data
 
 // Redirect root to setup
 app.get('/', async (req, res) => {
