@@ -155,6 +155,10 @@ function main() {
         case 'seed':
             applySeeder(new Database(DB_PATH));
             break;
+        case 'setup':
+            applyMigrations();
+            applySeeder(new Database(DB_PATH));
+            break;
         default:
             console.log('Usage:');
             console.log('  node migrate.js <command> [args]');

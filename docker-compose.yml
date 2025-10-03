@@ -1,6 +1,7 @@
 services:
   app:
-    build: .
+    image: ghcr.io/ebg-pw/simplestrichliste:main
+    container_name: simplestrichliste
     ports:
       - "3000:3000"
     environment:
@@ -14,6 +15,7 @@ services:
       - LOG_STACK=false
       - GLOBALWAITTIME=0
       - PORT=3000 # Ensure this matches the exposed port
+      - BINDIP=0.0.0.0
       - SALTROUNDS=12 # Adjust as needed
       - WebTokenDurationH=9600 # Token duration in hours
       - DECREASEPERMIN=60 # Ratelimit decrease per minute
