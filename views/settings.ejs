@@ -36,7 +36,6 @@
     </style>
   </head>
   <body class="bg-gray-100">
-    <!-- Navbar placeholder restored -->
     <%- html_content.navbar %>
 
     <main id="main-content-container" class="container mx-auto p-4">
@@ -98,13 +97,24 @@
             </form>
           </div>
         </div>
+
+        <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
+          <div class="p-8 md:p-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2" data-translate="Settings.Sessions.Headline"></h2>
+            <p class="text-gray-500 mb-8" data-translate="Settings.Sessions.Description"></p>
+            <div class="flex justify-end mb-6">
+              <button id="terminate-all-sessions-button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" data-translate="Settings.Button.TerminateAllSessions"></button>
+            </div>
+            <div id="session-list-container" class="space-y-4">
+            </div>
+          </div>
+        </div>
       </div>
       <div id="message-box-container" class="fixed bottom-5 right-5 w-full max-w-xs">
         <div id="message-box" class="hidden mt-4 p-4 rounded-lg shadow-lg"></div>
       </div>
     </main>
 
-    <!-- Script links restored -->
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script>
@@ -123,6 +133,8 @@
       const messageBox = document.getElementById("message-box");
       const loadingSpinner = document.getElementById("loading-spinner");
       const formContainer = document.getElementById("profile-form-container");
+      const sessionListContainer = document.getElementById("session-list-container");
+      const terminateAllButton = document.getElementById("terminate-all-sessions-button");
 
       /**
        * Shows a message to the user.
@@ -193,7 +205,7 @@
             showMessage(i18next.t("Settings.SettingsUpdatedSuccsess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
             inputField.classList.add("ring-2", "ring-green-500");
 
-              setTimeout(() => {
+            setTimeout(() => {
               inputField.classList.remove("ring-2", "ring-green-500");
             }, 5000);
           } else {
@@ -219,8 +231,8 @@
       }
 
       /**
-      * Handles the password change form submission.
-      */
+       * Handles the password change form submission.
+       */
       async function changePassword(event) {
         event.preventDefault();
 
@@ -234,39 +246,152 @@
         const confirmPassword = confirmPasswordInput.value;
 
         if (newPassword !== confirmPassword) {
-            showMessage(i18next.t("Settings.PasswordsDoNotMatch"), "error");
-            newPasswordInput.classList.add("ring-2", "ring-red-500");
-            confirmPasswordInput.classList.add("ring-2", "ring-red-500");
-            return;
+          showMessage(i18next.t("Settings.PasswordsDoNotMatch"), "error");
+          newPasswordInput.classList.add("ring-2", "ring-red-500");
+          confirmPasswordInput.classList.add("ring-2", "ring-red-500");
+          return;
         }
 
         try {
-            const response = await apiFetch('/api/v1/users/password', {
-                method: 'PUT',
-                body: JSON.stringify({ currentPassword, newPassword }),
-            });
+          const response = await apiFetch("/api/v1/users/password", {
+            method: "PUT",
+            body: JSON.stringify({ currentPassword, newPassword }),
+          });
 
-            if (response.ok) {
-                showMessage(i18next.t("Settings.PasswordUpdatedSuccessfully"));
-                passwordForm.reset();
-            } else {
-                const errorData = await response.json();
-                showMessage(i18next.t(`Error.${errorData.message}` || 'Failed to change password'), 'error');
-                // Highlight the field that was likely incorrect
-                if (errorData.field === 'currentPassword') {
-                    currentPasswordInput.classList.add('ring-2', 'ring-red-500');
-                }
+          if (response.ok) {
+            showMessage(i18next.t("Settings.PasswordUpdatedSuccessfully"));
+            passwordForm.reset();
+          } else {
+            const errorData = await response.json();
+            showMessage(i18next.t(`Error.${errorData.message}` || "Failed to change password"), "error");
+            // Highlight the field that was likely incorrect
+            if (errorData.field === "currentPassword") {
+              currentPasswordInput.classList.add("ring-2", "ring-red-500");
             }
+          }
         } catch (error) {
-            console.error("Error changing password:", error);
-            showMessage("An unexpected error occurred. Please try again.", "error");
+          console.error("Error changing password:", error);
+          showMessage("An unexpected error occurred. Please try again.", "error");
+        }
+      }
+
+      /**
+       * Fetches and displays the user's active sessions.
+       */
+      async function loadSessions() {
+        try {
+          const response = await fetch("/api/v1/users/sessions", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!response.ok) {
+            throw new Error("Failed to fetch sessions.");
+          }
+          const sessions = await response.json();
+          sessionListContainer.innerHTML = ""; // Clear previous list
+
+          if (sessions.length === 0) {
+            sessionListContainer.innerHTML = `<p class="text-gray-500 text-center" data-translate="Settings.Sessions.NoSessions"></p>`;
+            translatePage();
+            return;
+          }
+
+          sessions.forEach((session) => {
+            const sessionElement = document.createElement("div");
+            sessionElement.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg border";
+            const lastSeen = new Date(session.lastActive).toLocaleString();
+
+            let sessionInfoHTML = `
+              <div>
+                <p class="font-semibold text-gray-800">${session.userAgent || "Unknown Device"} ${session.isCurrent ? `<span class="text-green-600 font-normal text-sm" data-translate="Settings.Sessions.CurrentSession"></span>` : ""}</p>
+                <p class="text-sm text-gray-500">${session.location || "Unknown Location"} - ${session.ipAddress}</p>
+                <p class="text-xs text-gray-400" data-translate="Settings.Sessions.LastSeen" data-translate-options='{"date": "${lastSeen}"}'></p>
+              </div>`;
+
+            let actionButtonHTML = "";
+            if (!session.isCurrent) {
+              actionButtonHTML = `<button class="terminate-session-button text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded-md p-1" data-session-id="${session.id}" data-translate="Settings.Button.Terminate"></button>`;
+            }
+
+            sessionElement.innerHTML = sessionInfoHTML + actionButtonHTML;
+            sessionListContainer.appendChild(sessionElement);
+          });
+
+          document.querySelectorAll(".terminate-session-button").forEach((button) => {
+            button.addEventListener("click", (event) => {
+              const sessionId = event.currentTarget.getAttribute("data-session-id");
+              terminateSession(sessionId);
+            });
+          });
+
+          translatePage();
+        } catch (error) {
+          console.error("Error loading sessions:", error);
+          sessionListContainer.innerHTML = `<p class="text-red-500">${i18next.t("Settings.ErrorLoadingSessions")}</p>`;
+        }
+      }
+
+      /**
+       * Terminates a specific user session.
+       * @param {string} sessionId - The ID of the session to terminate.
+       */
+      async function terminateSession(sessionId) {
+        if (!confirm(i18next.t("Settings.ConfirmTerminateSession"))) return;
+        try {
+          const response = await fetch(`/api/v1/users/sessions/${sessionId}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (response.ok) {
+            showMessage(i18next.t("Settings.SessionTerminatedSuccess"));
+            loadSessions();
+          } else {
+            const errorData = await response.json();
+            showMessage(i18next.t(`Error.${errorData.message}` || "Settings.ErrorTerminatingSession"), "error");
+          }
+        } catch (error) {
+          console.error("Error terminating session:", error);
+          showMessage(i18next.t("Settings.ErrorTerminatingSession"), "error");
+        }
+      }
+
+      /**
+       * Terminates all user sessions except the current one.
+       */
+      async function terminateAllOtherSessions() {
+        if (!confirm(i18next.t("Settings.ConfirmTerminateAllSessions"))) return;
+        try {
+          const response = await fetch("/api/v1/users/sessions", {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (response.ok) {
+            showMessage(i18next.t("Settings.AllSessionsTerminatedSuccess"));
+            loadSessions();
+          } else {
+            const errorData = await response.json();
+            showMessage(i18next.t(`Error.${errorData.message}` || "Settings.ErrorTerminatingAllSessions"), "error");
+          }
+        } catch (error) {
+          console.error("Error terminating all other sessions:", error);
+          showMessage(i18next.t("Settings.ErrorTerminatingAllSessions"), "error");
         }
       }
 
       // --- Initial Load ---
       document.addEventListener("DOMContentLoaded", () => {
         loadUserData();
-        passwordForm.addEventListener('submit', changePassword);
+        loadSessions();
+        passwordForm.addEventListener("submit", changePassword);
+        terminateAllButton.addEventListener("click", terminateAllOtherSessions);
       });
     </script>
   </body>
