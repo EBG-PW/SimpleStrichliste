@@ -75,10 +75,9 @@
 
             const formatTimestamp = (isoString) => {
                 const date = new Date(isoString);
-                const locale = i18next.language === 'de' ? 'de-DE' : 'en-US';
                 return {
-                    date: date.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' }),
-                    time: date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+                    date: date.toLocaleDateString(t("Page.LangKey"), { year: 'numeric', month: 'long', day: 'numeric' }),
+                    time: date.toLocaleTimeString(t("Page.LangKey"), { hour: '2-digit', minute: '2-digit' })
                 };
             };
 

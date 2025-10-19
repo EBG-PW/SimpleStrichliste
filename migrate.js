@@ -6,6 +6,11 @@ const DB_PATH = './storage/application.db';
 const MIGRATIONS_DIR = 'migrations';
 const SEEDER_FILE = 'seeder.sql';
 
+if(!fs.existsSync(path.dirname(DB_PATH))) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    console.log(`Created database directory: '${path.dirname(DB_PATH)}'`);
+}
+
 /**
  * Applies data from the seeder file.
  * @param {Database.Database} db The database instance.

@@ -1,6 +1,8 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
+const { removeWebtoken } = require('@lib/cache');
 const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
+const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
@@ -40,6 +42,10 @@ const userPasswordSchema = Joi.object({
 
 const userLanguageSchema = Joi.object({
     language: Joi.fullysanitizedString().min(2).max(2).required()
+});
+
+const validateUUID = Joi.object({
+    uuid: Joi.string().uuid().required()
 });
 
 /**
@@ -144,6 +150,32 @@ router.put('/language', verifyRequest('app.user.settings.language.write'), limit
 
     await updateUserLanguage(user_id, body.language);
     return res.json({ message: 'Language updated successfully' });
+});
+
+router.get('/sessions', verifyRequest('web.user.sessions.read'), limiter(2), async (req, res) => {
+    const sql_response = getAllUserSessions(req.user.user_data.id, req.authorization);
+
+    res.status(200);
+    res.json(sql_response);
+});
+
+router.delete('/sessions/:uuid', verifyRequest('web.user.sessions.write'), limiter(10), async (req, res) => {
+    const params = await validateUUID.validateAsync(req.params);
+    removeWebtoken(params.uuid);
+
+    res.status(200);
+    res.json({
+        message: 'Session deleted',
+    });
+});
+
+router.delete('/allothersessions', verifyRequest('web.user.sessions.write'), limiter(10), async (req, res) => {
+    deleteAllWebtokensForUser(req.user.user_data.id, req.authorization);
+
+    res.status(200);
+    res.json({
+        message: 'All other sessions deleted',
+    });
 });
 
 module.exports = {

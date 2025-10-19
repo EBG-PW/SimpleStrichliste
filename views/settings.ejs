@@ -8,8 +8,8 @@
     <script>
       const lang = <%- JSON.stringify(language) %>;
     </script>
-    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
 
     <style>
       .loader {
@@ -40,34 +40,37 @@
 
     <main id="main-content-container" class="container mx-auto p-4">
       <div id="settings-content" class="space-y-8">
-        <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
+        <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl light:bg-gray-800">
           <div class="p-8 md:p-12">
             <div id="loading-spinner" class="flex justify-center items-center h-64">
-              <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+              <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 light:border-gray-700 h-32 w-32"></div>
             </div>
             <div id="profile-form-container" class="hidden">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2" data-translate="Settings.Form.Headline"></h1>
-              <p class="text-gray-500 mb-8" data-translate="Settings.Form.Description"></p>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2 light:text-white" data-translate="Settings.Form.Headline"></h1>
+              <p class="text-gray-500 mb-8 light:text-gray-300" data-translate="Settings.Form.Description"></p>
+              
               <form id="profile-form" class="space-y-6">
                 <div>
-                  <label for="username" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.Username"></label>
-                  <input type="text" onchange="updateProfileField(this.id, this.value)" name="username" id="username" class="mt-1 block w-full px-3 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                  <label for="username" class="block text-sm font-medium text-gray-700 light:text-gray-200" data-translate="Setup.Form.Username"></label>
+                  <input type="text" onchange="updateProfileField(this.id, this.value)" name="username" id="username" class="mt-1 block w-full px-3 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm light:bg-gray-700 light:border-gray-500 light:text-white light:placeholder-gray-400" />
                 </div>
                 <div>
-                  <label for="name" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.Name"></label>
-                  <input type="text" onchange="updateProfileField(this.id, this.value)" name="name" id="name" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                  <label for="name" class="block text-sm font-medium text-gray-700 light:text-gray-200" data-translate="Setup.Form.Name"></label>
+                  <input type="text" onchange="updateProfileField(this.id, this.value)" name="name" id="name" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm light:bg-gray-700 light:border-gray-500 light:text-white light:placeholder-gray-400" />
                 </div>
                 <div>
-                  <label for="email" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.Email"></label>
-                  <input type="email" onchange="updateProfileField(this.id, this.value)" name="email" id="email" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                  <label for="email" class="block text-sm font-medium text-gray-700 light:text-gray-200" data-translate="Setup.Form.Email"></label>
+                  <input type="email" onchange="updateProfileField(this.id, this.value)" name="email" id="email" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm light:bg-gray-700 light:border-gray-500 light:text-white light:placeholder-gray-400" />
                 </div>
                 <div>
-                  <label for="language" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.Language"></label>
-                  <select id="language" onchange="updateProfileField(this.id, this.value)" name="language" class="relative w-full cursor-default rounded-lg bg-white py-3 pl-4 pr-10 text-left bg-gray-100 border-gray-400 border shadow-sm focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-300">
-                    <% for(const code in countryConfig) { %>
-                    <option value="<%= code %>"><%= countryConfig[code] %></option>
-                    <% } %>
-                  </select>
+                  <label for="language" class="block text-sm font-medium text-gray-700 light:text-gray-200" data-translate="Setup.Form.Language"></label>
+                  <div class="mt-1 flex items-center space-x-4">
+                    <select id="language" onchange="updateProfileField(this.id, this.value)" name="language" class="relative flex-1 cursor-default rounded-lg bg-gray-100 border-gray-400 border shadow-sm py-3 pl-4 pr-10 text-left focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-300 light:bg-gray-700 light:border-gray-500 light:text-white">
+                      <% for(const code in countryConfig) { %>
+                      <option value="<%= code %>"><%= countryConfig[code] %></option>
+                      <% } %>
+                    </select>
+                  </div>
                 </div>
               </form>
             </div>
@@ -105,8 +108,7 @@
             <div class="flex justify-end mb-6">
               <button id="terminate-all-sessions-button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" data-translate="Settings.Button.TerminateAllSessions"></button>
             </div>
-            <div id="session-list-container" class="space-y-4">
-            </div>
+            <div id="session-list-container" class="space-y-4"></div>
           </div>
         </div>
       </div>
@@ -279,6 +281,39 @@
        * Fetches and displays the user's active sessions.
        */
       async function loadSessions() {
+        const sessionListContainer = document.getElementById("session-list-container");
+        if (!sessionListContainer) {
+          console.error("Error: Container 'session-list-container' not found.");
+          return;
+        }
+
+        sessionListContainer.innerHTML = "";
+        const table = document.createElement("table");
+        table.className = "min-w-full divide-y divide-gray-200 border rounded-lg";
+
+        const thead = document.createElement("thead");
+        thead.className = "bg-gray-50";
+        thead.innerHTML = `
+        <tr>
+          <th scope="col" class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${t("Settings.Sessions.TableBrowser")}
+          </th>
+          <th scope="col" class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${t("Settings.Sessions.TableTime")}
+          </th>
+          <th scope="col" class="p-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${t("Settings.Sessions.TableStatus")}
+          </th>
+          <th scope="col" class="relative p-4">
+          </th>
+        </tr>
+      `;
+
+        const tableBody = document.createElement("tbody");
+        tableBody.id = "Settings.Sessions.TableData";
+        tableBody.className = "bg-white divide-y divide-gray-200";
+
+        table.appendChild(thead);
+        table.appendChild(tableBody);
+        sessionListContainer.appendChild(table);
+
         try {
           const response = await fetch("/api/v1/users/sessions", {
             method: "GET",
@@ -287,50 +322,72 @@
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           });
+
           if (!response.ok) {
             throw new Error("Failed to fetch sessions.");
           }
-          const sessions = await response.json();
-          sessionListContainer.innerHTML = ""; // Clear previous list
 
-          if (sessions.length === 0) {
-            sessionListContainer.innerHTML = `<p class="text-gray-500 text-center" data-translate="Settings.Sessions.NoSessions"></p>`;
-            translatePage();
-            return;
+          const sessions = await response.json();
+
+          // Disable "Terminate All" button if there's only one session
+          const terminateAllButton = document.getElementById("terminate-all-sessions-button");
+          if (terminateAllButton && sessions.length <= 1) {
+            terminateAllButton.disabled = true;
+            terminateAllButton.classList.add("opacity-50", "cursor-not-allowed");
           }
 
           sessions.forEach((session) => {
-            const sessionElement = document.createElement("div");
-            sessionElement.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg border";
-            const lastSeen = new Date(session.lastActive).toLocaleString();
+            const row = document.createElement("tr");
 
-            let sessionInfoHTML = `
-              <div>
-                <p class="font-semibold text-gray-800">${session.userAgent || "Unknown Device"} ${session.isCurrent ? `<span class="text-green-600 font-normal text-sm" data-translate="Settings.Sessions.CurrentSession"></span>` : ""}</p>
-                <p class="text-sm text-gray-500">${session.location || "Unknown Location"} - ${session.ipAddress}</p>
-                <p class="text-xs text-gray-400" data-translate="Settings.Sessions.LastSeen" data-translate-options='{"date": "${lastSeen}"}'></p>
-              </div>`;
+            const browserCell = document.createElement("td");
+            browserCell.className = "p-4 whitespace-nowrap text-sm font-medium text-gray-900";
+            browserCell.innerText = session.browser || "Unknown Browser";
+            row.appendChild(browserCell);
 
-            let actionButtonHTML = "";
-            if (!session.isCurrent) {
-              actionButtonHTML = `<button class="terminate-session-button text-sm font-medium text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded-md p-1" data-session-id="${session.id}" data-translate="Settings.Button.Terminate"></button>`;
+            const timeCell = document.createElement("td");
+            timeCell.className = "p-4 whitespace-nowrap text-sm text-gray-500";
+            timeCell.innerText = new Date(session.time).toLocaleString(t("Page.LangKey"));
+            row.appendChild(timeCell);
+
+            const statusCell = document.createElement("td");
+            statusCell.className = "p-4 whitespace-nowrap text-sm";
+            if (session.current_session) {
+              statusCell.innerHTML = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${t("Settings.Sessions.CurrentSession")}</span>`;
             }
+            row.appendChild(statusCell);
 
-            sessionElement.innerHTML = sessionInfoHTML + actionButtonHTML;
-            sessionListContainer.appendChild(sessionElement);
+            const actionCell = document.createElement("td");
+            actionCell.className = "p-4 whitespace-nowrap text-right text-sm font-medium";
+
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "terminate-session-button text-red-600 hover:text-red-800 focus:outline-none";
+            deleteButton.setAttribute("data-session-id", session.token);
+            deleteButton.setAttribute("data-translate", "Settings.Button.Terminate");
+            deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>`;
+            deleteButton.title = "Terminate session";
+
+            actionCell.appendChild(deleteButton);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
           });
 
           document.querySelectorAll(".terminate-session-button").forEach((button) => {
             button.addEventListener("click", (event) => {
               const sessionId = event.currentTarget.getAttribute("data-session-id");
-              terminateSession(sessionId);
+              if (sessionId) {
+                terminateSession(sessionId);
+              }
             });
           });
-
-          translatePage();
         } catch (error) {
           console.error("Error loading sessions:", error);
-          sessionListContainer.innerHTML = `<p class="text-red-500">${i18next.t("Settings.ErrorLoadingSessions")}</p>`;
+          tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="p-4 text-center text-red-500">
+              ${i18next.t("Settings.ErrorLoadingSessions")}
+            </td>
+          </tr>`;
         }
       }
 
@@ -339,7 +396,6 @@
        * @param {string} sessionId - The ID of the session to terminate.
        */
       async function terminateSession(sessionId) {
-        if (!confirm(i18next.t("Settings.ConfirmTerminateSession"))) return;
         try {
           const response = await fetch(`/api/v1/users/sessions/${sessionId}`, {
             method: "DELETE",
@@ -349,6 +405,11 @@
           });
           if (response.ok) {
             showMessage(i18next.t("Settings.SessionTerminatedSuccess"));
+            if(sessionId === localStorage.getItem("token")) {
+              // If the current session was terminated, log out the user
+              window.location.href = "/login";
+              return;
+            }
             loadSessions();
           } else {
             const errorData = await response.json();
@@ -364,9 +425,8 @@
        * Terminates all user sessions except the current one.
        */
       async function terminateAllOtherSessions() {
-        if (!confirm(i18next.t("Settings.ConfirmTerminateAllSessions"))) return;
         try {
-          const response = await fetch("/api/v1/users/sessions", {
+          const response = await fetch("/api/v1/users/allothersessions", {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
