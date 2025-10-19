@@ -8,6 +8,7 @@
     "PurchaseSuccess": "Kauf erfolgreich!",
     "PurchaseErrorFunds": "Nicht genügend Guthaben",
     "PurchaseErrorStock": "Nicht genügend auf Lager",
+    "PurchaseErrorNotAvailable": "Artikel nicht verfügbar",
     "PurchaseError": "Ein Fehler ist aufgetreten",
     "RestockItemsOpen": "Artikel kaufen",
     "RestockItems": {
