@@ -79,6 +79,14 @@
                     <% } %>
                   </select>
                 </div>
+                <div>
+                  <label for="usergroup" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.UserGroup"></label>
+                  <select type="usergroup" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onchange="updateProfileField(this.id, this.value)" id="userGroup" value="">
+                    <% permissions_groups.forEach((group, index) => { %>
+                    <option value="<%= group %>" data-index="<%= index %>" data-translate="Page.UserGroups.<%= group %>"></option>
+                    <% }); %>
+                  </select>
+                </div>
               </form>
             </div>
           </div>
@@ -146,6 +154,7 @@
           nameInput.value = user.name;
           emailInput.value = user.email;
           languageSelect.value = user.language;
+          document.getElementById("userGroup").value = user.user_role;
 
           loadingSpinner.classList.add("hidden");
           formContainer.classList.remove("hidden");

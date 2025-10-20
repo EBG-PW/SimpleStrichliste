@@ -2,5 +2,11 @@
     "LangKey": "DE-DE",
     "Imprint": "Impressum",
     "Privacy": "Datenschutz",
-    "Github": "Quellcode auf Github"
+    "Github": "Quellcode auf Github",
+    "UserGroups": {
+        "app": "Applikation",
+        "user": "Benutzer",
+        "admin": "Administrator",
+        "root": "Root"
+    }
 }

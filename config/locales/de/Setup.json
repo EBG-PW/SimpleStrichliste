@@ -15,7 +15,8 @@
         "PasswordRepeat": "Passwort wiederholen",
         "Language": "Sprache",
         "Submit": "Erstelle Account",
-        "RegCode": "Registrierungs-Code"
+        "RegCode": "Registrierungs-Code",
+        "UserGroup": "Benutzergruppe"
     },
     "Error": {
         "Connection": "Verbindungsfehler",

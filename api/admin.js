@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, getUserByUUID, getUsers, updateBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID } = require('@lib/sqlite/users');
+const { countUsers, getUserByUUID, getUsers, updateBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID } = require('@lib/sqlite/users');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
@@ -45,6 +45,10 @@ const userUsernameSchema = Joi.object({
 
 const userLanguageSchema = Joi.object({
     language: Joi.fullysanitizedString().min(2).max(2).required()
+});
+
+const userGroupCheck = Joi.object({
+    userGroup: Joi.string().valid(...Object.keys(process.permissions_config.groups)).required(),
 });
 
 /**
@@ -99,6 +103,14 @@ router.put('/user/:uuid/language', verifyRequest('app.user.settings.language.wri
 
     await updateUserLanguageByUUID(params.uuid, body.language);
     return res.json({ message: 'Language updated successfully' });
+});
+
+router.put('/user/:uuid/userGroup', verifyRequest('app.admin.users.usergroup.write'), limiter(10), async (req, res) => {
+    const body = await userGroupCheck.validateAsync(await req.json());
+    const params = await getUserByUUIDSchema.validateAsync(req.params);
+
+    await updateUserGroupByUUID(params.uuid, body.userGroup);
+    return res.json({ message: 'User group updated successfully' });
 });
 
 router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async (req, res) => {
