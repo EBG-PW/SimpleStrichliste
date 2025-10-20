@@ -38,6 +38,10 @@ const uuidItemArraySchema = Joi.object({
     })).min(1).required()
 });
 
+const validateUUID = Joi.object({
+    uuid: Joi.string().uuid().required()
+});
+
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
     const body = await newItemSchema.validateAsync(req.body);
     const validImage = await verifyBufferIsJPG(req.file.buffer, 512, 512);
@@ -71,25 +75,16 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
     res.json({ groupedItems, totalInventoryValue });
 });
 
-router.delete('/uuid', verifyRequest('web.admin.items.write'), limiter(4), async (req, res) => {
-    const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);
-    const db_delete_restult = await deleteItem(uuid);
-    if (db_delete_restult) deleteImage('items', uuid, 'webp');
-
-    res.json({ message: "Succsess" })
-});
-
-
 router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
-    const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);
-    const item = await getItemByUUID(uuid);
+    const params = await validateUUID.validateAsync(req.params);
+    const item = await getItemByUUID(params.uuid);
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
     res.json(item);
 });
 
 router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
-    const uuid = await Joi.string().uuid().validateAsync(req.params.uuid);
+    const params = await validateUUID.validateAsync(req.params);
     const body = await newItemSchema.validateAsync(req.body);
 
     // Image is only in the request if it was modified
@@ -99,12 +94,19 @@ router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), l
 
         const webpImage = await convertToWebp(req.file.buffer, { quality: 75, lossless: false, effort: 4 });
 
-        await writeImage(webpImage, 'items', uuid, 'webp');
+        await writeImage(webpImage, 'items', params.uuid, 'webp');
     }
 
     await updateItemByUUID(uuid, body);
 
     res.status(200).json(uuid);
+});
+
+router.delete('/:uuid', verifyRequest('web.admin.items.write'), limiter(4), async (req, res) => {
+    const params = await validateUUID.validateAsync(req.params);
+    const db_delete_result = await deleteItem(params.uuid);
+    if (db_delete_result) deleteImage('items', params.uuid, 'webp');
+    res.json({ message: "Success" })
 });
 
 /**

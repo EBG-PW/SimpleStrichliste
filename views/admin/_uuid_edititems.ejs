@@ -120,7 +120,6 @@
       let croppedImageBlob = null;
 
       const apiEndpoint = `/api/v1/items/<%= params.uuid %>`;
-      const itemUuid = "<%= params.uuid %>"; // <-- ADDED
 
       const editItemForm = document.getElementById("edit-item-form");
       const categoryButton = document.getElementById("category-button");
@@ -134,23 +133,21 @@
       const cropButton = document.getElementById("crop-button");
       const cancelCropButton = document.getElementById("cancel-crop-button");
       const submitButton = document.getElementById("submit-button");
-      const deleteButton = document.getElementById("delete-button"); // <-- ADDED
-      const deleteConfirmModal = document.getElementById("delete-confirm-modal"); // <-- ADDED
-      const cancelDeleteButton = document.getElementById("cancel-delete-button"); // <-- ADDED
-      const confirmDeleteButton = document.getElementById("confirm-delete-button"); // <-- ADDED
+      const deleteButton = document.getElementById("delete-button");
+      const deleteConfirmModal = document.getElementById("delete-confirm-modal");
+      const cancelDeleteButton = document.getElementById("cancel-delete-button");
+      const confirmDeleteButton = document.getElementById("confirm-delete-button");
       const packSizeInput = document.getElementById("packSize");
       const packPriceInput = document.getElementById("packPrice");
       const priceInput = document.getElementById("price");
 
-      // <-- MODIFIED deleteItem function -->
-      async function deleteItem(uuid) {
+      async function deleteItem() {
         try {
-          const response = await apiFetch(`/api/v1/items/${uuid}`, {
+          const response = await apiFetch(apiEndpoint, {
             method: "DELETE",
           });
           if (!response.ok) throw new Error("Could not delete item");
           
-          alert(i18next.t("Items.Response.SuccessDelete") || "Item deleted successfully."); // You may need to add this translation key
           window.location.href = "/admin/items"; // Redirect to items list
         } catch (error) {
           console.error("Failed to delete item:", error);
@@ -355,7 +352,7 @@
 
         confirmDeleteButton.addEventListener("click", () => {
           deleteConfirmModal.style.display = "none";
-          deleteItem(itemUuid);
+          deleteItem();
         });
 
         packSizeInput.addEventListener("input", calculateItemPrice);

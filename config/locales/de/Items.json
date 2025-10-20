@@ -12,6 +12,10 @@
     "SystemTransaction": "Systemtransaktion",
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
+    "Delete": {
+        "ConfirmTitle": "Lösche Artikel",
+        "ConfirmMessage": "Möchtest du den Artikel wirklich löschen?"
+    },
     "Create": {
         "Headline": "Neuen Artikel erstellen",
         "Description": "Fülle alle Felder aus"
@@ -38,7 +42,8 @@
         "Cancel": "Abbrechen",
         "CropSave": "Zuschneiden & Bestätigen",
         "Saving": "Speichern...",
-        "Delete": "Artikel löschen"
+        "Delete": "Artikel löschen",
+        "ConfirmDelete": "Ja, Artikel löschen"
     },
     "Response": {
         "Success": "Artikel erfolgreich erstellt",
