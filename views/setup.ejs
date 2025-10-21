@@ -113,6 +113,13 @@
           const ErrorLine = document.getElementById("ErrorLine");
           const submitButton = form.querySelector('button[type="submit"]');
 
+          const keys = {
+            name: "name",
+            email: "email",
+            username: "username",
+            password: "password",
+          };
+
           submitButton.disabled = true;
           feedbackDiv.innerHTML = "";
 
@@ -153,6 +160,7 @@
 
               ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
               document.getElementById(keys[input_name]).classList.add("is-invalid");
+              submitButton.disabled = false;
             }
           } catch (error) {
             feedbackDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
