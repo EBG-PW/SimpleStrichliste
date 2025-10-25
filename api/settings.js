@@ -1,11 +1,14 @@
 const crypto = require('node:crypto')
+const fs = require('node:fs');
 const path = require('node:path');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const package = require('../package.json');
 const { getDBSize, vacuumDB, backupDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
+const { copyAllImages } = require('@lib/imageStore');
 const { getSystemStats } = require('@lib/stats');
+const { zipDirectory } = require('@lib/utils');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
 const router = new HyperExpress.Router();
@@ -50,21 +53,26 @@ router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async 
     return res.json({ success: true, dbSize_before, dbSize_after });
 });
 
-router.post('/backupdb', verifyRequest('app.admin.db.read'), limiter(20), async (req, res) => {
-    let backupPath = '';
+router.post('/backup', verifyRequest('app.admin.db.read'), limiter(20), async (req, res) => {
     try {
-        backupPath = await backupDB();
-        const filename = path.basename(backupPath);
-        res.download(backupPath, filename, (err) => {
-            if (err) {
-                console.error(`Error during file transfer stream for ${filename}:`, err);
-            } else {
-                console.log(`Successfully sent backup file: ${filename}`);
-            }
-        });
+        const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+        const tempPath = path.join(__dirname, '..', 'storage', `backup_${timestamp}`);
+        process.log.system(`Preparing DB backup at temporary path: ${tempPath}`);
+        fs.mkdirSync(tempPath, { recursive: true });
+        await backupDB(tempPath);
+        await copyAllImages(path.join(__dirname, '..', 'storage'), tempPath);
+
+        const zipFilePath = await zipDirectory(tempPath, path.join(__dirname, '..', 'storage', 'backups'), timestamp);
+
+        // Clean up temporary files
+        fs.rmSync(tempPath, { recursive: true, force: true });
+        process.log.system(`Temporary backup files cleaned up: ${tempPath}`);
+        process.log.system(`Backup created successfully at: ${zipFilePath}`);
+
+        res.status(200).json({ success: true });
 
     } catch (error) {
-        console.error("Backup creation failed:", error);
+        process.log.error("Backup creation failed:", error);
         if (!res.sent) {
             res.status(500).json({ success: false, error: "Failed to create backup" });
         }

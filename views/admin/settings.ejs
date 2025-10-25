@@ -356,10 +356,16 @@
 
       // Make new Backup and store the returned File IT IS NOT A JSON RESPONSE!!!!!
       function sendBackupRequest() {
-        apiFetch("/api/v1/settings/backupdb", {
+        apiFetch("/api/v1/settings/backup", {
           method: "POST"
         })
           .then((response) => {
+            if(response.ok){
+              alert("Backup erfolgreich erstellt und im Backup-Ordner gespeichert.");
+            } else {
+              throw new Error("Network response was not ok");
+            }
+            /*
             if (response.ok) {
               return response.blob();
             }
@@ -369,12 +375,13 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `backup_${crypto.randomUUID()}.sql`;
+            a.download = `backup_${crypto.randomUUID()}.zip`;
             document.body.appendChild(a);
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
             loadSystemStats();
+            */
           })
           .catch((error) => {
             console.error("Error sending backup request:", error);

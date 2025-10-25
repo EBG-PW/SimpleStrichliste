@@ -56,7 +56,7 @@ const verifyRequest = (permission) => {
                 // Check if the user has the permission for the request
                 const allowed = checkPermission(WebTokenResponse.Data.permissions, permission);
                 if (!allowed.result) throw new PermissionsError('NoPermissions', permission);
-                process.log.debug(`Permission Granted for ${WebTokenResponse.Data.username} to ${permission}`);
+                process.log.debug(`Permission Granted for ${WebTokenResponse.Data.user_data.username} to ${permission}`);
             }
 
             // Add the user data to the request
