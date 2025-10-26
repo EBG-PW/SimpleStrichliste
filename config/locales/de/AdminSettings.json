@@ -37,6 +37,25 @@
   "DBBackup": {
     "Title": "Datenbank-Backup",
     "Description": "Aktiviere diese Funktion um regelmäßige Backups der Datenbank zu erstellen.",
-    "Button": "Jetzt Backup erstellen"
+    "Button": "Jetzt Backup erstellen",
+    "ManageButton": "Backups verwalten",
+    "ModalTitle": "Verfügbare Backups",
+    "Loading": "Lade Backups...",
+    "NoBackups": "Keine Backups gefunden.",
+    "DeleteConfirm": "Möchtest du dieses Backup wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "DeleteError": "Fehler beim Löschen des Backups.",
+    "DownloadError": "Fehler beim Herunterladen des Backups."
+  },
+  "Restore": {
+    "Title": "Daten wiederherstellen",
+    "DropzoneText": "Datei hierher ziehen oder klicken, um eine Datei auszuwählen",
+    "DragFile": "Ziehe deine .zip Datei hierher",
+    "FileSelected": "Datei ausgewählt:",
+    "InProgress": "Wiederherstellung läuft. Dies kann einige Zeit dauern...",
+    "OrClick": "oder klicke, um auszuwählen",
+    "Button": "Wiederherstellen",
+    "Success": "Daten erfolgreich wiederhergestellt.",
+    "SuccessDescription": "Deine Daten wurden wiederhergestellt. Du kannst dich jetzt einloggen.",
+    "Error": "Fehler beim Wiederherstellen der Daten. Bitte stelle sicher, dass die Datei gültig ist."
   }
 }

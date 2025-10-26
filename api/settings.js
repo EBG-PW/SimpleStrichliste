@@ -4,11 +4,12 @@ const path = require('node:path');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const package = require('../package.json');
-const { getDBSize, vacuumDB, backupDB } = require('@lib/sqlite/index');
+const multer = require('multer');
+const { getDBSize, vacuumDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
-const { copyAllImages } = require('@lib/imageStore');
+const { countUsers } = require('@lib/sqlite/users');
 const { getSystemStats } = require('@lib/stats');
-const { zipDirectory } = require('@lib/utils');
+const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
 const router = new HyperExpress.Router();
@@ -17,6 +18,14 @@ const router = new HyperExpress.Router();
 const PluginName = 'Settings'; //This plugins name
 const PluginRequirements = []; //Put your Requirements and version here <Name, not file name>|Version
 const PluginVersion = '0.0.1'; //This plugins version
+
+const uploadDir = path.join(__dirname, '..', 'storage', 'temp_uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const uploadHandler = multer({
+    dest: uploadDir,
+    limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB file size limit
+});
 
 const settingsToggleSchema = Joi.object({
     setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM').required(),
@@ -53,31 +62,61 @@ router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async 
     return res.json({ success: true, dbSize_before, dbSize_after });
 });
 
-router.post('/backup', verifyRequest('app.admin.db.read'), limiter(20), async (req, res) => {
-    try {
-        const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
-        const tempPath = path.join(__dirname, '..', 'storage', `backup_${timestamp}`);
-        process.log.system(`Preparing DB backup at temporary path: ${tempPath}`);
-        fs.mkdirSync(tempPath, { recursive: true });
-        await backupDB(tempPath);
-        await copyAllImages(path.join(__dirname, '..', 'storage'), tempPath);
+router.get('/backup', verifyRequest('app.admin.backup.read'), limiter(5), async (req, res) => {
+    const backups = getBackups();
+    return res.json(backups);
+});
 
-        const zipFilePath = await zipDirectory(tempPath, path.join(__dirname, '..', 'storage', 'backups'), timestamp);
+router.post('/backup', verifyRequest('app.admin.backup.write'), limiter(20), async (req, res) => {
+    await createBackup();
+    res.status(200).json({ success: true });
+});
 
-        // Clean up temporary files
-        fs.rmSync(tempPath, { recursive: true, force: true });
-        process.log.system(`Temporary backup files cleaned up: ${tempPath}`);
-        process.log.system(`Backup created successfully at: ${zipFilePath}`);
+router.get('/backup/:timestamp', verifyRequest('app.admin.backup.read'), limiter(5), async (req, res) => {
+    const { timestamp } = req.params;
+    const backup = getBackups().find(b => b.name === `${timestamp}.zip`);
+    if (!backup) {
+        return res.status(404).json({ success: false, error: "Backup not found" });
+    }
+    return res.download(path.join(__dirname, '..', 'storage', 'backups', backup.name), backup.name);
+});
 
-        res.status(200).json({ success: true });
+router.delete('/backup/:timestamp', verifyRequest('app.admin.backup.write'), limiter(5), async (req, res) => {
+    const { timestamp } = req.params;
+    const backupPath = path.join(__dirname, '..', 'storage', 'backups', `${timestamp}.zip`);
+    if (!fs.existsSync(backupPath)) {
+        return res.status(404).json({ success: false, error: "Backup not found" });
+    }
+    fs.rmSync(backupPath);
+    return res.json({ success: true });
+});
 
-    } catch (error) {
-        process.log.error("Backup creation failed:", error);
-        if (!res.sent) {
-            res.status(500).json({ success: false, error: "Failed to create backup" });
+router.post('/backup/restore', limiter(10), uploadHandler.single('backupFile'), async (req, res) => {
+    // Only allow restore if no users exist
+    const usercount = await countUsers();
+    if (usercount > 0) return res.status(409).json({ error: 'Not available' });
+    if (!req.file) return res.status(400).json({ success: false });
+
+        const zipFilePath = req.file.path;
+        process.log.system(`Restore started. Received file: ${zipFilePath}`);
+
+        try {
+            await restoreBackup(zipFilePath);
+            res.status(200).json({ success: true });
+        } catch (error) {
+            process.log.error('Restore failed:', error);
+            res.status(500).json({ success: false });
+        } finally {
+            if (fs.existsSync(zipFilePath)) {
+                fs.rmSync(zipFilePath, { force: true });
+                process.log.system(`Cleaned up uploaded zip: ${zipFilePath}`);
+            }
+            // Kill Application
+            process.log.system('Killing application to get into a safe state...');
+            process.exit(0);
         }
     }
-});
+);
 
 module.exports = {
     router: router,

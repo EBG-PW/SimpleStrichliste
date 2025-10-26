@@ -1,5 +1,5 @@
 module.exports = {
-    "/setup": ["Setup", "Error", "Page"],
+    "/setup": ["Setup", "Error", "Page", "AdminSettings"],
     "/login": ["Login", "Error", "Page"],
     "/register": ["Setup", "Error", "Page"],
     "/overview": ["Overview", "Error", "Page", "Navbar", "Categories", "Items"],

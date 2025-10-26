@@ -10,13 +10,18 @@
     </script>
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <style>
+      .dropzone-active {
+        border-color: #2563eb;
+        background-color: #eff6ff;
+      }
+    </style>
   </head>
 
- <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+  <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
     <main class="flex-grow flex flex-col items-center justify-center p-4">
       <div id="setup-container" class="w-full max-w-md">
-        <div class="text-center text-gray-500">
-        </div>
+        <!-- Content is loaded by JS -->
       </div>
     </main>
 
@@ -46,10 +51,10 @@
           } catch (error) {
             console.error("Error checking user status:", error);
             setupContainer.innerHTML = `
-                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                            <h1 class="text-2xl font-bold text-red-600">${i18next.t("Setup.Error.Connection")}</h1>
-                            <p class="text-gray-600 mt-2">${i18next.t("Setup.Error.LoadUser")}</p>
-                        </div>`;
+                    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                        <h1 class="text-2xl font-bold text-red-600">${i18next.t("Setup.Error.Connection")}</h1>
+                        <p class="text-gray-600 mt-2">${i18next.t("Setup.Error.LoadUser")}</p>
+                    </div>`;
           }
         }
 
@@ -58,49 +63,105 @@
          */
         function renderNotAvailable() {
           setupContainer.innerHTML = `
-                    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                        <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.NoAvailable")}</h1>
-                        <p class="text-gray-600 mt-2">${i18next.t("Setup.NoAvailableDescription")}</p>
-                    </div>`;
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                    <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.NoAvailable")}</h1>
+                    <p class="text-gray-600 mt-2">${i18next.t("Setup.NoAvailableDescription")}</p>
+                </div>`;
         }
 
         /**
-         * Renders the initial user setup form.
+         * Renders the initial user setup form AND the restore form.
          */
         function renderSetupForm() {
           setupContainer.innerHTML = `
-                    <div class="bg-white rounded-xl shadow-lg p-8">
-                        <div class="text-center mb-8">
-                            <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.Welcome")}</h1>
-                            <p class="text-gray-600 mt-2">${i18next.t("Setup.WelcomeDescription")}</p>
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <div class="text-center mb-8">
+                        <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.Welcome")}</h1>
+                        <p class="text-gray-600 mt-2">${i18next.t("Setup.WelcomeDescription")}</p>
+                    </div>
+                    <form id="setup-form" class="space-y-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Name")}</label>
+                            <input type="text" id="name" name="name" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <form id="setup-form" class="space-y-4">
-                            <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Name")}</label>
-                                <input type="text" id="name" name="name" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Email")}</label>
-                                <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                             <div>
-                                <label for="username" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Username")}</label>
-                                <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label for="password" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Password")}</label>
-                                <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div id="ErrorLine"></div>
-                            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                ${i18next.t("Setup.Form.Submit")}
-                            </button>
-                        </form>
-                        <div id="form-feedback" class="mt-4 text-center"></div>
-                    </div>`;
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Email")}</label>
+                            <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Username")}</label>
+                            <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">${i18next.t("Setup.Form.Password")}</label>
+                            <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div id="ErrorLine"></div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            ${i18next.t("Setup.Form.Submit")}
+                        </button>
+                    </form>
+                    <div id="form-feedback" class="mt-4 text-center"></div>
 
-          // Attach event listener to the newly created form
+                    <div class="relative my-8">
+                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center">
+                            <span class="bg-white px-3 text-base font-semibold leading-6 text-gray-900">${i18next.t("Setup.Or")}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 text-center">${i18next.t("AdminSettings.Restore.Title")}</h3>
+                        
+                        <form id="restore-form" enctype="multipart/form-data">
+                            <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                                <input type="file" id="backupFile" name="backupFile" class="hidden" accept=".zip" />
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m0 0l-8-8m8 8v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="mt-2 text-gray-600 text-sm">
+                                    <span class="font-medium text-blue-600">${i18next.t("AdminSettings.Restore.DragFile")}</span>
+                                    ${i18next.t("AdminSettings.Restore.OrClick")}
+                                </p>
+                                <p id="file-name" class="text-sm text-gray-500 mt-2"></p>
+                            </div>
+
+                            <button type="submit" id="restore-backup-btn" class="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50">
+                                ${i18next.t("AdminSettings.Restore.Button")}
+                            </button>
+                            <div id="restore-status" class="mt-4 text-sm text-center"></div>
+                        </form>
+                    </div>
+                </div>`;
+
+          // Attach event listeners to the newly created forms
           document.getElementById("setup-form").addEventListener("submit", handleFormSubmit);
+
+          // --- Restore Form Listeners ---
+          const restoreForm = document.getElementById("restore-form");
+          const dropzone = document.getElementById("dropzone");
+          const fileInput = document.getElementById("backupFile");
+
+          dropzone.addEventListener("click", () => fileInput.click());
+          dropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropzone.classList.add("dropzone-active");
+          });
+          dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("dropzone-active");
+          });
+          dropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropzone.classList.remove("dropzone-active");
+            if (e.dataTransfer.files.length) {
+              fileInput.files = e.dataTransfer.files;
+              updateFileName();
+            }
+          });
+          fileInput.addEventListener("change", updateFileName);
+          restoreForm.addEventListener("submit", handleRestoreFormSubmit);
         }
 
         /**
@@ -141,13 +202,13 @@
 
             if (response.ok) {
               setupContainer.innerHTML = `
-                            <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                                <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.AdminUserCreated")}</h1>
-                                <p class="text-gray-600 mt-2">${i18next.t("Setup.AdminUserCreatedDescription")}</p>
-                                <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Zum Login</a>
-                            </div>`;
+                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                            <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.AdminUserCreated")}</h1>
+                            <p class="text-gray-600 mt-2">${i18next.t("Setup.AdminUserCreatedDescription")}</p>
+                            <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
+                        </div>`;
             } else {
-                if(response.status === 500) ErrorLine.innerHTML = response_json.error
+              if (response.status === 500) ErrorLine.innerHTML = response_json.error;
               if (typeof response_json.reason === "string") {
                 ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.${response_json.message}`) + "</div>";
                 return;
@@ -158,7 +219,13 @@
                 document.getElementById(keys[key]).classList.remove("is-invalid");
               }
 
-              ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
+              ErrorLine.innerHTML =
+                '<div class="alert alert-danger">' +
+                i18next.t(`Error.Joi.${input_type}`, {
+                  field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`),
+                  limit: response_json.reason[0].context?.limit,
+                }) +
+                "</div>";
               document.getElementById(keys[input_name]).classList.add("is-invalid");
               submitButton.disabled = false;
             }
@@ -166,6 +233,68 @@
             feedbackDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
             submitButton.disabled = false;
             submitButton.textContent = i18next.t("Setup.Form.Submit");
+          }
+        }
+
+        /**
+         * Updates the file name display under the dropzone.
+         */
+        function updateFileName() {
+          const fileInput = document.getElementById("backupFile");
+          const fileNameDisplay = document.getElementById("file-name");
+          if (fileInput.files.length > 0) {
+            fileNameDisplay.textContent = `${i18next.t("AdminSettings.FileSelected")} ${fileInput.files[0].name}`;
+          } else {
+            fileNameDisplay.textContent = "";
+          }
+        }
+
+        /**
+         * Handles the submission of the restore form.
+         */
+        async function handleRestoreFormSubmit(e) {
+          e.preventDefault();
+
+          const restoreBtn = document.getElementById("restore-backup-btn");
+          const restoreStatus = document.getElementById("restore-status");
+          const fileInput = document.getElementById("backupFile");
+
+          if (fileInput.files.length === 0) {
+            restoreStatus.className = "mt-4 text-sm text-red-600";
+            restoreStatus.textContent = i18next.t("AdminSettings.Restore.NoFile", "Please select a .zip file to restore.");
+            return;
+          }
+
+          const file = fileInput.files[0];
+          const formData = new FormData();
+          formData.append("backupFile", file);
+
+          restoreBtn.disabled = true;
+          restoreStatus.className = "mt-4 text-sm text-blue-600";
+          restoreStatus.textContent = i18next.t("AdminSettings.Restore.InProgress");
+
+          try {
+            const response = await fetch("/api/v1/settings/backup/restore", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              setupContainer.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                            <h1 class="text-2xl font-bold text-green-600">${i18next.t("AdminSettings.Restore.Success")}</h1>
+                            <p class="text-gray-600 mt-2">${i18next.t("AdminSettings.Restore.SuccessDescription")}</p>
+                            <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
+                        </div>`;
+            } else {
+              throw new Error(data.error || i18next.t("AdminSettings.Restore.Error"));
+            }
+          } catch (error) {
+            restoreStatus.className = "mt-4 text-sm text-red-600";
+            restoreStatus.textContent = error.message;
+            restoreBtn.disabled = false;
           }
         }
 

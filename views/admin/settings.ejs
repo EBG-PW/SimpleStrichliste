@@ -19,6 +19,15 @@
       #qr-modal-overlay.active #qr-modal-content {
         transform: scale(1);
       }
+
+      #backup-list-modal-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      #backup-list-modal-overlay.active #backup-list-modal-content {
+        transform: scale(1);
+      }
     </style>
   </head>
 
@@ -125,26 +134,38 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col h-full">
-          <div>
+          <div class="flex-grow">
             <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.DBBackup.Title"></h2>
             <p class="text-gray-600 text-sm mb-2" data-translate="AdminSettings.DBBackup.Description"></p>
           </div>
-          <button id="trigger-db-backup-btn" onclick="sendBackupRequest()" class="w-full mt-auto bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed" data-translate="AdminSettings.DBBackup.Button"></button>
+          <div class="flex items-center gap-4 mt-4">
+            <button id="trigger-db-backup-btn" onclick="sendBackupRequest()" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed" data-translate="AdminSettings.DBBackup.Button"></button>
+            <button id="manage-db-backup-btn" onclick="showBackupListModal()" class="w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition" data-translate="AdminSettings.DBBackup.ManageButton"></button>
+          </div>
         </div>
       </div>
 
       <div id="qr-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
         <div id="qr-modal-content" class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center relative transform scale-95 transition-transform duration-300">
           <button onclick="closeQRCodeModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
-
           <h2 class="text-2xl font-bold text-gray-800 mb-4" data-translate="AdminSettings.REGCode.ModalTitle"></h2>
-
           <div id="qr-modal-image-container" class="w-full min-h-[200px] flex items-center justify-center"></div>
-
           <p class="mt-4 text-gray-600" data-translate="AdminSettings.REGCode.ModalDescription"></p>
           <p id="qr-modal-code-text" class="mt-2 text-gray-800 font-mono bg-gray-100 p-2 rounded"></p>
         </div>
       </div>
+
+      <div id="backup-list-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
+        <div id="backup-list-modal-content" class="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full relative transform scale-95 transition-transform duration-300">
+          <button onclick="closeBackupListModal()" class="absolute top-3 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+          <h2 class="text-2xl font-bold text-gray-800 mb-4" data-translate="AdminSettings.DBBackup.ModalTitle"></h2>
+          
+          <div id="backup-list-container" class="max-h-[60vh] overflow-y-auto space-y-2">
+            <p class="text-gray-500">...</p>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
@@ -232,7 +253,7 @@
           qrImageContainer.innerHTML = "";
 
           if (regCode === "DEFAULT_REG_CODE") {
-            qrImageContainer.innerHTML = `<p class="text-red-500">${i18next.t("AdminSettings.REGCode.DefaultError")}</p>`;
+            qrImageContainer.innerHTML = `<p class="text-red-500">${t("AdminSettings.REGCode.DefaultError")}</p>`;
             return;
           }
 
@@ -263,7 +284,7 @@
       async function regenerateRegCode() {
         // This function remains mostly the same
         const regenerateBtn = document.getElementById("regenerate-reg-code-btn");
-        regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateButton");
+        regenerateBtn.textContent = t("AdminSettings.REGCode.RegenerateButton");
         regenerateBtn.disabled = true;
 
         try {
@@ -276,7 +297,7 @@
           regCode = data.new_reg_code;
           regenerateBtn.classList.add("bg-green-500");
           regenerateBtn.classList.add("hover:bg-green-600");
-          regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateSuccess");
+          regenerateBtn.textContent = t("AdminSettings.REGCode.RegenerateSuccess");
           setTimeout(() => {
             regenerateBtn.classList.remove("bg-green-500");
             regenerateBtn.classList.remove("hover:bg-green-600");
@@ -284,7 +305,7 @@
         } catch (error) {
           regenerateBtn.classList.add("bg-red-500");
           regenerateBtn.classList.add("hover:bg-red-600");
-          regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateError");
+          regenerateBtn.textContent = t("AdminSettings.REGCode.RegenerateError");
           setTimeout(() => {
             regenerateBtn.classList.remove("bg-red-500");
             regenerateBtn.classList.remove("hover:bg-red-600");
@@ -293,7 +314,7 @@
         } finally {
           regenerateBtn.disabled = false;
           setTimeout(() => {
-            regenerateBtn.textContent = i18next.t("AdminSettings.REGCode.RegenerateButton");
+            regenerateBtn.textContent = t("AdminSettings.REGCode.RegenerateButton");
           }, 2000);
         }
       }
@@ -305,7 +326,7 @@
           const data = await response.json();
 
           // Populate Stats Card
-          document.getElementById("StatsTitle").textContent = i18next.t("AdminSettings.Stats.TitleVersion", { version: data.appversion || "N/A" });
+          document.getElementById("StatsTitle").textContent = t("AdminSettings.Stats.TitleVersion", { version: data.appversion || "N/A" });
           document.getElementById("stat-cpu-usage").textContent = data.systemStats ? `${data.systemStats.cpu}%` : "N/A";
           document.getElementById("stat-db-size").textContent = data.dbSize ? formatBytes(data.dbSize) : "N/A";
           document.getElementById("stat-uptime").textContent = data.systemStats ? formatUptime(data.systemStats.uptime) : "N/A";
@@ -322,9 +343,9 @@
               const driveElement = document.createElement("div");
               driveElement.className = "flex justify-between items-center text-xs";
               driveElement.innerHTML = `
-                    <span class="font-mono text-gray-500">${drive.dir}</span>
-                    <span class="font-mono font-semibold text-gray-800">${formatBytes(drive.size)}</span>
-                `;
+                      <span class="font-mono text-gray-500">${drive.dir}</span>
+                      <span class="font-mono font-semibold text-gray-800">${formatBytes(drive.size)}</span>
+                    `;
               storageContainer.appendChild(driveElement);
             });
           }
@@ -357,41 +378,155 @@
       // Make new Backup and store the returned File IT IS NOT A JSON RESPONSE!!!!!
       function sendBackupRequest() {
         apiFetch("/api/v1/settings/backup", {
-          method: "POST"
+          method: "POST",
         })
           .then((response) => {
-            if(response.ok){
+            if (response.ok) {
               alert("Backup erfolgreich erstellt und im Backup-Ordner gespeichert.");
+              // If the backup list modal is active, refresh it
+              if (document.getElementById("backup-list-modal-overlay").classList.contains("active")) {
+                loadBackupList();
+              }
             } else {
               throw new Error("Network response was not ok");
             }
-            /*
-            if (response.ok) {
-              return response.blob();
-            }
-            throw new Error("Network response was not ok");
-          })
-          .then((blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `backup_${crypto.randomUUID()}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-            loadSystemStats();
-            */
           })
           .catch((error) => {
             console.error("Error sending backup request:", error);
+            alert("Fehler beim Erstellen des Backups.");
           });
       }
 
+      function showBackupListModal() {
+        const modalOverlay = document.getElementById("backup-list-modal-overlay");
+        modalOverlay.classList.add("active");
+        loadBackupList();
+      }
 
       /**
-       * Updates the disabled state of QR code buttons based on the toggle's status.
+       * Closes the backup list modal.
        */
+      function closeBackupListModal() {
+        const modalOverlay = document.getElementById("backup-list-modal-overlay");
+        modalOverlay.classList.remove("active");
+        document.getElementById("backup-list-container").innerHTML = ""; // Clear list on close
+      }
+
+      /**
+       * Fetches backup list and populates the modal.
+       */
+      async function loadBackupList() {
+        const listContainer = document.getElementById("backup-list-container");
+        listContainer.innerHTML = `<p class="text-gray-500 p-3">${t("AdminSettings.DBBackup.Loading")}</p>`;
+
+        try {
+          const response = await apiFetch("/api/v1/settings/backup");
+          if (!response.ok) throw new Error("Network response was not ok");
+          const backups = await response.json();
+
+          listContainer.innerHTML = "";
+
+          if (!backups || backups.length === 0) {
+            listContainer.innerHTML = `<p class="text-gray-500 p-3">${t("AdminSettings.DBBackup.NoBackups")}</p>`;
+            return;
+          }
+
+          // Sort by name (timestamp) descending and take last 10
+          const sortedBackups = backups
+            .sort((a, b) => b.name.localeCompare(a.name))
+            .slice(0, 10);
+
+          sortedBackups.forEach((backup) => {
+            const timestamp = parseInt(backup.name.split(".")[0], 10);
+            const readableDate = new Date(timestamp).toLocaleString(t("Page.LangKey"), {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+            const size = formatBytes(backup.size);
+
+            const item = document.createElement("div");
+            item.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100";
+            item.innerHTML = `
+              <div>
+                <div class="font-semibold text-gray-800">${readableDate}</div>
+                <div class="text-sm text-gray-500">${backup.name} - ${size}</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <button onclick="downloadBackup('${timestamp}')" class="text-blue-500 hover:text-blue-700" title="Download">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </button>
+                <button onclick="deleteBackup('${timestamp}', this)" class="text-red-500 hover:text-red-700" title="Löschen">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            `;
+            listContainer.appendChild(item);
+          });
+          
+
+        } catch (error) {
+          console.error("Error fetching backups:", error);
+          listContainer.innerHTML = `<p class="text-red-500 p-3">${t("AdminSettings.DBBackup.Error", "Fehler beim Laden der Backups.")}</p>`;
+        }
+      }
+
+      /**
+       * Triggers a file download for a specific backup.
+       */
+      function downloadBackup(timestamp) {
+        apiFetch(`/api/v1/settings/backup/${timestamp}`)
+          .then((response) => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.blob();
+          })
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `backup_${timestamp}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => {
+            console.error("Error downloading backup:", error);
+            alert(t("AdminSettings.DBBackup.DownloadError"));
+          });
+      }
+
+      /**
+       * Deletes a specific backup after confirmation.
+       */
+      async function deleteBackup(timestamp, element) {
+        const confirmMsg = t("AdminSettings.DBBackup.DeleteConfirm");
+        if (!confirm(confirmMsg)) return;
+
+        element.disabled = true;
+
+        try {
+          const response = await apiFetch(`/api/v1/settings/backup/${timestamp}`, {
+            method: "DELETE",
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            loadBackupList(); // Refresh the list
+          } else {
+            throw new Error(data.error || "Failed to delete backup");
+          }
+        } catch (error) {
+          console.error("Error deleting backup:", error);
+          alert(t("AdminSettings.DBBackup.DeleteError"));
+          element.disabled = false;
+        }
+      }
+
       async function updateRegCodeButtonsState() {
         const regCodeToggle = document.getElementById("reg-code-toggle");
         const displayBtn = document.getElementById("display-qr-code-btn");
