@@ -333,9 +333,9 @@
 
           if (data.systemStats) {
             const mem = data.systemStats.memory;
-            document.getElementById("stat-mem-rss").textContent = formatBytes(mem.rss);
-            document.getElementById("stat-mem-heap").textContent = `${formatBytes(mem.heapUsed)} | ${formatBytes(mem.heapTotal)}`;
-            document.getElementById("stat-mem-external-buffer").textContent = `${formatBytes(mem.external)} | ${formatBytes(mem.arrayBuffers)}`;
+            document.getElementById("stat-mem-rss").textContent = formatBytes(mem.rss, 2);
+            document.getElementById("stat-mem-heap").textContent = `${formatBytes(mem.heapUsed, 2)} | ${formatBytes(mem.heapTotal, 2)}`;
+            document.getElementById("stat-mem-external-buffer").textContent = `${formatBytes(mem.external, 2)} | ${formatBytes(mem.arrayBuffers, 2)}`;
 
             const storageContainer = document.getElementById("stat-storage-container");
             storageContainer.innerHTML = ""; // Clear previous entries

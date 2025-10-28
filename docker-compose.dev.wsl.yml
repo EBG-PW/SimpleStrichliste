@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+    container_name: simplestrichliste
+    ports:
+      - "3000:3000"
+    environment:
+      - APPLICATION=Strichliste
+      - DOMAIN=http://localhost:3000
+      - FALLBACKLANG=de
+      - LOG_LEVEL=4
+      - LOG_TYPE=console
+      - LOG_COLOR=true
+      - LOG_TEMPLATE=
+      - LOG_STACK=false
+      - GLOBALWAITTIME=0
+      - PORT=3000 # Ensure this matches the exposed port
+      - BINDIP=0.0.0.0
+      - SALTROUNDS=12 # Adjust as needed
+      - WebTokenDurationH=9600 # Token duration in hours
+      - DECREASEPERMIN=60 # Ratelimit decrease per minute
+      - CLOUDFLARE_PROXY=false
+      - ANY_PROXY=false
+      - MAX_AVATAR_SIZE_KB=16000 # Max avatar size in KB
+      - HE_FAST_BUFFERS=false # Set to true if using reverse proxy with HTTP/2
+    volumes:
+      # Mount single volume for all persistent data
+      - ~/strichliste_data:/app/storage
+    restart: unless-stopped
