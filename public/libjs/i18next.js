@@ -24,15 +24,27 @@ document.cookie = `language=${localLang}; path=/`;
                         if (value === undefined || value === null) {
                             return '';
                         }
-                        const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
-                        return ` (${formattedCost} €)`;
+                        if (typeof value === 'number') {
+                            const formattedCost = value.toFixed(2).replace('.', ',');
+                            return ` ${formattedCost} €`;
+                        }
+                        if (typeof value === 'string') {
+                            const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
+                            return ` ${formattedCost} €`;
+                        }
                     }
                     if (format === 'price') {
                         if (value === undefined || value === null) {
                             return '';
                         }
-                        const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
-                        return ` ${formattedCost} €`;
+                        if (typeof value === 'number') {
+                            const formattedCost = value.toFixed(2).replace('.', ',');
+                            return ` ${formattedCost} €`;
+                        }
+                        if (typeof value === 'string') {
+                            const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
+                            return ` ${formattedCost} €`;
+                        }
                     }
                     if (format === 'date') {
                         if (value === undefined || value === null) {
