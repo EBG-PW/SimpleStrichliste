@@ -15,10 +15,9 @@ const paginationSchema = Joi.object({
     page: Joi.number().integer().min(1).default(1)
 });
 
-router.get('/', async (req, res) => {
+router.get('/', verifyRequest('web.user.transactions.read'), limiter(4), async (req, res) => {
     const query = await paginationSchema.validateAsync(req.query);
-
-    const transactions = await getTransactionHistory(1, query.limit, query.page);
+    const transactions = await getTransactionHistory(req.user.user_data.id, query.limit, query.page);
     res.json({ transactions });
 });
 

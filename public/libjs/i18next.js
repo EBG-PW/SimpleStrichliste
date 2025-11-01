@@ -24,14 +24,14 @@ document.cookie = `language=${localLang}; path=/`;
                         if (value === undefined || value === null) {
                             return '';
                         }
-                        const formattedCost = parseFloat(value).toFixed(2).replace('.', ',');
+                        const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
                         return ` (${formattedCost} €)`;
                     }
                     if (format === 'price') {
                         if (value === undefined || value === null) {
                             return '';
                         }
-                        const formattedCost = parseFloat(value).toFixed(2).replace('.', ',');
+                        const formattedCost = parseFloat(value.replace(',', '.')).toFixed(2).replace('.', ',');
                         return ` ${formattedCost} €`;
                     }
                     if (format === 'date') {

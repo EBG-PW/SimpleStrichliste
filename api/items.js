@@ -97,9 +97,9 @@ router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), l
         await writeImage(webpImage, 'items', params.uuid, 'webp');
     }
 
-    await updateItemByUUID(uuid, body);
+    await updateItemByUUID(params.uuid, body);
 
-    res.status(200).json(uuid);
+    res.status(200).json(params.uuid);
 });
 
 router.delete('/:uuid', verifyRequest('web.admin.items.write'), limiter(4), async (req, res) => {

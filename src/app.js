@@ -21,6 +21,7 @@ if (fs.existsSync(path.join(__dirname, '..', 'cert.pem')) && fs.existsSync(path.
 
 const app = new HyperExpress.Server({
     fast_buffers: process.env.HE_FAST_BUFFERS == 'false' ? false : true || false,
+    max_body_length: '50mb',
     ...options
 });
 

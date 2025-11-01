@@ -277,11 +277,10 @@
             const response = await fetch("/api/v1/settings/backup/restore", {
               method: "POST",
               body: formData,
-            });
-
-            const data = await response.json();
+            })
 
             if (response.ok) {
+              const data = await response.json();
               setupContainer.innerHTML = `
                         <div class="bg-white rounded-xl shadow-lg p-8 text-center">
                             <h1 class="text-2xl font-bold text-green-600">${i18next.t("AdminSettings.Restore.Success")}</h1>
@@ -289,6 +288,10 @@
                             <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
                         </div>`;
             } else {
+              if(response.status === 413) {
+                throw new Error(i18next.t("AdminSettings.Restore.ErrorFileTooLarge"));
+              }
+              const data = await response.json();
               throw new Error(data.error || i18next.t("AdminSettings.Restore.Error"));
             }
           } catch (error) {
