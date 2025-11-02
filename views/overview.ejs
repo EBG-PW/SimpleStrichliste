@@ -11,15 +11,24 @@
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
     <style>
+      html,
+
       body {
-        padding-bottom: 80px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .category-item-list {
-        max-height: 60vh;
+        max-height: 80vh;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #a0aec0 #edf2f7;
+      }
+
+      #main-content-container {
+        flex: 1 0 auto;
+        padding-bottom: 80px;
       }
 
       #popup-wrapper {
