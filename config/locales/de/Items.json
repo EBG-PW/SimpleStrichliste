@@ -12,6 +12,7 @@
     "SystemTransaction": "Systemtransaktion",
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
+    "GroupByDay": "Nach Tag gruppieren",
     "Delete": {
         "ConfirmTitle": "Lösche Artikel",
         "ConfirmMessage": "Möchtest du den Artikel wirklich löschen?"

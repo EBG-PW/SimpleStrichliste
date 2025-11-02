@@ -478,14 +478,14 @@
               setTimeout(() => {
                 buyBtn.classList.remove("bg-green-500", "hover:bg-green-600");
                 closeBuyPopup();
-              }, 2500);
+              }, 1500);
             } else {
               const errorData = await response.json();
               buyBtn.classList.add("bg-red-500", "hover:bg-red-600");
               setTimeout(() => {
                 buyBtn.classList.remove("bg-red-500", "hover:bg-red-600");
                 closeBuyPopup();
-              }, 2500);
+              }, 1500);
               if (response.status === 400) {
                 buyBtn.textContent = t(`Overview.${errorData.message}`);
               } else {

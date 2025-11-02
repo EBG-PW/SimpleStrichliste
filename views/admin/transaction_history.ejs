@@ -171,7 +171,7 @@
           }
 
           try {
-            const response = await apiFetch(`/api/v1/transactions?page=${currentPage}&limit=${ITEMS_PER_PAGE}&groupbyday=${groupByDay}`);
+            const response = await apiFetch(`/api/v1/transactions/all?page=${currentPage}&limit=${ITEMS_PER_PAGE}&groupbyday=${groupByDay}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const result = await response.json();
