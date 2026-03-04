@@ -108,7 +108,7 @@ router.put('/user/:uuid/addbalance', verifyRequest('app.admin.users.balance.writ
     res.json({ success: true });
 });
 
-router.put('/user/:uuid/setbalance', verifyRequest('app.admin.settings.balance.write'), limiter(10), async (req, res) => {
+router.put('/user/:uuid/balance', verifyRequest('app.admin.settings.balance.write'), limiter(10), async (req, res) => {
     const body = await setUserBalanceSchema.validateAsync(await req.json());
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
