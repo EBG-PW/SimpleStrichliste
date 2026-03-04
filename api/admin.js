@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, getUserByUUID, getUsers, updateBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID } = require('@lib/sqlite/users');
+const { countUsers, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID } = require('@lib/sqlite/users');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
@@ -23,8 +23,11 @@ const getUserDataTableSchema = Joi.object({
 });
 
 const updateUserBalanceSchema = Joi.object({
-    uuid: Joi.string().uuid().required(),
     add: Joi.number().min(-10000).max(10000).required()
+});
+
+const setUserBalanceSchema = Joi.object({
+    balance: Joi.number().min(-10000).max(10000).required()
 });
 
 const getUserByUUIDSchema = Joi.object({
@@ -73,7 +76,7 @@ router.get('/user/:uuid', verifyRequest('app.admin.users.read'), limiter(1), asy
     res.json(user);
 });
 
-router.put('/user/:uuid/name', verifyRequest('app.user.settings.name.write'), limiter(10), async (req, res) => {
+router.put('/user/:uuid/name', verifyRequest('app.admin.settings.name.write'), limiter(10), async (req, res) => {
     const body = await userNameSchema.validateAsync(await req.json());
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
@@ -81,7 +84,7 @@ router.put('/user/:uuid/name', verifyRequest('app.user.settings.name.write'), li
     return res.json({ message: 'Name updated successfully' });
 });
 
-router.put('/user/:uuid/email', verifyRequest('app.user.settings.email.write'), limiter(10), async (req, res) => {
+router.put('/user/:uuid/email', verifyRequest('app.admin.settings.email.write'), limiter(10), async (req, res) => {
     const body = await userEmailSchema.validateAsync(await req.json());
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
@@ -89,7 +92,7 @@ router.put('/user/:uuid/email', verifyRequest('app.user.settings.email.write'), 
     return res.json({ message: 'Email updated successfully' });
 });
 
-router.put('/user/:uuid/username', verifyRequest('app.user.settings.username.write'), limiter(10), async (req, res) => {
+router.put('/user/:uuid/username', verifyRequest('app.admin.settings.username.write'), limiter(10), async (req, res) => {
     const body = await userUsernameSchema.validateAsync(await req.json());
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
@@ -97,7 +100,23 @@ router.put('/user/:uuid/username', verifyRequest('app.user.settings.username.wri
     return res.json({ message: 'Username updated successfully' });
 });
 
-router.put('/user/:uuid/language', verifyRequest('app.user.settings.language.write'), limiter(10), async (req, res) => {
+router.put('/user/:uuid/addbalance', verifyRequest('app.admin.users.balance.write'), limiter(1), async (req, res) => {
+    const body = await updateUserBalanceSchema.validateAsync(await req.json());
+    const params = await getUserByUUIDSchema.validateAsync(req.params);
+
+    await updateBalance(params.uuid, body.add, req.user.user_data.id);
+    res.json({ success: true });
+});
+
+router.put('/user/:uuid/setbalance', verifyRequest('app.admin.settings.balance.write'), limiter(10), async (req, res) => {
+    const body = await setUserBalanceSchema.validateAsync(await req.json());
+    const params = await getUserByUUIDSchema.validateAsync(req.params);
+
+    await setBalance(params.uuid, body.balance, req.user.user_data.id)
+    return res.json({ message: 'Balance updated successfully' });
+});
+
+router.put('/user/:uuid/language', verifyRequest('app.admin.settings.language.write'), limiter(10), async (req, res) => {
     const body = await userLanguageSchema.validateAsync(await req.json());
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
@@ -127,14 +146,6 @@ router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async
         }
     }
     res.json(result);
-});
-
-router.post('/users/balance', verifyRequest('app.admin.users.balance.write'), limiter(1), async (req, res) => {
-    const body = await updateUserBalanceSchema.validateAsync(await req.json());
-
-    await updateBalance(body.uuid, body.add, req.user.user_data.id);
-
-    res.json({ success: true });
 });
 
 module.exports = {

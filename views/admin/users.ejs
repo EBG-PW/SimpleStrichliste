@@ -344,10 +344,10 @@
         saveBtn.disabled = true;
         saveBtn.textContent = i18next.t("AdminUsers.BalanceModal.Saving");
         try {
-          const response = await apiFetch(`/api/v1/admin/users/balance`, {
+          const response = await apiFetch(`/api/v1/admin/user/${currentEditingUser.uuid}/addbalance`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ uuid: currentEditingUser.uuid, add: parseFloat(document.getElementById("balance-input").value) }),
+            body: JSON.stringify({ add: parseFloat(document.getElementById("balance-input").value) }),
           });
           if (!response.ok) throw new Error((await response.json()).message || "Failed to save balance.");
           closeBalanceModal();
