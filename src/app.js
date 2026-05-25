@@ -54,6 +54,7 @@ if (dbMigration === 0) {
             process.exit(1);
         }
     }
+    execSync('node migrate.js seed', { stdio: 'inherit' });
 }
 
 backfillStatistics(); // Backfill statistics data
