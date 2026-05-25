@@ -76,10 +76,13 @@ process.permissions_config = require('@config/permissions.js');
     }
 })();
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-    process.log.system('\n\nShutting down gracefully...');
+function handleShutdown(signal) {
+    process.log.system(`\n\nReceived ${signal}. Shutting down gracefully...`);
     const { closeDatabases } = require('@lib/sqlite');
     closeDatabases();
     process.exit(0);
-});
+}
+
+// Listen for both Docker stop (SIGTERM) and Ctrl+C (SIGINT)
+process.on('SIGINT', () => handleShutdown('SIGINT'));
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
