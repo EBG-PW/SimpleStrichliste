@@ -24,5 +24,9 @@
         "Error": "Fehler beim Speichern des Einkaufs.",
         "Processing": "Speichern...",
         "TotalPrice": "Gesamtpreis: {{price, price}}"
+    },
+    "LowFunds": {
+        "Title": "Geringer Kontostand",
+        "Close": "Schließen"
     }
 }

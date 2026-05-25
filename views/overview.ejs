@@ -43,6 +43,9 @@
       #restocking-popup-wrapper {
         transition: visibility 0s, opacity 0.3s ease-in-out;
       }
+      #low-funds-popup-wrapper {
+        transition: visibility 0s, opacity 0.3s ease-in-out;
+      }
     </style>
   </head>
 
@@ -110,6 +113,18 @@
                 <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.RestockItems.CompleteButton"></button>
             </div>
         </div>
+    </div>
+
+    <div id="low-funds-popup-wrapper" class="fixed inset-0 z-[70] invisible opacity-0 flex items-center justify-center p-4">
+      <div id="low-funds-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
+      <div id="low-funds-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <img id="low-funds-popup-image" src="" alt="Low funds warning" class="w-full max-h-[70vh] object-contain bg-gray-100" />
+        <div class="p-5 text-center">
+          <h2 class="text-xl font-bold text-gray-800 mb-2" data-translate="Overview.LowFunds.Title"></h2>
+          <p id="low-funds-popup-message" class="text-gray-600 mb-4"></p>
+          <button id="low-funds-close-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors" data-translate="Overview.LowFunds.Close"></button>
+        </div>
+      </div>
     </div>
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
@@ -208,6 +223,9 @@
         let itemCache = {};
         
         let restockingItemsData = [];
+        let lowFundsSettings = null;
+        let lowFundsDismissed = false;
+        const lowFundsDismissedUntilKey = "LOW_FUNDS_WARNING_DISMISSED_UNTIL";
 
         const getCurrentBalance = async () => {
           const response = await apiFetch("/api/v1/store/balance");
@@ -217,7 +235,59 @@
           }
           const data = await response.json();
           document.getElementById("balance-display").textContent = t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
+          updateLowFundsWarning(data.balance);
         };
+
+        const lowFundsPopupWrapper = document.getElementById("low-funds-popup-wrapper");
+        const closeLowFundsPopup = () => {
+          lowFundsDismissed = true;
+          const resettime = parseInt(lowFundsSettings?.resettime || "0", 10);
+          const dismissedUntil = Number.isFinite(resettime) && resettime > 0 ? Date.now() + resettime * 60 * 60 * 1000 : Date.now();
+          localStorage.setItem(lowFundsDismissedUntilKey, dismissedUntil.toString());
+          lowFundsPopupWrapper.classList.add("opacity-0");
+          lowFundsPopupWrapper.addEventListener("transitionend", () => {
+            lowFundsPopupWrapper.classList.add("invisible");
+          }, { once: true });
+        };
+
+        const openLowFundsPopup = () => {
+          document.getElementById("low-funds-popup-image").src = `/i/static/low-funds?${Date.now()}`;
+          document.getElementById("low-funds-popup-message").textContent = lowFundsSettings.message;
+          lowFundsPopupWrapper.classList.remove("invisible", "opacity-0");
+        };
+
+        const updateLowFundsWarning = (balance, settings = lowFundsSettings) => {
+          if (settings) lowFundsSettings = settings;
+          if (!lowFundsSettings || !lowFundsSettings.enabled) return;
+
+          const amount = parseFloat(lowFundsSettings.amount);
+          if (!Number.isFinite(amount)) return;
+
+          console.log(`Checking low funds warning: balance=${balance}, threshold=${amount}, dismissed=${lowFundsDismissed}`);
+          if (balance >= amount) {
+            lowFundsDismissed = false;
+            localStorage.removeItem(lowFundsDismissedUntilKey);
+            return;
+          }
+
+          const dismissedUntil = parseInt(localStorage.getItem(lowFundsDismissedUntilKey) || "0", 10);
+          if (dismissedUntil > Date.now()) {
+            lowFundsDismissed = true;
+            return;
+          }
+
+          if (dismissedUntil > 0) {
+            localStorage.removeItem(lowFundsDismissedUntilKey);
+            lowFundsDismissed = false;
+          }
+
+          if (!lowFundsDismissed) {
+            openLowFundsPopup();
+          }
+        };
+
+        document.getElementById("low-funds-popup-backdrop").addEventListener("click", closeLowFundsPopup);
+        document.getElementById("low-funds-close-button").addEventListener("click", closeLowFundsPopup);
 
         const reloadData = () => {
           getCurrentBalance();
@@ -346,6 +416,7 @@
               const sortedFavorites = sortItems(data.favorites);
               data.favorites.forEach((item) => (itemCache[item.uuid] = item));
               document.getElementById("balance-display").textContent = t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
+              updateLowFundsWarning(data.balance, data.lowFunds);
               overviewItemsGrid.innerHTML = "";
               sortedFavorites.forEach((item) => {
                 favoriteItems.push(item.uuid);

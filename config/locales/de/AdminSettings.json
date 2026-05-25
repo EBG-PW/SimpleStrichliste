@@ -58,9 +58,25 @@
     "AdjustFavicon": "Favicon anpassen",
     "Cancel": "Abbrechen",
     "CropSave": "Zuschneiden und speichern",
-    "Button": "Manifest speichern",
+    "Button": "Speichern",
     "Saving": "Speichern...",
-    "Success": "Manifest gespeichert",
+    "Success": "Gespeichert",
+    "Error": "Fehler beim Speichern"
+  },
+  "LowFunds": {
+    "Title": "Geringer Kontostand",
+    "Description": "Zeige Benutzern eine Warnung, wenn ihr Kontostand unter einen festgelegten Betrag fällt.",
+    "ToggleLabel": "Warnung aktivieren",
+    "Amount": "Betrag",
+    "Resettime": "Erneut anzeigen nach Stunden",
+    "Message": "Hinweistext",
+    "Image": "Bild",
+    "AdjustImage": "Bild anpassen",
+    "Cancel": "Abbrechen",
+    "CropSave": "Zuschneiden und speichern",
+    "Button": "Speichern",
+    "Saving": "Speichern...",
+    "Success": "Gespeichert",
     "Error": "Fehler beim Speichern"
   },
   "Restore": {

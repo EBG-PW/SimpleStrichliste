@@ -3,6 +3,7 @@ const { limiter } = require('@middleware/limiter');
 const { getActiveCategories } = require('@lib/sqlite/categories');
 const { getUserBalance, getUserFavorites, purchaseItem } = require('@lib/sqlite/users');
 const { getItemsByCategory, toggleUserFavorite } = require('@lib/sqlite/items');
+const { getSetting } = require('@lib/sqlite/settings');
 const gategories_conf = require('@config/categories');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
@@ -34,7 +35,19 @@ router.get('/overview', verifyRequest('web.user.store.read'), limiter(2), async 
     }
     const { balance } = await getUserBalance(req.user.user_data.id);
     const favorites = await getUserFavorites(req.user.user_data.id, 10);
-    return res.json({ categories, balance, favorites });
+    const [lowFundsWarning, lowFundsAmount, lowFundsResettime, lowFundsString] = await Promise.all([
+        getSetting('LOW_FUNDS_WARNING'),
+        getSetting('LOW_FUNDS_AMOUNT'),
+        getSetting('LOW_FUNDS_RESETTIME'),
+        getSetting('LOW_FUNDS_STRING')
+    ]);
+    const lowFunds = {
+        enabled: lowFundsWarning === 'true',
+        amount: parseFloat(lowFundsAmount || '0') / 100,
+        resettime: parseInt(lowFundsResettime || '0', 10),
+        message: lowFundsString || ''
+    };
+    return res.json({ categories, balance, favorites, lowFunds });
 });
 
 router.get('/balance', verifyRequest('web.user.store.read'), limiter(1), async (req, res) => {

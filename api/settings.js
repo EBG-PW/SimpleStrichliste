@@ -10,8 +10,8 @@ const { getDBSize, vacuumDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
 const { countUsers } = require('@lib/sqlite/users');
 const { getSystemStats } = require('@lib/stats');
-const { writefavicon } = require('@lib/imageStore');
-const { verifyBufferIsJPG } = require('@lib/utils');
+const { writefavicon, writeImage } = require('@lib/imageStore');
+const { verifyBufferIsJPG, verifyBufferIsJPGMaxDimensions, convertToWebp } = require('@lib/utils');
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const { generateManifest } = require('@lib/manifest');
 const { InvalidRouteInput } = require('@lib/errors');
@@ -33,7 +33,7 @@ const uploadHandler = multer({
 });
 
 const settingsToggleSchema = Joi.object({
-    setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM').required(),
+    setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING').required(),
 });
 
 const settingsManifestSchema = Joi.object({
@@ -42,6 +42,12 @@ const settingsManifestSchema = Joi.object({
     APP_DESCRIPTION: Joi.fullysanitizedString().min(1).max(250).required(),
     APP_BACKGROUND_COLOR: Joi.string().pattern(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).required(),
     APP_THEME_COLOR: Joi.string().pattern(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).required(),
+});
+
+const settingsLowFundsSchema = Joi.object({
+    LOW_FUNDS_AMOUNT: Joi.number().min(1).max(10000).required(),
+    LOW_FUNDS_RESETTIME: Joi.number().integer().min(0).max(8760).required(),
+    LOW_FUNDS_STRING: Joi.fullysanitizedString().min(1).max(250).required(),
 });
 
 router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req, res) => {
@@ -108,6 +114,27 @@ router.put('/favicon', verifyRequest('web.admin.items.write'), parseMultipart(),
 
         await writefavicon(req.file.buffer);
     }
+
+    res.status(200).json({ success: true });
+});
+
+router.put('/lowFunds', verifyRequest('app.admin.settings.write'), parseMultipart(), limiter(10), async (req, res) => {
+    const body = await settingsLowFundsSchema.validateAsync(req.body);
+
+    if (req.file) {
+        if (req.file.fieldname !== 'lowFundsImage') throw new InvalidRouteInput('Invalid Image');
+
+        const validImage = await verifyBufferIsJPGMaxDimensions(req.file.buffer, 5000, 5000);
+        if (!validImage) throw new InvalidRouteInput('Invalid Image');
+
+        const webpImage = await convertToWebp(req.file.buffer, { quality: 80, lossless: false, effort: 4 });
+
+        await writeImage(webpImage, 'static', 'low-funds', 'webp');
+    }
+
+    await updateSetting('LOW_FUNDS_AMOUNT', body.LOW_FUNDS_AMOUNT.toString());
+    await updateSetting('LOW_FUNDS_RESETTIME', body.LOW_FUNDS_RESETTIME.toString());
+    await updateSetting('LOW_FUNDS_STRING', body.LOW_FUNDS_STRING);
 
     res.status(200).json({ success: true });
 });

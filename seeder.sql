@@ -7,7 +7,11 @@ INSERT OR IGNORE INTO app_settings (setting_key, setting_value) VALUES
 ('APP_SHORT_NAME', 'Strichlisten'),
 ('APP_DESCRIPTION', 'Eine App zur Verwaltung von Strichlisten.'),
 ('APP_BACKGROUND_COLOR', '#ffffff'),
-('APP_THEME_COLOR', '#3367D6');
+('APP_THEME_COLOR', '#3367D6'),
+('LOW_FUNDS_WARNING', 'false'),
+('LOW_FUNDS_AMOUNT', '500'),
+('LOW_FUNDS_RESETTIME', '24'),
+('LOW_FUNDS_STRING', 'Bitte lade dein Konto auf!');
 
 INSERT OR IGNORE INTO item_categories (uuid, name, is_active) VALUES
 ('13620506-b9f8-44d7-a9ff-d1b58ddee93f', 'System', 2); -- 2 To Hide it

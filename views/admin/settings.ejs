@@ -145,7 +145,47 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.LowFunds.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.LowFunds.Description"></p>
+          <div class="flex items-center justify-between mb-6">
+            <span class="font-semibold text-gray-700" data-translate="AdminSettings.LowFunds.ToggleLabel"></span>
+            <label for="low-funds-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" onchange="toggleSetting('LOW_FUNDS_WARNING')" id="low-funds-toggle" class="sr-only peer" />
+              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+
+          <form id="low-funds-settings-form" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="low-funds-amount" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.LowFunds.Amount"></label>
+                <input type="number" name="low-funds-amount" id="low-funds-amount" step="0.01" min="1" max="10000" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed" required />
+              </div>
+              <div>
+                <label for="low-funds-resettime" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.LowFunds.Resettime"></label>
+                <input type="number" name="low-funds-resettime" id="low-funds-resettime" min="0" max="8760" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed" required />
+              </div>
+              <div class="md:col-span-2">
+                <label for="low-funds-string" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.LowFunds.Message"></label>
+                <input type="text" name="low-funds-string" id="low-funds-string" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed" required />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.LowFunds.Image"></label>
+              <div class="mt-2 flex items-center gap-6">
+                <img id="low-funds-preview" src="/i/static/low-funds?<%= curentUnixTime %>" alt="Low funds preview" class="h-24 w-24 rounded-lg object-cover" />
+                <input type="file" name="lowFundsImage" id="low-funds-image" accept="image/*" class="block w-full text-sm text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                <button type="submit" id="low-funds-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                  <span data-translate="AdminSettings.LowFunds.Button"></span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Manifest.Title"></h2>
           <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Manifest.Description"></p>
 
@@ -182,13 +222,10 @@
               <div class="mt-2 flex items-center gap-6">
                 <img id="favicon-preview" src="/favicon.ico?<%= curentUnixTime %>" alt="Favicon preview" class="h-24 w-24 rounded-full object-cover" />
                 <input type="file" name="favicon" id="favicon" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                <button type="submit" id="manifest-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                  <span data-translate="AdminSettings.Manifest.Button"></span>
+                </button>
               </div>
-            </div>
-
-            <div class="pt-2 flex justify-end">
-              <button type="submit" id="manifest-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
-                <span data-translate="AdminSettings.Manifest.Button"></span>
-              </button>
             </div>
           </form>
         </div>
@@ -228,6 +265,19 @@
         </div>
       </div>
 
+      <div id="low-funds-cropper-modal" class="cropper-modal-container">
+        <div class="cropper-modal-content">
+          <h2 class="text-xl font-bold mb-4" data-translate="AdminSettings.LowFunds.AdjustImage"></h2>
+          <div class="cropper-image-container">
+            <img id="low-funds-image-to-crop" />
+          </div>
+          <div class="flex justify-end gap-4 mt-4">
+            <button type="button" id="cancel-low-funds-crop-button" class="py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200" data-translate="AdminSettings.LowFunds.Cancel"></button>
+            <button type="button" id="crop-low-funds-button" class="py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700" data-translate="AdminSettings.LowFunds.CropSave"></button>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
@@ -238,6 +288,8 @@
       let regCode = "";
       let faviconCropper;
       let croppedFaviconBlob = null;
+      let lowFundsCropper;
+      let croppedLowFundsBlob = null;
       function formatBytes(bytes, decimals = 2) {
         if (!+bytes) return "0 Bytes";
         const k = 1024;
@@ -275,8 +327,9 @@
           });
           const data = await response.json();
           if (data.success) {
-            getSettings();
+            await getSettings();
             updateRegCodeButtonsState();
+            updateLowFundsSettingsState();
           }
         } catch (error) {
           console.error("Error toggling setting:", error);
@@ -291,12 +344,17 @@
           document.getElementById("reg-code-toggle").checked = settings.find((s) => s.setting_key === "REG_CODE_ACTIVE")?.setting_value === "true";
           document.getElementById("user-shoppinglist-toggle").checked = settings.find((s) => s.setting_key === "USER_SHOPPINGLIST_ACTIVE")?.setting_value === "true";
           document.getElementById("db-autovacuum-toggle").checked = settings.find((s) => s.setting_key === "DB_AUTOVACUUM")?.setting_value === "true";
+          document.getElementById("low-funds-toggle").checked = settings.find((s) => s.setting_key === "LOW_FUNDS_WARNING")?.setting_value === "true";
           regCode = settings.find((s) => s.setting_key === "REG_CODE")?.setting_value || "";
           document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";
           document.getElementById("app-short-name").value = settings.find((s) => s.setting_key === "APP_SHORT_NAME")?.setting_value || "";
           document.getElementById("app-description").value = settings.find((s) => s.setting_key === "APP_DESCRIPTION")?.setting_value || "";
           document.getElementById("app-background-color").value = settings.find((s) => s.setting_key === "APP_BACKGROUND_COLOR")?.setting_value || "#ffffff";
           document.getElementById("app-theme-color").value = settings.find((s) => s.setting_key === "APP_THEME_COLOR")?.setting_value || "#3367D6";
+          document.getElementById("low-funds-amount").value = settings.find((s) => s.setting_key === "LOW_FUNDS_AMOUNT")?.setting_value || "";
+          document.getElementById("low-funds-resettime").value = settings.find((s) => s.setting_key === "LOW_FUNDS_RESETTIME")?.setting_value || "";
+          document.getElementById("low-funds-string").value = settings.find((s) => s.setting_key === "LOW_FUNDS_STRING")?.setting_value || "";
+          updateLowFundsSettingsState();
         } catch (error) {
           console.error("Error fetching settings:", error);
         }
@@ -319,6 +377,31 @@
 
           faviconCropper = new Cropper(faviconImageToCrop, {
             aspectRatio: 1,
+            viewMode: 1,
+            background: false,
+            responsive: true,
+            restore: true,
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function handleLowFundsImageSelection(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const lowFundsCropperModal = document.getElementById("low-funds-cropper-modal");
+        const lowFundsImageToCrop = document.getElementById("low-funds-image-to-crop");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          lowFundsImageToCrop.src = e.target.result;
+          lowFundsCropperModal.style.display = "flex";
+
+          if (lowFundsCropper) {
+            lowFundsCropper.destroy();
+          }
+
+          lowFundsCropper = new Cropper(lowFundsImageToCrop, {
             viewMode: 1,
             background: false,
             responsive: true,
@@ -362,11 +445,13 @@
           }
 
           submitButton.classList.remove(...originalButtonClasses);
+          submitButton.disabled = false;
           submitButton.classList.add("bg-green-600");
           submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Success")}</span>`;
           document.getElementById("favicon-preview").src = `/favicon.ico?${Date.now()}`;
         } catch (error) {
           submitButton.classList.remove(...originalButtonClasses);
+          submitButton.disabled = false;
           submitButton.classList.add("bg-red-600");
           submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Error")}</span>`;
           console.error("Error saving manifest settings:", error);
@@ -376,6 +461,61 @@
             submitButton.classList.remove("bg-green-600", "bg-red-600");
             submitButton.classList.add(...originalButtonClasses);
             submitButton.innerHTML = originalButtonHTML;
+          }, 3000);
+        }
+      }
+
+      async function handleLowFundsSubmit(event) {
+        event.preventDefault();
+
+        const submitButton = document.getElementById("low-funds-submit-button");
+        if (submitButton.disabled) return;
+
+        const originalButtonClasses = ["bg-indigo-600", "hover:bg-indigo-700"];
+        const originalButtonHTML = submitButton.innerHTML;
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Saving")}</span>`;
+
+        try {
+          const formData = new FormData();
+          formData.set("LOW_FUNDS_AMOUNT", document.getElementById("low-funds-amount").value);
+          formData.set("LOW_FUNDS_RESETTIME", document.getElementById("low-funds-resettime").value);
+          formData.set("LOW_FUNDS_STRING", document.getElementById("low-funds-string").value);
+
+          if (croppedLowFundsBlob) {
+            formData.set("lowFundsImage", croppedLowFundsBlob, "low-funds.jpg");
+          }
+
+          const response = await apiFetch("/api/v1/settings/lowFunds", {
+            method: "PUT",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("Failed to update low funds warning.");
+
+          if (croppedLowFundsBlob) {
+            document.getElementById("low-funds-image").value = "";
+            croppedLowFundsBlob = null;
+          }
+
+          submitButton.classList.remove(...originalButtonClasses);
+          submitButton.disabled = false;
+          submitButton.classList.add("bg-green-600");
+          submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Success")}</span>`;
+          document.getElementById("low-funds-preview").src = `/i/static/low-funds?${Date.now()}`;
+        } catch (error) {
+          submitButton.classList.remove(...originalButtonClasses);
+          submitButton.disabled = false;
+          submitButton.classList.add("bg-red-600");
+          submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Error")}</span>`;
+          console.error("Error saving low funds settings:", error);
+        } finally {
+          setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.classList.remove("bg-green-600", "bg-red-600");
+            submitButton.classList.add(...originalButtonClasses);
+            submitButton.innerHTML = originalButtonHTML;
+            updateLowFundsSettingsState();
           }, 3000);
         }
       }
@@ -691,13 +831,34 @@
         }
       }
 
+      function updateLowFundsSettingsState() {
+        const lowFundsToggle = document.getElementById("low-funds-toggle");
+        const lowFundsForm = document.getElementById("low-funds-settings-form");
+        const lowFundsInputs = [
+          document.getElementById("low-funds-amount"),
+          document.getElementById("low-funds-resettime"),
+          document.getElementById("low-funds-string"),
+          document.getElementById("low-funds-image"),
+          document.getElementById("low-funds-submit-button"),
+        ];
+
+        const isActive = lowFundsToggle.checked;
+        lowFundsInputs.forEach((element) => {
+          element.disabled = !isActive;
+        });
+        lowFundsForm.classList.toggle("opacity-50", !isActive);
+      }
+
       document.addEventListener("DOMContentLoaded", async () => {
         await loadSystemStats();
         await getSettings();
         await updateRegCodeButtonsState();
+        updateLowFundsSettingsState();
 
         document.getElementById("favicon").addEventListener("change", handleFaviconSelection);
         document.getElementById("manifest-settings-form").addEventListener("submit", handleManifestSubmit);
+        document.getElementById("low-funds-image").addEventListener("change", handleLowFundsImageSelection);
+        document.getElementById("low-funds-settings-form").addEventListener("submit", handleLowFundsSubmit);
         document.getElementById("crop-favicon-button").addEventListener("click", () => {
           if (!faviconCropper) return;
 
@@ -722,6 +883,32 @@
         document.getElementById("cancel-favicon-crop-button").addEventListener("click", () => {
           document.getElementById("favicon-cropper-modal").style.display = "none";
           document.getElementById("favicon").value = "";
+        });
+
+        document.getElementById("crop-low-funds-button").addEventListener("click", () => {
+          if (!lowFundsCropper) return;
+
+          const canvas = lowFundsCropper.getCroppedCanvas({
+            maxWidth: 5000,
+            maxHeight: 5000,
+          });
+
+          document.getElementById("low-funds-preview").src = canvas.toDataURL();
+
+          canvas.toBlob(
+            (blob) => {
+              croppedLowFundsBlob = blob;
+            },
+            "image/jpeg",
+            0.9
+          );
+
+          document.getElementById("low-funds-cropper-modal").style.display = "none";
+        });
+
+        document.getElementById("cancel-low-funds-crop-button").addEventListener("click", () => {
+          document.getElementById("low-funds-cropper-modal").style.display = "none";
+          document.getElementById("low-funds-image").value = "";
         });
 
         setInterval(() => {
