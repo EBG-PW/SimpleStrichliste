@@ -75,3 +75,11 @@ process.permissions_config = require('@config/permissions.js');
         process.log.error(`Failed to start webserver on: ${port}\nError: ${error}`);
     }
 })();
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    process.log.system('\n\nShutting down gracefully...');
+    const { closeDatabases } = require('@lib/sqlite');
+    closeDatabases();
+    process.exit(0);
+});
