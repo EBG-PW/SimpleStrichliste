@@ -46,6 +46,23 @@
     "DeleteError": "Fehler beim Löschen des Backups.",
     "DownloadError": "Fehler beim Herunterladen des Backups."
   },
+  "Manifest": {
+    "Title": "Manifest",
+    "Description": "Passe die App-Informationen und das Favicon an.",
+    "Name": "App-Name",
+    "ShortName": "Kurzer App-Name",
+    "AppDescription": "Beschreibung",
+    "BackgroundColor": "Hintergrundfarbe",
+    "ThemeColor": "Theme-Farbe",
+    "Favicon": "Favicon",
+    "AdjustFavicon": "Favicon anpassen",
+    "Cancel": "Abbrechen",
+    "CropSave": "Zuschneiden und speichern",
+    "Button": "Manifest speichern",
+    "Saving": "Speichern...",
+    "Success": "Manifest gespeichert",
+    "Error": "Fehler beim Speichern"
+  },
   "Restore": {
     "Title": "Daten wiederherstellen",
     "DropzoneText": "Datei hierher ziehen oder klicken, um eine Datei auszuwählen",

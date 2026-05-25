@@ -7,6 +7,7 @@ const { ViewRenderer } = require('@lib/template');
 const { getDBMigration } = require('@lib/sqlite/utils')
 const { execSync } = require('child_process');
 const { dbVersion } = require('@config/application');
+const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
 
@@ -108,36 +109,11 @@ app.use('/api/v1', apiv1);
 app.use('/i', images_handler);
 // app.use('/auth', auth_handler);
 
-app.get('/manifest.json', (req, res) => {
+app.get('/manifest.json', async (req, res) => {
     res.header('Content-Type', 'application/json');
-
-    res.json({
-        "name": process.env.APPLICATION || "Strichliste",
-        "short_name": "Strichliste",
-        "description": "Eine App zur Verwaltung von Strichlisten.",
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": "#ffffff",
-        "theme_color": "#3367D6",
-        "icons": [
-            {
-                "src": "/favicon.ico",
-                "sizes": "48x48",
-                "type": "image/x-icon"
-            },
-            {
-                "src": "/icons/icon-192.png",
-                "type": "image/png",
-                "sizes": "192x192"
-            },
-            {
-                "src": "/icons/icon-512.png",
-                "type": "image/png",
-                "sizes": "512x512"
-            }
-        ]
-    })
-})
+    const manifest = await getManifest();
+    res.json(manifest);
+});
 
 app.get('/*', (req, res) => {
     // Split the URL to separate the path and query string

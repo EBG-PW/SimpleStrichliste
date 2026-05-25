@@ -113,6 +113,7 @@ router.delete('/:uuid', verifyRequest('web.admin.items.write'), limiter(4), asyn
  * User route to get all items that need restocking, only if the restocking feature is enabled
  */
 router.get('/restocking/list', verifyRequest('web.user.restock.read'), limiter(4), async (req, res) => {
+    // Admins always have access to the restocking list, regular users only if the feature is enabled
     const hasPermission = checkPermission(req.user.permissions, 'web.admin.restock.read');
     if (hasPermission.result) {
         const restockingItems = await getItemsRestocking();
@@ -126,8 +127,9 @@ router.get('/restocking/list', verifyRequest('web.user.restock.read'), limiter(4
     }
 });
 
-router.post('restocking/complete', verifyRequest('web.user.restock.write'), limiter(4), async (req, res) => {
+router.post('/restocking/complete', verifyRequest('web.user.restock.write'), limiter(4), async (req, res) => {
     const body = await uuidItemArraySchema.validateAsync(await req.json());
+    // Admins always have access to the restocking list, regular users only if the feature is enabled
     const hasPermission = checkPermission(req.user.permissions, 'web.admin.restock.write');
     if (hasPermission.result) {
         const {awardedAmount, totalAwardedPrice} = updateItemsBought(body.items, req.user.user_data.uuid);

@@ -3,13 +3,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
+const { parseMultipart } = require('@middleware/parseMultipartForm');
 const package = require('../package.json');
 const multer = require('multer');
 const { getDBSize, vacuumDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
 const { countUsers } = require('@lib/sqlite/users');
 const { getSystemStats } = require('@lib/stats');
+const { writefavicon } = require('@lib/imageStore');
+const { verifyBufferIsJPG } = require('@lib/utils');
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
+const { generateManifest } = require('@lib/manifest');
+const { InvalidRouteInput } = require('@lib/errors');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
 const router = new HyperExpress.Router();
@@ -29,6 +34,14 @@ const uploadHandler = multer({
 
 const settingsToggleSchema = Joi.object({
     setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM').required(),
+});
+
+const settingsManifestSchema = Joi.object({
+    APP_NAME: Joi.fullysanitizedString().min(1).max(100).required(),
+    APP_SHORT_NAME: Joi.fullysanitizedString().min(1).max(100).required(),
+    APP_DESCRIPTION: Joi.fullysanitizedString().min(1).max(250).required(),
+    APP_BACKGROUND_COLOR: Joi.string().pattern(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).required(),
+    APP_THEME_COLOR: Joi.string().pattern(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/).required(),
 });
 
 router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req, res) => {
@@ -60,6 +73,43 @@ router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async 
     await vacuumDB();
     const dbSize_after = getDBSize();
     return res.json({ success: true, dbSize_before, dbSize_after });
+});
+
+router.put('/manifest', verifyRequest('app.admin.settings.write'), parseMultipart(), limiter(10), async (req, res) => {
+    const body = await settingsManifestSchema.validateAsync(req.body);
+
+    if (req.file) {
+        if (req.file.fieldname !== 'favicon') throw new InvalidRouteInput('Invalid Image');
+
+        const validImage = await verifyBufferIsJPG(req.file.buffer, 512, 512);
+        if (!validImage) throw new InvalidRouteInput('Invalid Image');
+
+        await writefavicon(req.file.buffer);
+    }
+
+    await updateSetting('APP_NAME', body.APP_NAME);
+    await updateSetting('APP_SHORT_NAME', body.APP_SHORT_NAME);
+    await updateSetting('APP_DESCRIPTION', body.APP_DESCRIPTION);
+    await updateSetting('APP_BACKGROUND_COLOR', body.APP_BACKGROUND_COLOR);
+    await updateSetting('APP_THEME_COLOR', body.APP_THEME_COLOR);
+
+    await generateManifest();
+
+    res.status(200).json({ success: true });
+});
+
+router.put('/favicon', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
+    // Image is only in the request if it was modified
+    if (req.file) {
+        if (req.file.fieldname !== 'favicon') throw new InvalidRouteInput('Invalid Image');
+
+        const validImage = await verifyBufferIsJPG(req.file.buffer, 512, 512);
+        if (!validImage) throw new InvalidRouteInput('Invalid Image');
+
+        await writefavicon(req.file.buffer);
+    }
+
+    res.status(200).json({ success: true });
 });
 
 router.get('/backup', verifyRequest('app.admin.backup.read'), limiter(5), async (req, res) => {
@@ -97,25 +147,25 @@ router.post('/backup/restore', limiter(10), uploadHandler.single('backupFile'), 
     if (usercount > 0) return res.status(409).json({ error: 'Not available' });
     if (!req.file) return res.status(400).json({ success: false });
 
-        const zipFilePath = req.file.path;
-        process.log.system(`Restore started. Received file: ${zipFilePath}`);
+    const zipFilePath = req.file.path;
+    process.log.system(`Restore started. Received file: ${zipFilePath}`);
 
-        try {
-            await restoreBackup(zipFilePath);
-            res.status(200).json({ success: true });
-        } catch (error) {
-            process.log.error('Restore failed:', error);
-            res.status(500).json({ success: false });
-        } finally {
-            if (fs.existsSync(zipFilePath)) {
-                fs.rmSync(zipFilePath, { force: true });
-                process.log.system(`Cleaned up uploaded zip: ${zipFilePath}`);
-            }
-            // Kill Application
-            process.log.system('Killing application to get into a safe state...');
-            process.exit(0);
+    try {
+        await restoreBackup(zipFilePath);
+        res.status(200).json({ success: true });
+    } catch (error) {
+        process.log.error('Restore failed:', error);
+        res.status(500).json({ success: false });
+    } finally {
+        if (fs.existsSync(zipFilePath)) {
+            fs.rmSync(zipFilePath, { force: true });
+            process.log.system(`Cleaned up uploaded zip: ${zipFilePath}`);
         }
+        // Kill Application
+        process.log.system('Killing application to get into a safe state...');
+        process.exit(0);
     }
+}
 );
 
 module.exports = {

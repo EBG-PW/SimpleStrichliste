@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle"></title>
+    <link rel="stylesheet" href="<%= domain %>/css/cropper.min.css?<%= curentUnixTime %>">
     <%- html_content.manifest %>
     <script>
       const lang = <%- JSON.stringify(language) %>;
@@ -143,6 +144,54 @@
             <button id="manage-db-backup-btn" onclick="showBackupListModal()" class="w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition" data-translate="AdminSettings.DBBackup.ManageButton"></button>
           </div>
         </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Manifest.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Manifest.Description"></p>
+
+          <form id="manifest-settings-form" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="app-name" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.Name"></label>
+                <input type="text" name="app-name" id="app-name" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+              </div>
+              <div>
+                <label for="app-short-name" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.ShortName"></label>
+                <input type="text" name="app-short-name" id="app-short-name" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+              </div>
+            </div>
+
+            <div>
+              <label for="app-description" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.AppDescription"></label>
+              <input type="text" name="app-description" id="app-description" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="app-background-color" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.BackgroundColor"></label>
+                <input type="color" name="app-background-color" id="app-background-color" class="mt-1 block w-full h-12 px-2 py-1 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+              </div>
+              <div>
+                <label for="app-theme-color" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.ThemeColor"></label>
+                <input type="color" name="app-theme-color" id="app-theme-color" class="mt-1 block w-full h-12 px-2 py-1 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Manifest.Favicon"></label>
+              <div class="mt-2 flex items-center gap-6">
+                <img id="favicon-preview" src="/favicon.ico?<%= curentUnixTime %>" alt="Favicon preview" class="h-24 w-24 rounded-full object-cover" />
+                <input type="file" name="favicon" id="favicon" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+              </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button type="submit" id="manifest-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                <span data-translate="AdminSettings.Manifest.Button"></span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <div id="qr-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
@@ -166,13 +215,29 @@
         </div>
       </div>
 
+      <div id="favicon-cropper-modal" class="cropper-modal-container">
+        <div class="cropper-modal-content">
+          <h2 class="text-xl font-bold mb-4" data-translate="AdminSettings.Manifest.AdjustFavicon"></h2>
+          <div class="cropper-image-container">
+            <img id="favicon-image-to-crop" />
+          </div>
+          <div class="flex justify-end gap-4 mt-4">
+            <button type="button" id="cancel-favicon-crop-button" class="py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200" data-translate="AdminSettings.Manifest.Cancel"></button>
+            <button type="button" id="crop-favicon-button" class="py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700" data-translate="AdminSettings.Manifest.CropSave"></button>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/qrcode.min.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/cropper.min.js?<%= curentUnixTime %>"></script>
     <script>
       let regCode = "";
+      let faviconCropper;
+      let croppedFaviconBlob = null;
       function formatBytes(bytes, decimals = 2) {
         if (!+bytes) return "0 Bytes";
         const k = 1024;
@@ -227,8 +292,91 @@
           document.getElementById("user-shoppinglist-toggle").checked = settings.find((s) => s.setting_key === "USER_SHOPPINGLIST_ACTIVE")?.setting_value === "true";
           document.getElementById("db-autovacuum-toggle").checked = settings.find((s) => s.setting_key === "DB_AUTOVACUUM")?.setting_value === "true";
           regCode = settings.find((s) => s.setting_key === "REG_CODE")?.setting_value || "";
+          document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";
+          document.getElementById("app-short-name").value = settings.find((s) => s.setting_key === "APP_SHORT_NAME")?.setting_value || "";
+          document.getElementById("app-description").value = settings.find((s) => s.setting_key === "APP_DESCRIPTION")?.setting_value || "";
+          document.getElementById("app-background-color").value = settings.find((s) => s.setting_key === "APP_BACKGROUND_COLOR")?.setting_value || "#ffffff";
+          document.getElementById("app-theme-color").value = settings.find((s) => s.setting_key === "APP_THEME_COLOR")?.setting_value || "#3367D6";
         } catch (error) {
           console.error("Error fetching settings:", error);
+        }
+      }
+
+      function handleFaviconSelection(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const faviconCropperModal = document.getElementById("favicon-cropper-modal");
+        const faviconImageToCrop = document.getElementById("favicon-image-to-crop");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          faviconImageToCrop.src = e.target.result;
+          faviconCropperModal.style.display = "flex";
+
+          if (faviconCropper) {
+            faviconCropper.destroy();
+          }
+
+          faviconCropper = new Cropper(faviconImageToCrop, {
+            aspectRatio: 1,
+            viewMode: 1,
+            background: false,
+            responsive: true,
+            restore: true,
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function handleManifestSubmit(event) {
+        event.preventDefault();
+
+        const submitButton = document.getElementById("manifest-submit-button");
+        const originalButtonClasses = ["bg-indigo-600", "hover:bg-indigo-700"];
+        const originalButtonHTML = submitButton.innerHTML;
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Saving")}</span>`;
+
+        try {
+          const formData = new FormData();
+          formData.set("APP_NAME", document.getElementById("app-name").value);
+          formData.set("APP_SHORT_NAME", document.getElementById("app-short-name").value);
+          formData.set("APP_DESCRIPTION", document.getElementById("app-description").value);
+          formData.set("APP_BACKGROUND_COLOR", document.getElementById("app-background-color").value);
+          formData.set("APP_THEME_COLOR", document.getElementById("app-theme-color").value);
+
+          if (croppedFaviconBlob) {
+            formData.set("favicon", croppedFaviconBlob, "favicon.jpg");
+          }
+
+          const response = await apiFetch("/api/v1/settings/manifest", {
+            method: "PUT",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("Failed to update manifest.");
+
+          if (croppedFaviconBlob) {
+            document.getElementById("favicon").value = "";
+            croppedFaviconBlob = null;
+          }
+
+          submitButton.classList.remove(...originalButtonClasses);
+          submitButton.classList.add("bg-green-600");
+          submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Success")}</span>`;
+          document.getElementById("favicon-preview").src = `/favicon.ico?${Date.now()}`;
+        } catch (error) {
+          submitButton.classList.remove(...originalButtonClasses);
+          submitButton.classList.add("bg-red-600");
+          submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Error")}</span>`;
+          console.error("Error saving manifest settings:", error);
+        } finally {
+          setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.classList.remove("bg-green-600", "bg-red-600");
+            submitButton.classList.add(...originalButtonClasses);
+            submitButton.innerHTML = originalButtonHTML;
+          }, 3000);
         }
       }
 
@@ -547,6 +695,34 @@
         await loadSystemStats();
         await getSettings();
         await updateRegCodeButtonsState();
+
+        document.getElementById("favicon").addEventListener("change", handleFaviconSelection);
+        document.getElementById("manifest-settings-form").addEventListener("submit", handleManifestSubmit);
+        document.getElementById("crop-favicon-button").addEventListener("click", () => {
+          if (!faviconCropper) return;
+
+          const canvas = faviconCropper.getCroppedCanvas({
+            width: 512,
+            height: 512,
+          });
+
+          document.getElementById("favicon-preview").src = canvas.toDataURL();
+
+          canvas.toBlob(
+            (blob) => {
+              croppedFaviconBlob = blob;
+            },
+            "image/jpeg",
+            0.9
+          );
+
+          document.getElementById("favicon-cropper-modal").style.display = "none";
+        });
+
+        document.getElementById("cancel-favicon-crop-button").addEventListener("click", () => {
+          document.getElementById("favicon-cropper-modal").style.display = "none";
+          document.getElementById("favicon").value = "";
+        });
 
         setInterval(() => {
           loadSystemStats();
