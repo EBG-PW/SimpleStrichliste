@@ -77,7 +77,7 @@ process.permissions_config = require('@config/permissions.js');
 })();
 
 function handleShutdown(signal) {
-    process.log.system(`\n\nReceived ${signal}. Shutting down gracefully...`);
+    process.log.system(`Received ${signal}. Shutting down gracefully...`);
     const { closeDatabases } = require('@lib/sqlite');
     closeDatabases();
     process.exit(0);
