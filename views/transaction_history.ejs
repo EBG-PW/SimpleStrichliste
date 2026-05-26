@@ -141,8 +141,9 @@
               iconOrImage = `<img src="/i/items/${tx.item_uuid}" alt="${tx.item_name}" class="w-12 h-12 object-cover rounded-full">`;
           }
 
-          const sign = isPurchase ? "+" : "-";
-          const amountColor = isPurchase ? "text-green-600" : "text-red-600";
+          const sign = totalAmount > 0 ? "+" : totalAmount < 0 ? "-" : "";
+          const amountColor = totalAmount > 0 ? "text-green-600" : totalAmount < 0 ? "text-red-600" : "text-gray-600";
+          const displayAmount = Math.abs(totalAmount).toFixed(2);
 
           return `
                     <div class="transaction-item flex items-center justify-between p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -154,7 +155,7 @@
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0 ml-2">
-                            <p class="font-bold text-lg ${amountColor}">${i18next.t("Items.HistoryAmmount", { amount: totalAmount.toFixed(2), sign: sign })}</p>
+                            <p class="font-bold text-lg ${amountColor}">${i18next.t("Items.HistoryAmmount", { amount: displayAmount, sign: sign })}</p>
                         </div>
                     </div>
                 `;
