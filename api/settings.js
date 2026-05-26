@@ -45,7 +45,7 @@ const settingsManifestSchema = Joi.object({
 });
 
 const settingsLowFundsSchema = Joi.object({
-    LOW_FUNDS_AMOUNT: Joi.number().min(1).max(10000).required(),
+    LOW_FUNDS_AMOUNT: Joi.number().min(1).max(100).required(),
     LOW_FUNDS_RESETTIME: Joi.number().integer().min(0).max(8760).required(),
     LOW_FUNDS_STRING: Joi.fullysanitizedString().min(1).max(250).required(),
 });
