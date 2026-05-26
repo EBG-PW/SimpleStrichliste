@@ -12,7 +12,6 @@
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
     <style>
       html,
-
       body {
         height: 100%;
         display: flex;
@@ -32,22 +31,32 @@
       }
 
       #popup-wrapper {
-        transition: visibility 0s, opacity 0.3s ease-in-out;
+        transition:
+          visibility 0s,
+          opacity 0.3s ease-in-out;
       }
       #popup-wrapper.active {
-        transition: visibility 0s, opacity 0.3s ease-in-out;
+        transition:
+          visibility 0s,
+          opacity 0.3s ease-in-out;
       }
       #buy-popup {
         transition: transform 0.3s ease-in-out;
       }
       #restocking-popup-wrapper {
-        transition: visibility 0s, opacity 0.3s ease-in-out;
+        transition:
+          visibility 0s,
+          opacity 0.3s ease-in-out;
       }
       #low-funds-popup-wrapper {
-        transition: visibility 0s, opacity 0.3s ease-in-out;
+        transition:
+          visibility 0s,
+          opacity 0.3s ease-in-out;
       }
       #leaderboard-popup-wrapper {
-        transition: visibility 0s, opacity 0.3s ease-in-out;
+        transition:
+          visibility 0s,
+          opacity 0.3s ease-in-out;
       }
     </style>
   </head>
@@ -63,7 +72,13 @@
             <p id="balance-display" class="text-4xl font-bold text-gray-800 mt-1">...</p>
           </div>
           <button id="open-restock-popup-btn" class="hidden flex-shrink-0 flex items-center gap-2 bg-blue-300 font-semibold py-2 px-3 rounded-lg hover:bg-blue-400 transition-colors shadow text-black text-sm" data-translate="Overview.RestockItemsOpen">
-            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M17 17h-11v-14h-2" />
+              <path d="M6 5l14 1l-1 7h-13" />
+            </svg>
           </button>
         </div>
         <h2 class="text-xl font-bold mb-4 text-gray-700" data-translate="Overview.Favorites"></h2>
@@ -96,26 +111,25 @@
     <div id="message-box-container" class="fixed bottom-5 right-5 w-full max-w-xs z-[9999]">
       <div id="message-box" class="hidden mt-4 p-4 rounded-lg shadow-lg"></div>
     </div>
-    
+
     <div id="restocking-popup-wrapper" class="fixed inset-0 z-60 invisible opacity-0 flex items-center justify-center p-4">
-        <div id="restocking-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
-        <div id="restocking-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800" data-translate="Overview.RestockItems.Title"></h2>
-                    <p class="text-sm text-gray-500" data-translate="Overview.RestockItems.Description"></p>
-                </div>
-                <button id="restock-close-button" class="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <div id="restocking-items-list" class="flex-grow p-2 overflow-y-auto">
-            </div>
-            <div class="p-4 border-t">
-                <div id="restock-total-container" class="text-right mb-2 text-lg font-medium text-gray-700"></div>
-                <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.RestockItems.CompleteButton"></button>
-            </div>
+      <div id="restocking-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
+      <div id="restocking-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-gray-800" data-translate="Overview.RestockItems.Title"></h2>
+            <p class="text-sm text-gray-500" data-translate="Overview.RestockItems.Description"></p>
+          </div>
+          <button id="restock-close-button" class="text-gray-400 hover:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
+        <div id="restocking-items-list" class="flex-grow p-2 overflow-y-auto"></div>
+        <div class="p-4 border-t">
+          <div id="restock-total-container" class="text-right mb-2 text-lg font-medium text-gray-700"></div>
+          <button id="restock-confirm-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400" data-translate="Overview.RestockItems.CompleteButton"></button>
+        </div>
+      </div>
     </div>
 
     <div id="low-funds-popup-wrapper" class="fixed inset-0 z-[70] invisible opacity-0 flex items-center justify-center p-4">
@@ -249,7 +263,7 @@
         const mainContainer = document.getElementById("main-content-container");
         const ITEMS_PER_PAGE = 10;
         let itemCache = {};
-        
+
         let restockingItemsData = [];
         let lowFundsSettings = null;
         let lowFundsDismissed = false;
@@ -275,9 +289,13 @@
           const dismissedUntil = Number.isFinite(resettime) && resettime > 0 ? Date.now() + resettime * 60 * 60 * 1000 : Date.now();
           localStorage.setItem(lowFundsDismissedUntilKey, dismissedUntil.toString());
           lowFundsPopupWrapper.classList.add("opacity-0");
-          lowFundsPopupWrapper.addEventListener("transitionend", () => {
-            lowFundsPopupWrapper.classList.add("invisible");
-          }, { once: true });
+          lowFundsPopupWrapper.addEventListener(
+            "transitionend",
+            () => {
+              lowFundsPopupWrapper.classList.add("invisible");
+            },
+            { once: true },
+          );
         };
 
         const openLowFundsPopup = () => {
@@ -324,9 +342,13 @@
 
         const closeLeaderboardPopup = () => {
           leaderboardPopupWrapper.classList.add("opacity-0");
-          leaderboardPopupWrapper.addEventListener("transitionend", () => {
-            leaderboardPopupWrapper.classList.add("invisible");
-          }, { once: true });
+          leaderboardPopupWrapper.addEventListener(
+            "transitionend",
+            () => {
+              leaderboardPopupWrapper.classList.add("invisible");
+            },
+            { once: true },
+          );
         };
 
         const getUserIconHTML = () => `
@@ -339,25 +361,30 @@
 
         const getLeaderboardRankClass = (index) => {
           if (index === 0) return "bg-yellow-50 border-yellow-200";
-          if (index === 1) return "bg-slate-50 border-slate-200";
+          if (index === 1) return "bg-zinc-50 border-zinc-200";
           if (index === 2) return "bg-orange-50 border-orange-200";
-          return "bg-gray-50 border-gray-200";
+          return "bg-white-50 border-white-200";
         };
 
         const getLeaderboardRankBadge = (index) => {
           if (index === 0) return "bg-yellow-400 text-yellow-950";
-          if (index === 1) return "bg-slate-300 text-slate-900";
+          if (index === 1) return "bg-zinc-300 text-zinc-900";
           if (index === 2) return "bg-orange-400 text-orange-950";
-          return "bg-gray-200 text-gray-700";
+          return "bg-white-200 text-white-700";
         };
 
-        const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#039;"
-        }[char]));
+        const escapeHTML = (value) =>
+          String(value ?? "").replace(
+            /[&<>"']/g,
+            (char) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;",
+              })[char],
+          );
 
         const setLeaderboardRangeButtonState = () => {
           document.querySelectorAll(".leaderboard-range-button").forEach((button) => {
@@ -377,7 +404,9 @@
             return;
           }
 
-          leaderboardList.innerHTML = entries.map((entry, index) => `
+          leaderboardList.innerHTML = entries
+            .map(
+              (entry, index) => `
             <div class="flex items-center justify-between gap-3 rounded-xl border p-3 ${getLeaderboardRankClass(index)}">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${getLeaderboardRankBadge(index)}">${index + 1}</span>
@@ -389,7 +418,9 @@
               </div>
               <div class="font-bold text-gray-800 whitespace-nowrap">${t("Overview.Leaderboard.Amount", { count: entry.total_quantity })}</div>
             </div>
-          `).join("");
+          `,
+            )
+            .join("");
         };
 
         const loadLeaderboard = async () => {
@@ -502,15 +533,16 @@
 
         const createItemCardHTML = (item) => {
           const stockColor = item.stock < item.target_stock * 0.25 ? "text-red-500" : item.stock < item.target_stock * 0.5 ? "text-orange-500" : item.stock < item.target_stock * 0.75 ? "text-yellow-500" : "text-green-500";
-          
-          const adminSettingsButton = (typeof checkPermission === 'function' && checkPermission("app.admin"))
-            ? `
+
+          const adminSettingsButton =
+            typeof checkPermission === "function" && checkPermission("app.admin")
+              ? `
           <a href="/admin/${item.uuid}/edititems"
               class="p-2 rounded-full bg-white/70 backdrop-blur-sm hover:bg-white text-gray-700 shadow-md transition-colors"
               aria-label="Artikel bearbeiten">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
           </a>`
-            : "";
+              : "";
 
           return `
           <div class="relative">
@@ -648,11 +680,15 @@
           popupWrapper.classList.remove("active");
           popupWrapper.classList.add("opacity-0");
           popupContent.classList.add("translate-y-full");
-          popupWrapper.addEventListener("transitionend", () => {
-            if (!popupWrapper.classList.contains("active")) {
-              popupWrapper.classList.add("invisible");
-            }
-          }, { once: true });
+          popupWrapper.addEventListener(
+            "transitionend",
+            () => {
+              if (!popupWrapper.classList.contains("active")) {
+                popupWrapper.classList.add("invisible");
+              }
+            },
+            { once: true },
+          );
         };
 
         const updatePopupQuantity = (newQuantity) => {
@@ -739,34 +775,34 @@
           }
         };
 
-        const restockingPopupWrapper = document.getElementById('restocking-popup-wrapper');
-        const restockingItemsList = document.getElementById('restocking-items-list');
-        const restockConfirmButton = document.getElementById('restock-confirm-button');
-        const restockCloseButton = document.getElementById('restock-close-button');
-        const restockingPopupBackdrop = document.getElementById('restocking-popup-backdrop');
-        const openRestockBtn = document.getElementById('open-restock-popup-btn');
-        
-        const updateRestockTotal = () => {
-            const totalContainer = document.getElementById('restock-total-container');
-            const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
-            
-            let total = 0;
-            const boughtUuids = Array.from(boughtItems).map(item => item.dataset.uuid);
+        const restockingPopupWrapper = document.getElementById("restocking-popup-wrapper");
+        const restockingItemsList = document.getElementById("restocking-items-list");
+        const restockConfirmButton = document.getElementById("restock-confirm-button");
+        const restockCloseButton = document.getElementById("restock-close-button");
+        const restockingPopupBackdrop = document.getElementById("restocking-popup-backdrop");
+        const openRestockBtn = document.getElementById("open-restock-popup-btn");
 
-            boughtUuids.forEach(uuid => {
-                const itemData = restockingItemsData.find(d => d.uuid === uuid);
-                if (itemData) {
-                    total += itemData.amount_to_buy * itemData.pack_price;
-                }
-            });
-            
-            totalContainer.textContent = t("Overview.RestockItems.TotalPrice", { price: total.toFixed(2) });
+        const updateRestockTotal = () => {
+          const totalContainer = document.getElementById("restock-total-container");
+          const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
+
+          let total = 0;
+          const boughtUuids = Array.from(boughtItems).map((item) => item.dataset.uuid);
+
+          boughtUuids.forEach((uuid) => {
+            const itemData = restockingItemsData.find((d) => d.uuid === uuid);
+            if (itemData) {
+              total += itemData.amount_to_buy * itemData.pack_price;
+            }
+          });
+
+          totalContainer.textContent = t("Overview.RestockItems.TotalPrice", { price: total.toFixed(2) });
         };
-        
+
         const displayRestockingPopup = (items) => {
-            restockingItemsList.innerHTML = '';
-            items.forEach(item => {
-                const itemHTML = `
+          restockingItemsList.innerHTML = "";
+          items.forEach((item) => {
+            const itemHTML = `
                         <div class="restock-item flex items-center p-3 border-b border-gray-200" data-uuid="${item.uuid}">
                             <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0 mr-4">
                             <div class="flex-grow min-w-0">
@@ -777,111 +813,115 @@
                             <button class="restock-bought-button ml-4 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors flex-shrink-0">${t("Overview.RestockItems.ConfirmButtonBuy")}</button>
                         </div>
                 `;
-                restockingItemsList.insertAdjacentHTML('beforeend', itemHTML);
-            });
-            restockingPopupWrapper.classList.remove('invisible', 'opacity-0');
-            updateRestockTotal();
+            restockingItemsList.insertAdjacentHTML("beforeend", itemHTML);
+          });
+          restockingPopupWrapper.classList.remove("invisible", "opacity-0");
+          updateRestockTotal();
         };
 
         const closeRestockingPopup = () => {
-            restockingPopupWrapper.classList.add('opacity-0');
-            restockingPopupWrapper.addEventListener('transitionend', () => {
-                restockingPopupWrapper.classList.add('invisible');
-            }, { once: true });
+          restockingPopupWrapper.classList.add("opacity-0");
+          restockingPopupWrapper.addEventListener(
+            "transitionend",
+            () => {
+              restockingPopupWrapper.classList.add("invisible");
+            },
+            { once: true },
+          );
         };
-        
-        restockingItemsList.addEventListener('click', (e) => {
-            const boughtButton = e.target.closest('.restock-bought-button');
-            if (!boughtButton) return;
-            const itemElement = boughtButton.closest('.restock-item');
-            const isBought = itemElement.dataset.bought === 'true';
-            if (isBought) {
-                itemElement.dataset.bought = 'false';
-                boughtButton.textContent = t("Overview.RestockItems.ConfirmButtonBuy");
-                boughtButton.classList.remove('bg-green-500', 'text-white', 'hover:bg-green-600');
-                boughtButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-            } else {
-                itemElement.dataset.bought = 'true';
-                boughtButton.textContent = t("Overview.RestockItems.ConfirmButton");
-                boughtButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                boughtButton.classList.add('bg-green-500', 'text-white', 'hover:bg-green-600');
-            }
-            updateRestockTotal();
+
+        restockingItemsList.addEventListener("click", (e) => {
+          const boughtButton = e.target.closest(".restock-bought-button");
+          if (!boughtButton) return;
+          const itemElement = boughtButton.closest(".restock-item");
+          const isBought = itemElement.dataset.bought === "true";
+          if (isBought) {
+            itemElement.dataset.bought = "false";
+            boughtButton.textContent = t("Overview.RestockItems.ConfirmButtonBuy");
+            boughtButton.classList.remove("bg-green-500", "text-white", "hover:bg-green-600");
+            boughtButton.classList.add("bg-gray-200", "text-gray-700", "hover:bg-gray-300");
+          } else {
+            itemElement.dataset.bought = "true";
+            boughtButton.textContent = t("Overview.RestockItems.ConfirmButton");
+            boughtButton.classList.remove("bg-gray-200", "text-gray-700", "hover:bg-gray-300");
+            boughtButton.classList.add("bg-green-500", "text-white", "hover:bg-green-600");
+          }
+          updateRestockTotal();
         });
 
-        restockConfirmButton.addEventListener('click', async () => {
-            const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
-            const itemsPayload = Array.from(boughtItems).map(itemEl => {
-                const uuid = itemEl.dataset.uuid;
-                const itemData = restockingItemsData.find(d => d.uuid === uuid);
-                return {
-                    uuid: uuid,
-                    amount: itemData.amount_to_buy
-                };
+        restockConfirmButton.addEventListener("click", async () => {
+          const boughtItems = restockingItemsList.querySelectorAll('.restock-item[data-bought="true"]');
+          const itemsPayload = Array.from(boughtItems).map((itemEl) => {
+            const uuid = itemEl.dataset.uuid;
+            const itemData = restockingItemsData.find((d) => d.uuid === uuid);
+            return {
+              uuid: uuid,
+              amount: itemData.amount_to_buy,
+            };
+          });
+          if (itemsPayload.length === 0) {
+            showMessage(t("Overview.RestockItems.NoMarkedItems"), "error");
+            return;
+          }
+          restockConfirmButton.disabled = true;
+          restockConfirmButton.textContent = t("Overview.RestockItems.Processing");
+          try {
+            const response = await apiFetch("/api/v1/items/restocking/complete", {
+              method: "POST",
+              body: JSON.stringify({ items: itemsPayload }),
             });
-            if (itemsPayload.length === 0) {
-                showMessage(t("Overview.RestockItems.NoMarkedItems"), 'error');
-                return;
+            if (!response.ok) {
+              throw new Error("Server responded with an error.");
             }
-            restockConfirmButton.disabled = true;
-            restockConfirmButton.textContent = t("Overview.RestockItems.Processing");
-            try {
-                const response = await apiFetch('/api/v1/items/restocking/complete', {
-                    method: 'POST',
-                    body: JSON.stringify({ items: itemsPayload })
-                });
-                if (!response.ok) {
-                  throw new Error('Server responded with an error.');
-                }
-                showMessage(t("Overview.RestockItems.Success"), 'success');
-                closeRestockingPopup();
-                reloadData();
-            } catch (error) {
-                console.error("Error saving restocking transaction:", error);
-                showMessage(t("Overview.RestockItems.Error"), 'error');
-                alert(error.message);
-            } finally {
-                restockConfirmButton.disabled = false;
-                restockConfirmButton.textContent = t("Overview.RestockItems.CompleteButton");
-            }
+            showMessage(t("Overview.RestockItems.Success"), "success");
+            closeRestockingPopup();
+            reloadData();
+          } catch (error) {
+            console.error("Error saving restocking transaction:", error);
+            showMessage(t("Overview.RestockItems.Error"), "error");
+            alert(error.message);
+          } finally {
+            restockConfirmButton.disabled = false;
+            restockConfirmButton.textContent = t("Overview.RestockItems.CompleteButton");
+          }
         });
 
-        restockCloseButton.addEventListener('click', closeRestockingPopup);
-        restockingPopupBackdrop.addEventListener('click', closeRestockingPopup);
-        
-        openRestockBtn.addEventListener('click', () => {
+        restockCloseButton.addEventListener("click", closeRestockingPopup);
+        restockingPopupBackdrop.addEventListener("click", closeRestockingPopup);
+
+        openRestockBtn.addEventListener("click", () => {
           if (restockingItemsData.length > 0) {
             displayRestockingPopup(restockingItemsData);
           }
         });
-        
+
         const loadRestockingItems = async () => {
-          const openRestockBtn = document.getElementById('open-restock-popup-btn');
+          const openRestockBtn = document.getElementById("open-restock-popup-btn");
           try {
             const response = await apiFetch("/api/v1/items/restocking/list");
 
             if (response.status === 503) {
-              openRestockBtn.classList.add('hidden');
+              openRestockBtn.classList.add("hidden");
               console.warn("Restocking service unavailable (503).");
               return;
             }
 
             if (!response.ok) {
-              openRestockBtn.classList.add('hidden');
+              openRestockBtn.classList.add("hidden");
               console.error("Failed to fetch restocking items, status:", response.status);
               return;
             }
-            
+
             const data = await response.json();
-            
+
             if (data && data.length > 0) {
               restockingItemsData = data;
-              openRestockBtn.classList.remove('hidden');
+              openRestockBtn.classList.remove("hidden");
             } else {
-              openRestockBtn.classList.add('hidden');
+              openRestockBtn.classList.add("hidden");
             }
           } catch (error) {
-            openRestockBtn.classList.add('hidden');
+            openRestockBtn.classList.add("hidden");
             console.error("Error fetching restocking items:", error);
           }
         };
