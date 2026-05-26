@@ -10,6 +10,7 @@ module.exports = {
     "/admin/categories": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories"],
     "/admin/additems": ["Admin", "Error", "Page", "Setup", "Navbar", "Categories", "Items"],
     "/admin/settings": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminSettings"],
+    "/admin/stats": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminStats"],
     "/admin/transaction_history": ["Admin", "Error", "Page", "Setup", "Navbar", "Items"],
     "/admin/users": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminUsers"],
     "/admin/edituser": ["Admin", "Error", "Page", "Setup", "Navbar", "AdminUser"],

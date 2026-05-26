@@ -28,5 +28,17 @@
     "LowFunds": {
         "Title": "Geringer Kontostand",
         "Close": "Schließen"
+    },
+    "Leaderboard": {
+        "Title": "Top Käufer",
+        "Week": "Woche",
+        "Month": "Monat",
+        "All": "Alle",
+        "Empty": "Noch keine Käufe in diesem Zeitraum.",
+        "Loading": "Lade Rangliste...",
+        "Error": "Rangliste konnte nicht geladen werden.",
+        "Amount": "{{count}} gekauft",
+        "Amount_plural": "{{count}} gekauft",
+        "Close": "Schließen"
     }
 }

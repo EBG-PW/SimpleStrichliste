@@ -1,0 +1,27 @@
+{
+    "PageTitle": "Verkaufsstatistiken",
+    "CategorySales": {
+        "Title": "Verkäufe nach Kategorie",
+        "Description": "Mengen pro Kategorie und Umsatz im gleichen Zeitraum.",
+        "QuantityAxis": "Verkäufe",
+        "MoneyAxis": "Umsatz",
+        "MoneyLine": "Umsatz gesamt"
+    },
+    "ItemSales": {
+        "Title": "Artikelverkäufe nach Kategorie",
+        "Description": "Alle Artikel der gewählten Kategorie als eigene Linien.",
+        "CategoryLabel": "Kategorie",
+        "EmptyCategory": "Keine aktive Kategorie mit Artikeln gefunden."
+    },
+    "Range": {
+        "Last7": "7 Tage",
+        "Last30": "30 Tage",
+        "Last90": "90 Tage",
+        "Last365": "1 Jahr"
+    },
+    "Chart": {
+        "NoData": "Keine Verkäufe im gewählten Zeitraum.",
+        "Loading": "Lade Statistiken...",
+        "Error": "Statistiken konnten nicht geladen werden."
+    }
+}

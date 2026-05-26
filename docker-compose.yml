@@ -18,7 +18,7 @@ services:
       - BINDIP=0.0.0.0
       - SALTROUNDS=12 # Adjust as needed
       - WebTokenDurationH=9600 # Token duration in hours
-      - DECREASEPERMIN=60 # Ratelimit decrease per minute
+      - DECREASEPERMIN=240 # Ratelimit decrease per minute
       - CLOUDFLARE_PROXY=false
       - ANY_PROXY=false
       - MAX_AVATAR_SIZE_KB=16000 # Max avatar size in KB

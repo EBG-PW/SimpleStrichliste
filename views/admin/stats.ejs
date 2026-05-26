@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle"></title>
+    <%- html_content.manifest %>
+    <script>
+      const lang = <%- JSON.stringify(language) %>;
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <style>
+      .stats-chart {
+        width: 100%;
+        height: 360px;
+        display: block;
+      }
+
+      .range-button.active {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-100 font-sans">
+    <%- html_content.navbar %>
+
+    <main class="container mx-auto p-4 md:p-6">
+      <header class="flex items-center mb-6">
+        <a href="/admin/index" aria-label="Go back" class="text-gray-500 hover:text-gray-800 mr-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800" data-translate="AdminStats.PageTitle"></h1>
+      </header>
+
+      <div class="grid grid-cols-1 gap-6">
+        <section class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
+            <div>
+              <h2 class="font-bold text-xl text-gray-800" data-translate="AdminStats.CategorySales.Title"></h2>
+              <p class="text-gray-600 text-sm mt-1" data-translate="AdminStats.CategorySales.Description"></p>
+            </div>
+            <div class="flex flex-wrap gap-2" data-chart-range="category">
+              <button type="button" data-days="7" class="range-button active px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last7"></button>
+              <button type="button" data-days="30" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last30"></button>
+              <button type="button" data-days="90" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last90"></button>
+              <button type="button" data-days="365" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last365"></button>
+            </div>
+          </div>
+
+          <div class="relative">
+            <canvas id="category-chart" class="stats-chart"></canvas>
+            <div id="category-chart-message" class="hidden absolute inset-0 items-center justify-center text-sm text-gray-500 bg-white bg-opacity-80"></div>
+          </div>
+          <div id="category-chart-legend" class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-600"></div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between mb-4">
+            <div>
+              <h2 class="font-bold text-xl text-gray-800" data-translate="AdminStats.ItemSales.Title"></h2>
+              <p class="text-gray-600 text-sm mt-1" data-translate="AdminStats.ItemSales.Description"></p>
+            </div>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <label class="block">
+                <span class="block text-sm font-medium text-gray-700 mb-1" data-translate="AdminStats.ItemSales.CategoryLabel"></span>
+                <select id="item-category-select" class="block w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-800 focus:ring-blue-500 focus:border-blue-500"></select>
+              </label>
+              <div class="flex flex-wrap gap-2" data-chart-range="items">
+                <button type="button" data-days="7" class="range-button active px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last7"></button>
+                <button type="button" data-days="30" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last30"></button>
+                <button type="button" data-days="90" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last90"></button>
+                <button type="button" data-days="365" class="range-button px-3 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" data-translate="AdminStats.Range.Last365"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <canvas id="item-chart" class="stats-chart"></canvas>
+            <div id="item-chart-message" class="hidden absolute inset-0 items-center justify-center text-sm text-gray-500 bg-white bg-opacity-80"></div>
+          </div>
+          <div id="item-chart-legend" class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-600"></div>
+        </section>
+      </div>
+    </main>
+
+    <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+      const chartColors = [
+        "#2563eb",
+        "#16a34a",
+        "#dc2626",
+        "#9333ea",
+        "#0891b2",
+        "#ca8a04",
+        "#db2777",
+        "#4f46e5",
+        "#059669",
+        "#ea580c",
+        "#475569",
+        "#0d9488"
+      ];
+
+      const state = {
+        categoryDays: 7,
+        itemDays: 7,
+        categories: []
+      };
+
+      const getPeriod = (days) => days > 30 ? "week" : "day";
+      const moneyFormatter = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
+      const numberFormatter = new Intl.NumberFormat("de-DE");
+
+      function showChartMessage(id, message) {
+        const element = document.getElementById(id);
+        element.textContent = message;
+        element.classList.remove("hidden");
+        element.classList.add("flex");
+      }
+
+      function hideChartMessage(id) {
+        const element = document.getElementById(id);
+        element.classList.add("hidden");
+        element.classList.remove("flex");
+      }
+
+      function formatDateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function sqliteWeekNumber(date) {
+        const yearStart = new Date(date.getFullYear(), 0, 1);
+        const dayOfYear = Math.floor((date - yearStart) / 86400000);
+        const firstDay = yearStart.getDay();
+        const firstMondayOffset = firstDay === 0 ? 1 : (8 - firstDay) % 7;
+
+        if (dayOfYear < firstMondayOffset) return 0;
+        return Math.floor((dayOfYear - firstMondayOffset) / 7) + 1;
+      }
+
+      function formatWeekKey(date) {
+        return `${date.getFullYear()}-W${String(sqliteWeekNumber(date)).padStart(2, "0")}`;
+      }
+
+      function getLabels(days, period) {
+        const end = new Date();
+        const start = new Date(end);
+        start.setDate(start.getDate() - days + 1);
+
+        const labels = [];
+        const seen = new Set();
+        const current = new Date(start);
+        while (current <= end) {
+          const key = period === "week" ? formatWeekKey(current) : formatDateKey(current);
+          if (!seen.has(key)) {
+            seen.add(key);
+            labels.push(key);
+          }
+          current.setDate(current.getDate() + 1);
+        }
+        return labels;
+      }
+
+      function getValueTicks(maxValue) {
+        const max = Math.max(maxValue, 1);
+        return [0, 0.25, 0.5, 0.75, 1].map((part) => max * part);
+      }
+
+      function drawLegend(elementId, datasets, revenueDataset) {
+        const container = document.getElementById(elementId);
+        const allDatasets = revenueDataset ? [...datasets, revenueDataset] : datasets;
+        container.innerHTML = allDatasets.map((dataset) => `
+          <span class="inline-flex items-center min-w-0">
+            <span class="inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0" style="background:${dataset.color}"></span>
+            <span class="truncate">${dataset.name}</span>
+          </span>
+        `).join("");
+      }
+
+      function drawLineChart(canvasId, legendId, labels, datasets, options = {}) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext("2d");
+        const ratio = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const revenueDataset = options.revenueDataset || null;
+        const margins = { top: 24, right: revenueDataset ? 76 : 24, bottom: 54, left: 58 };
+        const plotWidth = Math.max(width - margins.left - margins.right, 1);
+        const plotHeight = Math.max(height - margins.top - margins.bottom, 1);
+        const leftMax = Math.max(...datasets.flatMap((dataset) => dataset.values), 1);
+        const rightMax = revenueDataset ? Math.max(...revenueDataset.values, 1) : 1;
+
+        ctx.font = "12px sans-serif";
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.fillStyle = "#6b7280";
+        ctx.textBaseline = "middle";
+
+        getValueTicks(leftMax).forEach((tick, index) => {
+          const y = margins.top + plotHeight - (plotHeight * index / 4);
+          ctx.beginPath();
+          ctx.moveTo(margins.left, y);
+          ctx.lineTo(margins.left + plotWidth, y);
+          ctx.stroke();
+          ctx.fillText(numberFormatter.format(Math.round(tick)), 8, y);
+        });
+
+        if (revenueDataset) {
+          ctx.textAlign = "right";
+          getValueTicks(rightMax).forEach((tick, index) => {
+            const y = margins.top + plotHeight - (plotHeight * index / 4);
+            ctx.fillText(moneyFormatter.format(tick), width - 8, y);
+          });
+          ctx.textAlign = "left";
+        }
+
+        ctx.strokeStyle = "#9ca3af";
+        ctx.beginPath();
+        ctx.moveTo(margins.left, margins.top);
+        ctx.lineTo(margins.left, margins.top + plotHeight);
+        ctx.lineTo(margins.left + plotWidth, margins.top + plotHeight);
+        ctx.stroke();
+
+        if (revenueDataset) {
+          ctx.beginPath();
+          ctx.moveTo(margins.left + plotWidth, margins.top);
+          ctx.lineTo(margins.left + plotWidth, margins.top + plotHeight);
+          ctx.stroke();
+        }
+
+        const maxLabelCount = width < 640 ? 4 : 7;
+        const labelStep = Math.max(1, Math.ceil(labels.length / maxLabelCount));
+        ctx.fillStyle = "#6b7280";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        labels.forEach((label, index) => {
+          if (index % labelStep !== 0 && index !== labels.length - 1) return;
+          const x = labels.length === 1 ? margins.left + plotWidth / 2 : margins.left + (plotWidth * index / (labels.length - 1));
+          ctx.fillText(label, x, margins.top + plotHeight + 14);
+        });
+
+        function drawDataset(dataset, maxValue, dashed = false) {
+          ctx.strokeStyle = dataset.color;
+          ctx.lineWidth = dataset.width || 2;
+          ctx.setLineDash(dashed ? [6, 5] : []);
+          ctx.beginPath();
+          dataset.values.forEach((value, index) => {
+            const x = labels.length === 1 ? margins.left + plotWidth / 2 : margins.left + (plotWidth * index / (labels.length - 1));
+            const y = margins.top + plotHeight - (plotHeight * value / Math.max(maxValue, 1));
+            if (index === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        datasets.forEach((dataset) => drawDataset(dataset, leftMax));
+        if (revenueDataset) drawDataset(revenueDataset, rightMax, true);
+
+        drawLegend(legendId, datasets, revenueDataset);
+      }
+
+      function seriesFromRows(rows, labels, keyField, nameField, valueField, knownItems = []) {
+        const known = new Map(knownItems.map((item) => [item.uuid, item.name]));
+        rows.forEach((row) => {
+          if (!known.has(row[keyField])) known.set(row[keyField], row[nameField]);
+        });
+
+        const byKey = new Map();
+        rows.forEach((row) => {
+          if (!byKey.has(row[keyField])) byKey.set(row[keyField], new Map());
+          byKey.get(row[keyField]).set(row.period, Number(row[valueField]) || 0);
+        });
+
+        return Array.from(known.entries()).map(([uuid, name], index) => ({
+          uuid,
+          name,
+          color: chartColors[index % chartColors.length],
+          values: labels.map((label) => byKey.get(uuid)?.get(label) || 0)
+        }));
+      }
+
+      function revenueSeries(rows, labels) {
+        const byPeriod = new Map(rows.map((row) => [row.period, Number(row.total_money) || 0]));
+        return {
+          name: t("AdminStats.CategorySales.MoneyLine"),
+          color: "#111827",
+          width: 2,
+          values: labels.map((label) => byPeriod.get(label) || 0)
+        };
+      }
+
+      async function loadCategoryChart() {
+        const days = state.categoryDays;
+        const period = getPeriod(days);
+        const labels = getLabels(days, period);
+        showChartMessage("category-chart-message", t("AdminStats.Chart.Loading"));
+
+        try {
+          const response = await apiFetch(`/api/v1/sale_stats/category_sales?days=${days}&period=${period}`);
+          if (!response.ok) throw new Error("Failed to load category stats");
+          const data = await response.json();
+          const datasets = seriesFromRows(data.categorySales, labels, "category_uuid", "category_name", "total_quantity");
+          const revenue = revenueSeries(data.revenueByPeriod, labels);
+          const hasData = datasets.some((dataset) => dataset.values.some((value) => value > 0)) || revenue.values.some((value) => value > 0);
+
+          hideChartMessage("category-chart-message");
+          drawLineChart("category-chart", "category-chart-legend", labels, datasets, { revenueDataset: revenue });
+          if (!hasData) showChartMessage("category-chart-message", t("AdminStats.Chart.NoData"));
+        } catch (error) {
+          console.error(error);
+          showChartMessage("category-chart-message", t("AdminStats.Chart.Error"));
+        }
+      }
+
+      async function loadCategories() {
+        const response = await apiFetch("/api/v1/sale_stats/categories");
+        if (!response.ok) throw new Error("Failed to load categories");
+        const data = await response.json();
+        state.categories = data.categories || [];
+
+        const select = document.getElementById("item-category-select");
+        select.innerHTML = state.categories
+          .filter((category) => category.item_count > 0)
+          .map((category) => `<option value="${category.uuid}">${category.name}</option>`)
+          .join("");
+
+        return select.value;
+      }
+
+      async function loadItemChart() {
+        const select = document.getElementById("item-category-select");
+        const category = select.value;
+        if (!category) {
+          showChartMessage("item-chart-message", t("AdminStats.ItemSales.EmptyCategory"));
+          return;
+        }
+
+        const days = state.itemDays;
+        const period = getPeriod(days);
+        const labels = getLabels(days, period);
+        showChartMessage("item-chart-message", t("AdminStats.Chart.Loading"));
+
+        try {
+          const response = await apiFetch(`/api/v1/sale_stats/item_sales?days=${days}&period=${period}&category=${category}`);
+          if (!response.ok) throw new Error("Failed to load item stats");
+          const data = await response.json();
+          const datasets = seriesFromRows(data.itemSales, labels, "item_uuid", "item_name", "total_quantity", data.items);
+          const hasData = datasets.some((dataset) => dataset.values.some((value) => value > 0));
+
+          hideChartMessage("item-chart-message");
+          drawLineChart("item-chart", "item-chart-legend", labels, datasets);
+          if (!hasData) showChartMessage("item-chart-message", t("AdminStats.Chart.NoData"));
+        } catch (error) {
+          console.error(error);
+          showChartMessage("item-chart-message", t("AdminStats.Chart.Error"));
+        }
+      }
+
+      function bindRangeButtons(group, onChange) {
+        document.querySelectorAll(`[data-chart-range="${group}"] .range-button`).forEach((button) => {
+          button.addEventListener("click", () => {
+            document.querySelectorAll(`[data-chart-range="${group}"] .range-button`).forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+            onChange(Number(button.dataset.days));
+          });
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        bindRangeButtons("category", (days) => {
+          state.categoryDays = days;
+          loadCategoryChart();
+        });
+
+        bindRangeButtons("items", (days) => {
+          state.itemDays = days;
+          loadItemChart();
+        });
+
+        document.getElementById("item-category-select").addEventListener("change", loadItemChart);
+
+        try {
+          await Promise.all([loadCategoryChart(), loadCategories()]);
+          await loadItemChart();
+        } catch (error) {
+          console.error(error);
+          showChartMessage("item-chart-message", t("AdminStats.Chart.Error"));
+        }
+
+        window.addEventListener("resize", () => {
+          loadCategoryChart();
+          loadItemChart();
+        });
+      });
+    </script>
+  </body>
+</html>

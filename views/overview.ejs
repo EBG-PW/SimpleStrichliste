@@ -46,6 +46,9 @@
       #low-funds-popup-wrapper {
         transition: visibility 0s, opacity 0.3s ease-in-out;
       }
+      #leaderboard-popup-wrapper {
+        transition: visibility 0s, opacity 0.3s ease-in-out;
+      }
     </style>
   </head>
 
@@ -123,6 +126,31 @@
           <h2 class="text-xl font-bold text-gray-800 mb-2" data-translate="Overview.LowFunds.Title"></h2>
           <p id="low-funds-popup-message" class="text-gray-600 mb-4"></p>
           <button id="low-funds-close-button" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors" data-translate="Overview.LowFunds.Close"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="leaderboard-popup-wrapper" class="fixed inset-0 z-[80] invisible opacity-0 flex items-center justify-center p-4">
+      <div id="leaderboard-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
+      <div id="leaderboard-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="p-5 border-b flex items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h2 id="leaderboard-title" class="text-xl font-bold text-gray-800 truncate"></h2>
+            <p id="leaderboard-subtitle" class="text-sm text-gray-500 mt-1"></p>
+          </div>
+          <button id="leaderboard-close-button" class="text-gray-400 hover:text-gray-600 flex-shrink-0" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <div id="leaderboard-range-buttons" class="grid grid-cols-3 gap-2 mb-4">
+            <button type="button" data-range="week" class="leaderboard-range-button rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white" data-translate="Overview.Leaderboard.Week"></button>
+            <button type="button" data-range="month" class="leaderboard-range-button rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" data-translate="Overview.Leaderboard.Month"></button>
+            <button type="button" data-range="all" class="leaderboard-range-button rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" data-translate="Overview.Leaderboard.All"></button>
+          </div>
+          <div id="leaderboard-list" class="space-y-2 min-h-[260px]"></div>
         </div>
       </div>
     </div>
@@ -226,6 +254,8 @@
         let lowFundsSettings = null;
         let lowFundsDismissed = false;
         const lowFundsDismissedUntilKey = "LOW_FUNDS_WARNING_DISMISSED_UNTIL";
+        let currentLeaderboardCategory = null;
+        let currentLeaderboardRange = "week";
 
         const getCurrentBalance = async () => {
           const response = await apiFetch("/api/v1/store/balance");
@@ -288,6 +318,114 @@
 
         document.getElementById("low-funds-popup-backdrop").addEventListener("click", closeLowFundsPopup);
         document.getElementById("low-funds-close-button").addEventListener("click", closeLowFundsPopup);
+
+        const leaderboardPopupWrapper = document.getElementById("leaderboard-popup-wrapper");
+        const leaderboardList = document.getElementById("leaderboard-list");
+
+        const closeLeaderboardPopup = () => {
+          leaderboardPopupWrapper.classList.add("opacity-0");
+          leaderboardPopupWrapper.addEventListener("transitionend", () => {
+            leaderboardPopupWrapper.classList.add("invisible");
+          }, { once: true });
+        };
+
+        const getUserIconHTML = () => `
+          <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A9 9 0 1118.879 17.8M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+        `;
+
+        const getLeaderboardRankClass = (index) => {
+          if (index === 0) return "bg-yellow-50 border-yellow-200";
+          if (index === 1) return "bg-slate-50 border-slate-200";
+          if (index === 2) return "bg-orange-50 border-orange-200";
+          return "bg-gray-50 border-gray-200";
+        };
+
+        const getLeaderboardRankBadge = (index) => {
+          if (index === 0) return "bg-yellow-400 text-yellow-950";
+          if (index === 1) return "bg-slate-300 text-slate-900";
+          if (index === 2) return "bg-orange-400 text-orange-950";
+          return "bg-gray-200 text-gray-700";
+        };
+
+        const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[char]));
+
+        const setLeaderboardRangeButtonState = () => {
+          document.querySelectorAll(".leaderboard-range-button").forEach((button) => {
+            const isActive = button.dataset.range === currentLeaderboardRange;
+            button.classList.toggle("bg-blue-600", isActive);
+            button.classList.toggle("border-blue-600", isActive);
+            button.classList.toggle("text-white", isActive);
+            button.classList.toggle("border-gray-300", !isActive);
+            button.classList.toggle("text-gray-700", !isActive);
+            button.classList.toggle("hover:bg-gray-50", !isActive);
+          });
+        };
+
+        const renderLeaderboard = (entries) => {
+          if (!entries || entries.length === 0) {
+            leaderboardList.innerHTML = `<div class="h-full min-h-[220px] flex items-center justify-center text-sm text-gray-500">${t("Overview.Leaderboard.Empty")}</div>`;
+            return;
+          }
+
+          leaderboardList.innerHTML = entries.map((entry, index) => `
+            <div class="flex items-center justify-between gap-3 rounded-xl border p-3 ${getLeaderboardRankClass(index)}">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${getLeaderboardRankBadge(index)}">${index + 1}</span>
+                ${getUserIconHTML()}
+                <div class="min-w-0">
+                  <p class="font-semibold text-gray-800 truncate">${escapeHTML(entry.user_name)}</p>
+                  <p class="text-xs text-gray-500 truncate">@${escapeHTML(entry.username)}</p>
+                </div>
+              </div>
+              <div class="font-bold text-gray-800 whitespace-nowrap">${t("Overview.Leaderboard.Amount", { count: entry.total_quantity })}</div>
+            </div>
+          `).join("");
+        };
+
+        const loadLeaderboard = async () => {
+          if (!currentLeaderboardCategory) return;
+          setLeaderboardRangeButtonState();
+          leaderboardList.innerHTML = `<div class="h-full min-h-[220px] flex items-center justify-center text-sm text-gray-500">${t("Overview.Leaderboard.Loading")}</div>`;
+
+          try {
+            const category = encodeURIComponent(currentLeaderboardCategory);
+            const response = await apiFetch(`/api/v1/store/categorie/${category}/leaderboard?range=${currentLeaderboardRange}`);
+            if (!response.ok) throw new Error("Failed to load leaderboard");
+            const data = await response.json();
+            renderLeaderboard(data.leaderboard);
+          } catch (error) {
+            console.error("Leaderboard error:", error);
+            leaderboardList.innerHTML = `<div class="h-full min-h-[220px] flex items-center justify-center text-sm text-red-500">${t("Overview.Leaderboard.Error")}</div>`;
+          }
+        };
+
+        const openLeaderboardPopup = (categoryName) => {
+          currentLeaderboardCategory = categoryName;
+          currentLeaderboardRange = "week";
+          document.getElementById("leaderboard-title").textContent = `${t("Overview.Leaderboard.Title")} 🏆`;
+          document.getElementById("leaderboard-subtitle").textContent = t(`Categories.${categoryName}`);
+          leaderboardPopupWrapper.classList.remove("invisible", "opacity-0");
+          loadLeaderboard();
+        };
+
+        document.getElementById("leaderboard-popup-backdrop").addEventListener("click", closeLeaderboardPopup);
+        document.getElementById("leaderboard-close-button").addEventListener("click", closeLeaderboardPopup);
+        document.getElementById("leaderboard-range-buttons").addEventListener("click", (event) => {
+          const button = event.target.closest(".leaderboard-range-button");
+          if (!button) return;
+          currentLeaderboardRange = button.dataset.range;
+          loadLeaderboard();
+        });
 
         const reloadData = () => {
           getCurrentBalance();
@@ -429,7 +567,10 @@
                 catContent.id = `content-${cat.name}`;
                 catContent.className = "category-content";
                 catContent.innerHTML = `
-                  <h1 class="text-2xl font-bold px-1">${t(`Categories.${cat.name}`)}</h1>
+                  <div class="flex items-center gap-2 px-1 mb-2">
+                    <h1 class="text-2xl font-bold text-gray-800 min-w-0 truncate">${t(`Categories.${cat.name}`)}</h1>
+                    <button type="button" class="leaderboard-button w-9 h-9 flex items-center justify-center rounded-full bg-white shadow hover:shadow-md hover:bg-yellow-50 transition-colors flex-shrink-0" data-category="${cat.name}" aria-label="Leaderboard">🏆</button>
+                  </div>
                   <div class="category-item-list flex flex-col gap-4" id="item-list-${cat.name}"
                         data-page="1" data-loading="false" data-has-more="true"></div>`;
                 mainContainer.appendChild(catContent);
@@ -473,8 +614,13 @@
         };
 
         mainContainer.addEventListener("click", async (e) => {
+          const leaderboardButton = e.target.closest(".leaderboard-button");
           const buyTriggerCard = e.target.closest(".buy-overlay-trigger");
           const favoriteButton = e.target.closest(".favorite-button");
+          if (leaderboardButton) {
+            openLeaderboardPopup(leaderboardButton.dataset.category);
+            return;
+          }
           if (buyTriggerCard) openBuyPopup(buyTriggerCard.dataset.uuid);
           if (favoriteButton) toggleFavorite(favoriteButton.dataset.uuid, favoriteButton);
         });

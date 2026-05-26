@@ -4,6 +4,7 @@ const { getActiveCategories } = require('@lib/sqlite/categories');
 const { getUserBalance, getUserFavorites, purchaseItem } = require('@lib/sqlite/users');
 const { getItemsByCategory, toggleUserFavorite } = require('@lib/sqlite/items');
 const { getSetting } = require('@lib/sqlite/settings');
+const { getCategoryPurchaseLeaderboard } = require('@lib/sqlite/stats');
 const gategories_conf = require('@config/categories');
 const Joi = require('@lib/sanitizer');
 const HyperExpress = require('hyper-express');
@@ -23,6 +24,10 @@ const paginationSchema = Joi.object({
 const buySchema = Joi.object({
     uuid: Joi.string().uuid().required(),
     quantity: Joi.number().integer().positive().min(1).max(99).required()
+});
+
+const leaderboardSchema = Joi.object({
+    range: Joi.string().valid('week', 'month', 'all').default('week')
 });
 
 router.get('/overview', verifyRequest('web.user.store.read'), limiter(2), async (req, res) => {
@@ -60,6 +65,13 @@ router.get('/categorie/:categoryName', verifyRequest('web.user.items.read'), lim
     const query = await paginationSchema.validateAsync(req.query);
     const items = await getItemsByCategory(categoryName, query.limit, query.page);
     res.json(items);
+});
+
+router.get('/categorie/:categoryName/leaderboard', verifyRequest('web.user.store.read'), limiter(4), async (req, res) => {
+    const categoryName = await Joi.string().valid(...Object.keys(gategories_conf)).validateAsync(req.params.categoryName);
+    const query = await leaderboardSchema.validateAsync(req.query);
+    const leaderboard = getCategoryPurchaseLeaderboard(categoryName, query.range, 5);
+    res.json({ category: categoryName, range: query.range, leaderboard });
 });
 
 router.post('/item/:uuid/favorite', verifyRequest('web.user.favorite.write'), limiter(1), async (req, res) => {
