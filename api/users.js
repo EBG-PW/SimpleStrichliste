@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { removeWebtoken } = require('@lib/cache');
+const { removeWebtoken, removeWebtokenFromCache } = require('@lib/cache');
 const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
@@ -149,6 +149,7 @@ router.put('/language', verifyRequest('app.user.settings.language.write'), limit
     const user_id = req.user.user_data.id;
 
     await updateUserLanguage(user_id, body.language);
+    removeWebtokenFromCache(req.authorization);
     return res.json({ message: 'Language updated successfully' });
 });
 

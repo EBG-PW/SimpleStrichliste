@@ -204,6 +204,14 @@
 
           const response_json = await response.json();
           if (response.ok) {
+            if (field === "language") {
+              localStorage.setItem("language", value);
+              document.cookie = `language=${value}; path=/; max-age=31536000`;
+              await checkSession();
+              window.location.reload();
+              return;
+            }
+
             showMessage(i18next.t("Settings.SettingsUpdatedSuccsess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
             inputField.classList.add("ring-2", "ring-green-500");
 
