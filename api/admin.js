@@ -1,6 +1,7 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID } = require('@lib/sqlite/users');
+const { countUsers, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
+const { removeWebtoken } = require('@lib/cache');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
@@ -130,6 +131,18 @@ router.put('/user/:uuid/userGroup', verifyRequest('app.admin.users.usergroup.wri
 
     await updateUserGroupByUUID(params.uuid, body.userGroup);
     return res.json({ message: 'User group updated successfully' });
+});
+
+router.delete('/user/:uuid', verifyRequest('app.admin.users.write'), limiter(10), async (req, res) => {
+    const params = await getUserByUUIDSchema.validateAsync(req.params);
+
+    const result = softDeleteUserByUUID(params.uuid);
+    if (!result.deleted) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+
+    result.sessionTokens.forEach((token) => removeWebtoken(token));
+    return res.json({ message: 'User deleted successfully' });
 });
 
 router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async (req, res) => {

@@ -5,13 +5,26 @@
         "Name": "Name",
         "Username": "Benutzername",
         "Role": "Rolle",
-        "Balance": "Kontostand"
+        "Balance": "Kontostand",
+        "Loading": "Benutzer werden geladen...",
+        "Error": "Benutzer konnten nicht geladen werden.",
+        "NoResults": "Keine Benutzer gefunden.",
+        "EditBalanceTitle": "Guthaben bearbeiten",
+        "EditUserTitle": "Benutzer bearbeiten",
+        "DeleteUserTitle": "Benutzer löschen"
     },
     "BalanceModal": {
         "Title": "Guthaben hinzufügen",
         "Editing": "Guthaben von:",
         "Saving": "Guthaben wird hinzugefügt...",
         "SaveButton": "Guthaben hinzufügen"
+    },
+    "DeleteModal": {
+        "Title": "Benutzer löschen",
+        "Confirm": "Diesen Benutzer dauerhaft löschen?",
+        "CancelButton": "Abbrechen",
+        "DeleteButton": "Löschen",
+        "Deleting": "Benutzer wird gelöscht..."
     },
     "Pagination": {
         "PageInfo": "Nutzer {{startUser}} bis {{endUser}} von {{totalUsers}}"

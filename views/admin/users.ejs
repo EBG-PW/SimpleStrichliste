@@ -20,6 +20,15 @@
         transform: scale(1);
       }
 
+      #delete-modal-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      #delete-modal-overlay.active #delete-modal-content {
+        transform: scale(1);
+      }
+
       .sortable-header {
         cursor: pointer;
         user-select: none;
@@ -124,6 +133,18 @@
       </div>
     </div>
 
+    <div id="delete-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
+      <div id="delete-modal-content" class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full relative transform scale-95 transition-transform duration-300">
+        <button onclick="closeDeleteModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+        <h2 class="text-xl font-bold text-gray-800 mb-4" data-translate="AdminUsers.DeleteModal.Title"></h2>
+        <p class="mb-6 text-gray-700"><span data-translate="AdminUsers.DeleteModal.Confirm"></span> <span id="delete-modal-user-name" class="font-semibold"></span></p>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition" data-translate="AdminUsers.DeleteModal.CancelButton"></button>
+          <button id="confirm-delete-btn" onclick="deleteUser()" class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700 transition" data-translate="AdminUsers.DeleteModal.DeleteButton"></button>
+        </div>
+      </div>
+    </div>
+
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
     <script>
@@ -131,7 +152,8 @@
         sortColumn = "name",
         sortDirection = "asc",
         searchTimeout = null,
-        currentEditingUser = null;
+        currentEditingUser = null,
+        currentDeletingUser = null;
       let currentPage = 1,
         totalPages = 1,
         totalUsers = 0;
@@ -207,9 +229,14 @@
               </div>
             </td>
             <td class="block p-3 md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap text-right">
-              <button title="${i18next.t("AdminUsers.Table.EditUserTitle")}" class="user-edit-btn p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg>
-              </button>
+              <div class="flex justify-end gap-2">
+                <button title="${i18next.t("AdminUsers.Table.EditUserTitle")}" class="user-edit-btn p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg>
+                </button>
+                <button title="${i18next.t("AdminUsers.Table.DeleteUserTitle")}" class="user-delete-btn p-1 text-gray-400 hover:text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0115.916 21H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                </button>
+              </div>
             </td>
           `;
 
@@ -221,6 +248,11 @@
           row.querySelector(".user-edit-btn").onclick = (e) => {
             e.stopPropagation();
             window.location.href = `/admin/${user.uuid}/edituser`;
+          };
+
+          row.querySelector(".user-delete-btn").onclick = (e) => {
+            e.stopPropagation();
+            openDeleteModal(user);
           };
 
           tableBody.appendChild(row);
@@ -333,6 +365,17 @@
         currentEditingUser = null;
       }
 
+      function openDeleteModal(user) {
+        currentDeletingUser = user;
+        document.getElementById("delete-modal-user-name").textContent = user.name;
+        document.getElementById("delete-modal-overlay").classList.add("active");
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("delete-modal-overlay").classList.remove("active");
+        currentDeletingUser = null;
+      }
+
       function addToBalance(amount) {
         const input = document.getElementById("balance-input");
         input.value = (parseFloat(input.value) || 0) + amount;
@@ -345,7 +388,7 @@
         saveBtn.textContent = i18next.t("AdminUsers.BalanceModal.Saving");
         try {
           const response = await apiFetch(`/api/v1/admin/user/${currentEditingUser.uuid}/addbalance`, {
-            method: "POST",
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ add: parseFloat(document.getElementById("balance-input").value) }),
           });
@@ -358,6 +401,28 @@
         } finally {
           saveBtn.disabled = false;
           saveBtn.textContent = i18next.t("AdminUsers.BalanceModal.SaveButton");
+        }
+      }
+
+      async function deleteUser() {
+        if (!currentDeletingUser) return;
+        const deleteBtn = document.getElementById("confirm-delete-btn");
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = i18next.t("AdminUsers.DeleteModal.Deleting");
+        try {
+          const response = await apiFetch(`/api/v1/admin/user/${currentDeletingUser.uuid}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+          if (!response.ok) throw new Error((await response.json()).message || "Failed to delete user.");
+          closeDeleteModal();
+          fetchUsers();
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          alert("Error: " + error.message);
+        } finally {
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = i18next.t("AdminUsers.DeleteModal.DeleteButton");
         }
       }
 
