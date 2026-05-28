@@ -73,8 +73,8 @@
       </header>
 
       <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="mb-4">
-          <div class="relative">
+        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="relative md:flex-1">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -82,6 +82,15 @@
             </div>
             <input type="text" id="search-input" onkeyup="handleSearch(event)" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search for users..." data-translate-placeholder="AdminUsers.SearchPlaceholder" />
           </div>
+          <label class="flex items-center justify-between gap-3 text-sm text-gray-700 md:justify-start">
+            <span data-translate="AdminUsers.Pagination.PageSizeLabel"></span>
+            <select id="page-size-select" onchange="handlePageSizeChange(event)" class="block w-24 rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </label>
         </div>
 
         <div class="overflow-x-auto">
@@ -113,7 +122,7 @@
           </table>
         </div>
 
-        <div id="pagination-container" class="flex items-center justify-between mt-4"></div>
+        <div id="pagination-container" class="flex flex-col gap-3 mt-4 sm:flex-row sm:items-center sm:justify-between"></div>
       </div>
     </main>
 
@@ -157,7 +166,7 @@
       let currentPage = 1,
         totalPages = 1,
         totalUsers = 0;
-      const usersPerPage = 5;
+      let usersPerPage = 5;
 
       function formatCurrency(amount) {
         return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount);
@@ -173,7 +182,7 @@
           const response = await apiFetch(`/api/v1/admin/users?${params.toString()}`);
           if (!response.ok) throw new Error("Network response was not ok");
           const result = await response.json();
-          totalPages = result.pagination.totalPages;
+          totalPages = Math.max(1, result.pagination.totalPages);
           totalUsers = result.pagination.totalItems;
           renderUserTable(result.data);
           renderPaginationControls();
@@ -193,42 +202,51 @@
 
         users.forEach((user) => {
           const row = document.createElement("tr");
-          // On mobile, each row is a block with a border. On desktop, it's a normal table row.
-          row.className = "block mb-4 border rounded-lg shadow-sm md:table-row md:mb-0 md:border-none md:shadow-none hover:bg-gray-50 cursor-pointer";
+          row.className = "block mb-3 border rounded-lg shadow-sm md:table-row md:mb-0 md:border-none md:shadow-none hover:bg-gray-50 cursor-pointer";
           row.onclick = () => (window.location.href = `/admin/${user.uuid}/edituser`);
 
-          // We build the cell content with mobile-only labels and responsive display classes.
           row.innerHTML = `
-            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
-              <div class="flex justify-between items-center">
-                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Name")}</span>
-                <span class="text-sm font-medium text-gray-900 text-right">${user.name}</span>
-              </div>
-            </td>
-            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
-              <div class="flex justify-between items-center">
-                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Username")}</span>
-                <span class="text-sm text-gray-500 text-right">${user.username}</span>
-              </div>
-            </td>
-            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
-              <div class="flex justify-between items-center">
-                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Role")}</span>
-                <span class="text-sm text-gray-500 text-right">${user.user_role}</span>
-              </div>
-            </td>
-            <td class="block p-3 border-b md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
-              <div class="flex justify-between items-center">
-                <span class="md:hidden text-xs font-bold uppercase text-gray-500">${i18next.t("AdminUsers.Table.Balance")}</span>
-                <div class="flex items-center space-x-2">
-                  <span class="font-mono text-sm text-gray-500">${formatCurrency(user.balance)}</span>
-                  <button title="${i18next.t("AdminUsers.Table.EditBalanceTitle")}" class="balance-edit-btn p-1 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            <td class="block p-3 md:hidden">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="truncate text-sm font-semibold text-gray-900">${user.name}</div>
+                  <div class="mt-0.5 truncate text-xs text-gray-500">@${user.username}</div>
+                </div>
+                <div class="flex shrink-0 items-center gap-1">
+                  <button title="${i18next.t("AdminUsers.Table.EditBalanceTitle")}" class="balance-edit-btn p-2 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h1.5M12 12.75a.75.75 0 000-1.5.75.75 0 000 1.5z" /></svg>
+                  </button>
+                  <button title="${i18next.t("AdminUsers.Table.EditUserTitle")}" class="user-edit-btn p-2 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg>
+                  </button>
+                  <button title="${i18next.t("AdminUsers.Table.DeleteUserTitle")}" class="user-delete-btn p-2 text-gray-400 hover:text-red-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0115.916 21H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                   </button>
                 </div>
               </div>
+              <div class="mt-3 flex items-center justify-between gap-3 border-t pt-3">
+                <span class="inline-flex max-w-[50%] items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 truncate">${user.user_role}</span>
+                <span class="font-mono text-sm font-semibold text-gray-700">${formatCurrency(user.balance)}</span>
+              </div>
             </td>
-            <td class="block p-3 md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap text-right">
+            <td class="hidden md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <span class="text-sm font-medium text-gray-900">${user.name}</span>
+            </td>
+            <td class="hidden md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <span class="text-sm text-gray-500">${user.username}</span>
+            </td>
+            <td class="hidden md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <span class="text-sm text-gray-500">${user.user_role}</span>
+            </td>
+            <td class="hidden md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <span class="font-mono text-sm text-gray-500">${formatCurrency(user.balance)}</span>
+                <button title="${i18next.t("AdminUsers.Table.EditBalanceTitle")}" class="balance-edit-btn p-1 text-gray-400 hover:text-green-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-15c-.621 0-1.125-.504-1.125-1.125v-9.75c0-.621.504-1.125 1.125-1.125h1.5M12 12.75a.75.75 0 000-1.5.75.75 0 000 1.5z" /></svg>
+                </button>
+              </div>
+            </td>
+            <td class="hidden md:table-cell md:px-6 md:py-4 md:border-none whitespace-nowrap text-right">
               <div class="flex justify-end gap-2">
                 <button title="${i18next.t("AdminUsers.Table.EditUserTitle")}" class="user-edit-btn p-1 text-gray-400 hover:text-blue-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" /></svg>
@@ -240,20 +258,20 @@
             </td>
           `;
 
-          row.querySelector(".balance-edit-btn").onclick = (e) => {
+          row.querySelectorAll(".balance-edit-btn").forEach((btn) => (btn.onclick = (e) => {
             e.stopPropagation();
             openBalanceModal(user);
-          };
+          }));
 
-          row.querySelector(".user-edit-btn").onclick = (e) => {
+          row.querySelectorAll(".user-edit-btn").forEach((btn) => (btn.onclick = (e) => {
             e.stopPropagation();
             window.location.href = `/admin/${user.uuid}/edituser`;
-          };
+          }));
 
-          row.querySelector(".user-delete-btn").onclick = (e) => {
+          row.querySelectorAll(".user-delete-btn").forEach((btn) => (btn.onclick = (e) => {
             e.stopPropagation();
             openDeleteModal(user);
-          };
+          }));
 
           tableBody.appendChild(row);
         });
@@ -273,7 +291,7 @@
         infoText.textContent = i18next.t("AdminUsers.Pagination.PageInfo", { startUser, endUser, totalUsers });
 
         const nav = document.createElement("nav");
-        nav.className = "relative z-0 inline-flex rounded-md shadow-sm -space-x-px";
+        nav.className = "relative z-0 inline-flex max-w-full overflow-x-auto rounded-md shadow-sm -space-x-px";
 
         const pageNumbers = getPaginationNumbers();
 
@@ -347,8 +365,13 @@
         goToPage(1);
       }
 
+      function handlePageSizeChange(event) {
+        usersPerPage = parseInt(event.target.value, 10) || 5;
+        goToPage(1);
+      }
+
       function goToPage(pageNumber) {
-        if (pageNumber < 1 || pageNumber > totalPages) return;
+        if (pageNumber < 1) return;
         currentPage = pageNumber;
         fetchUsers();
       }
