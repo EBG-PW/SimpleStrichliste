@@ -10,6 +10,7 @@ const { dbVersion } = require('@config/application');
 const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
+const { getStaticFilePath } = require('@lib/imageStore');
 
 let options = {};
 
@@ -114,6 +115,32 @@ app.get('/manifest.json', async (req, res) => {
     res.header('Content-Type', 'application/json');
     const manifest = await getManifest();
     res.json(manifest);
+});
+
+const manifestIconTypes = {
+    'icon-192.png': 'image/png',
+    'icon-512.png': 'image/png'
+};
+
+const sendStaticStorageFile = (res, relativePath, contentType) => {
+    const filePath = getStaticFilePath(relativePath, { fallbackToPublic: true });
+    res.header('Content-Type', contentType);
+    res.header('Cache-Control', 'public, max-age=172800');
+    res.send(fs.readFileSync(filePath));
+};
+
+app.get('/favicon.ico', (req, res) => {
+    sendStaticStorageFile(res, 'favicon.ico', 'image/x-icon');
+});
+
+app.get('/icons/:filename', (req, res) => {
+    const contentType = manifestIconTypes[req.params.filename];
+    if (!contentType) {
+        res.status(404);
+        return res.json({ message: "Page not found", info: "Request can not be served", reason: "The requested icon was not found" });
+    }
+
+    sendStaticStorageFile(res, path.join('icons', req.params.filename), contentType);
 });
 
 app.get('/*', (req, res) => {

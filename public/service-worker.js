@@ -1,7 +1,6 @@
-const CACHE_NAME = 'strichliste-v1';
+const CACHE_NAME = 'strichliste-v2';
 
 const APP_SHELL_URLS = [
-  '/favicon.ico',
   '/libjs/i18next.js',
   '/libjs/tailwind.js',
   '/appjs/translate.js',
@@ -38,6 +37,18 @@ self.addEventListener('activate', (event) => {
 // The main fetch event handler
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+  if (url.pathname === '/favicon.ico' || url.pathname.startsWith('/icons/')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return fetch(event.request).then((networkResponse) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        }).catch(() => cache.match(event.request));
+      })
+    );
+    return;
+  }
+
   if (url.pathname.startsWith('/i/image')) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
