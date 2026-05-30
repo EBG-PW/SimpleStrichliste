@@ -2,8 +2,8 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const { getUserTransactionHistory, getAllTransactionHistory } = require('@lib/sqlite/users');
 const Joi = require('@lib/sanitizer');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 /* Plugin info*/
 const PluginName = 'Transactions'; //This plugins name

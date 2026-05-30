@@ -30,9 +30,10 @@ const limiter = (cost = 1) => {
             const rateLimit = await LimiterMiddleware(key, cost);
 
             if (rateLimit.result) throw new TooManyRequests('Too Many Requests', rateLimit.retryIn)
+            return next();
 
         } catch (error) {
-            next(error); // This will trigger global error handler as we are returning an Error
+            return next(error); // This will trigger global error handler as we are returning an Error
         }
     };
 };

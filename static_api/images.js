@@ -1,9 +1,9 @@
 const Joi = require('joi');
-const HyperExpress = require('hyper-express');
+const express = require('ultimate-express');
 const { limiter } = require('@middleware/limiter');
 const { readImage } = require('@lib/imageStore');
 const sharp = require('sharp')
-const router = new HyperExpress.Router();
+const router = new express.Router();
 
 // Generate 512x512 gray image with question mark
 const defaultImage = sharp({

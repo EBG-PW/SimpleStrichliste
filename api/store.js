@@ -7,8 +7,8 @@ const { getSetting } = require('@lib/sqlite/settings');
 const { getCategoryPurchaseLeaderboard } = require('@lib/sqlite/stats');
 const gategories_conf = require('@config/categories');
 const Joi = require('@lib/sanitizer');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 
 /* Plugin info*/
@@ -81,7 +81,7 @@ router.post('/item/:uuid/favorite', verifyRequest('web.user.favorite.write'), li
 });
 
 router.post('/buy', verifyRequest('web.user.store.write'), limiter(4), async (req, res) => {
-    const { uuid, quantity } = await buySchema.validateAsync(await req.json());
+    const { uuid, quantity } = await buySchema.validateAsync(req.body);
 
     await purchaseItem(req.user.user_data.uuid, uuid, quantity, req.user.user_data.id);
     return res.json({ success: true });

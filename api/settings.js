@@ -16,8 +16,8 @@ const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const { generateManifest } = require('@lib/manifest');
 const { InvalidRouteInput } = require('@lib/errors');
 const Joi = require('@lib/sanitizer');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 /* Plugin info*/
 const PluginName = 'Settings'; //This plugins name
@@ -56,7 +56,7 @@ router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req
 });
 
 router.post('/toggle', verifyRequest('app.admin.settings.write'), limiter(1), async (req, res) => {
-    const body = await settingsToggleSchema.validateAsync(await req.json());
+    const body = await settingsToggleSchema.validateAsync(req.body);
     const result = await toggleSetting(body.setting_key);
     return res.json({ success: true, new_value: result });
 });

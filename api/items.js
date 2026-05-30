@@ -8,9 +8,9 @@ const Joi = require('@lib/sanitizer');
 const { writeImage, deleteImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, convertToWebp } = require('@lib/utils');
 const { InvalidRouteInput } = require('@lib/errors');
-const HyperExpress = require('hyper-express');
+const express = require('ultimate-express');
 const gategories_conf = require('@config/categories');
-const router = new HyperExpress.Router();
+const router = new express.Router();
 
 /* Plugin info*/
 const PluginName = 'Items'; //This plugins name
@@ -128,7 +128,7 @@ router.get('/restocking/list', verifyRequest('web.user.restock.read'), limiter(4
 });
 
 router.post('/restocking/complete', verifyRequest('web.user.restock.write'), limiter(4), async (req, res) => {
-    const body = await uuidItemArraySchema.validateAsync(await req.json());
+    const body = await uuidItemArraySchema.validateAsync(req.body);
     // Admins always have access to the restocking list, regular users only if the feature is enabled
     const hasPermission = checkPermission(req.user.permissions, 'web.admin.restock.write');
     if (hasPermission.result) {

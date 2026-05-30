@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test --test-force-exit",
     "update": "npx npm-check-updates -u",
     "dev": "nodemon -e js,ejs,json .\\index.js",
     "migrate:apply": "node migrate.js apply",
@@ -38,19 +38,20 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.2.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.0",
     "ejs": "^3.1.10",
     "error-stack-parser": "^2.1.4",
     "express-csp-header": "^6.1.0",
     "express-useragent": "^1.0.15",
     "html-minifier-next": "^1.1.5",
-    "hyper-express": "^6.17.3",
     "joi": "^17.13.3",
     "jszip": "^3.10.1",
     "megahash": "^1.0.5",
     "module-alias": "^2.2.3",
     "multer": "^2.0.2",
     "sanitize-html": "^2.17.0",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "ultimate-express": "2.1.0"
   }
 }

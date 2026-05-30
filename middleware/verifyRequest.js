@@ -26,7 +26,7 @@ const verifyRequest = (permission) => {
             if (req.headers['authorization'] != undefined) {
                 UserToken = req.headers['authorization'].replace('Bearer ', '');
             } else {
-                if (!permission) return; // Ignore if no permissions where requested - Its a public API route so everyone can access it but IF some logged in user is using it, we just append the user data to the request
+                if (!permission) return next(); // Ignore if no permissions where requested - Its a public API route so everyone can access it but IF some logged in user is using it, we just append the user data to the request
                 throw new InvalidToken('No Token Provided').withBackUrl("none");
             }
 
@@ -62,13 +62,14 @@ const verifyRequest = (permission) => {
             // Add the user data to the request
             req.user = WebTokenResponse.Data;
             req.authorization = UserToken;
+            return next();
 
         } catch (error) {
             if (error.name === "ValidationError") {
-                if (!permission) return; // Ignore if no permissions where requested - Its a public API route so everyone can access it but IF some logged in user is using it, we just append the user data to the request
-                next(new InvalidToken('Invalid Token'));
+                if (!permission) return next(); // Ignore if no permissions where requested - Its a public API route so everyone can access it but IF some logged in user is using it, we just append the user data to the request
+                return next(new InvalidToken('Invalid Token'));
             }
-            next(error); // This will trigger global error handler as we are returning an Error
+            return next(error); // This will trigger global error handler as we are returning an Error
         }
     };
 };

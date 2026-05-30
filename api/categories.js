@@ -3,8 +3,8 @@ const { limiter } = require('@middleware/limiter');
 const { getActiveCategories, updateCategoryStatus } = require('@lib/sqlite/categories');
 const gategories_conf = require('@config/categories');
 const Joi = require('@lib/sanitizer');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 /* Plugin info*/
 const PluginName = 'Categories'; //This plugins name
@@ -37,7 +37,7 @@ router.get('/', verifyRequest('web.admin.categories.read'), limiter(4), async (r
 
 router.patch('/:categoryName', verifyRequest('web.admin.categories.write'), limiter(4), async (req, res) => {
     const params = await categoryNameSchema.validateAsync(req.params);
-    const body = await booleanSchema.validateAsync(await req.json());
+    const body = await booleanSchema.validateAsync(req.body);
 
     await updateCategoryStatus(params.categoryName, body.enabled);
     res.json({ success: true });

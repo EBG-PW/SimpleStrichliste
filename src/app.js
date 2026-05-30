@@ -1,4 +1,5 @@
-const HyperExpress = require('hyper-express');
+const express = require('ultimate-express');
+const cookieParser = require('cookie-parser');
 const { expressCspHeader, INLINE, NONE, SELF } = require('express-csp-header');
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +15,7 @@ const { getStaticFilePath } = require('@lib/imageStore');
 
 let options = {};
 
+// Enable HTTPS if cert and key files are present in the root directory
 if (fs.existsSync(path.join(__dirname, '..', 'cert.pem')) && fs.existsSync(path.join(__dirname, '..', 'key.pem'))) {
     options = {
         key_file_name: path.join(process.cwd(), 'key.pem'),
@@ -21,10 +23,21 @@ if (fs.existsSync(path.join(__dirname, '..', 'cert.pem')) && fs.existsSync(path.
     };
 }
 
-const app = new HyperExpress.Server({
-    fast_buffers: process.env.HE_FAST_BUFFERS == 'false' ? false : true || false,
-    max_body_length: '50mb',
-    ...options
+const app = express({
+    uwsOptions: options
+});
+app.set('catch async errors', true);
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.text({ type: 'text/plain', limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
+app.use((req, res, next) => {
+    if (typeof req.body === 'string' && req.body.trim().match(/^[{\[]/)) {
+        req.body = JSON.parse(req.body);
+    }
+    req.json = async () => req.body;
+    next();
 });
 
 const { log_errors } = require('@config/errors')
@@ -221,7 +234,7 @@ app.post('/*', (req, res) => {
 });
 
 /* Handlers */
-app.set_error_handler((req, res, error) => {
+app.use((error, req, res, next) => {
     if (process.env.LOG_LEVEL == 4) console.error("Global Error Handler:", error)
     const outError = {
         message: error.message || "",
@@ -259,7 +272,7 @@ app.set_error_handler((req, res, error) => {
 
     /* Returns 429 if the client is ratelimited*/
     if (error.message === "Too Many Requests" || error.message === "Too Many Requests - IP Blocked") {
-        statusCode = 429;
+        outError.statusCode = 429;
     }
 
     if (log_errors[error.name] && !error.secret_reason) process.log.error(`[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}"`);

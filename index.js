@@ -66,9 +66,11 @@ process.permissions_config = require('@config/permissions.js');
                 if (process.env.ExtraErrorWebDelay > 0) {
                     process.log.system(`Webserver was delayed by ${process.env.ExtraErrorWebDelay || 500}ms beause of a error.`);
                 }
-                app.listen(port, bindip)
-                    .then((socket) => process.log.system(`Listening on port: ${port}`))
-                    .catch((error) => process.log.error(`Failed to start webserver on: ${port}\nError: ${error}`));
+                try {
+                    app.listen(port, bindip, () => process.log.system(`Listening on port: ${port}`));
+                } catch (error) {
+                    process.log.error(`Failed to start webserver on: ${port}\nError: ${error}`);
+                }
             }, 1500);
         }, process.env.GlobalWaitTime || 100);
     } catch (error) {

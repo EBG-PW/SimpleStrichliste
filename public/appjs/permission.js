@@ -104,12 +104,16 @@ const checkSession = async () => {
  */
 const apiFetch = (url, options = {}) => {
   const token = localStorage.getItem("token");
-  if (token) {
-    options.headers = {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-    };
+  const headers = { ...(options.headers || {}) };
+
+  if (typeof options.body === "string" && !headers["Content-Type"] && !headers["content-type"]) {
+    headers["Content-Type"] = "application/json";
   }
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  options.headers = headers;
 
   return fetch(url, options).then(response => {
     if (response.status === 401) {

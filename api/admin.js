@@ -6,8 +6,8 @@ const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
 const Joi = require('@lib/sanitizer');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 
 /* Plugin info*/
@@ -78,7 +78,7 @@ router.get('/user/:uuid', verifyRequest('app.admin.users.read'), limiter(1), asy
 });
 
 router.put('/user/:uuid/name', verifyRequest('app.admin.settings.name.write'), limiter(10), async (req, res) => {
-    const body = await userNameSchema.validateAsync(await req.json());
+    const body = await userNameSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateUserNameByUUID(params.uuid, body.name);
@@ -86,7 +86,7 @@ router.put('/user/:uuid/name', verifyRequest('app.admin.settings.name.write'), l
 });
 
 router.put('/user/:uuid/email', verifyRequest('app.admin.settings.email.write'), limiter(10), async (req, res) => {
-    const body = await userEmailSchema.validateAsync(await req.json());
+    const body = await userEmailSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateUserEmailByUUID(params.uuid, body.email);
@@ -94,7 +94,7 @@ router.put('/user/:uuid/email', verifyRequest('app.admin.settings.email.write'),
 });
 
 router.put('/user/:uuid/username', verifyRequest('app.admin.settings.username.write'), limiter(10), async (req, res) => {
-    const body = await userUsernameSchema.validateAsync(await req.json());
+    const body = await userUsernameSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateUserUserNameByUUID(params.uuid, body.username);
@@ -102,7 +102,7 @@ router.put('/user/:uuid/username', verifyRequest('app.admin.settings.username.wr
 });
 
 router.put('/user/:uuid/addbalance', verifyRequest('app.admin.users.balance.write'), limiter(1), async (req, res) => {
-    const body = await updateUserBalanceSchema.validateAsync(await req.json());
+    const body = await updateUserBalanceSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateBalance(params.uuid, body.add, req.user.user_data.id);
@@ -110,7 +110,7 @@ router.put('/user/:uuid/addbalance', verifyRequest('app.admin.users.balance.writ
 });
 
 router.put('/user/:uuid/balance', verifyRequest('app.admin.settings.balance.write'), limiter(10), async (req, res) => {
-    const body = await setUserBalanceSchema.validateAsync(await req.json());
+    const body = await setUserBalanceSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await setBalance(params.uuid, body.balance, req.user.user_data.id)
@@ -118,7 +118,7 @@ router.put('/user/:uuid/balance', verifyRequest('app.admin.settings.balance.writ
 });
 
 router.put('/user/:uuid/language', verifyRequest('app.admin.settings.language.write'), limiter(10), async (req, res) => {
-    const body = await userLanguageSchema.validateAsync(await req.json());
+    const body = await userLanguageSchema.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateUserLanguageByUUID(params.uuid, body.language);
@@ -126,7 +126,7 @@ router.put('/user/:uuid/language', verifyRequest('app.admin.settings.language.wr
 });
 
 router.put('/user/:uuid/userGroup', verifyRequest('app.admin.users.usergroup.write'), limiter(10), async (req, res) => {
-    const body = await userGroupCheck.validateAsync(await req.json());
+    const body = await userGroupCheck.validateAsync(req.body);
     const params = await getUserByUUIDSchema.validateAsync(req.params);
 
     await updateUserGroupByUUID(params.uuid, body.userGroup);

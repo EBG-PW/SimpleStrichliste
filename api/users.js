@@ -6,8 +6,8 @@ const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/w
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 
 /* Plugin info*/
@@ -63,7 +63,7 @@ router.get('/hasUsers', limiter(10), async (req, res) => {
  * Generate a new Admin User, is only avaible on a empty DB
  */
 router.post('/admin', limiter(20), async (req, res) => {
-    const body = await userSchema.validateAsync(await req.json());
+    const body = await userSchema.validateAsync(req.body);
     const usercount = await countUsers();
     if (usercount > 0) {
         return res.status(409).json({ error: 'Not available' });
@@ -86,7 +86,7 @@ router.post('/admin', limiter(20), async (req, res) => {
  * Create a normal user
  */
 router.post('/', limiter(20), async (req, res) => {
-    const body = await userSchema.validateAsync(await req.json());
+    const body = await userSchema.validateAsync(req.body);
 
     if (await checkIfSettingTrue('REG_CODE_ACTIVE')) {
         const regCode = await getSetting('REG_CODE');
@@ -106,7 +106,7 @@ router.get('/', verifyRequest('web.user.read'), limiter(1), async (req, res) => 
 });
 
 router.put('/name', verifyRequest('app.user.settings.name.write'), limiter(10), async (req, res) => {
-    const body = await userNameSchema.validateAsync(await req.json());
+    const body = await userNameSchema.validateAsync(req.body);
     const user_id = req.user.user_data.id;
 
     await updateUserName(user_id, body.name);
@@ -114,7 +114,7 @@ router.put('/name', verifyRequest('app.user.settings.name.write'), limiter(10), 
 });
 
 router.put('/email', verifyRequest('app.user.settings.email.write'), limiter(10), async (req, res) => {
-    const body = await userEmailSchema.validateAsync(await req.json());
+    const body = await userEmailSchema.validateAsync(req.body);
     const user_id = req.user.user_data.id;
 
     await updateUserEmail(user_id, body.email);
@@ -122,7 +122,7 @@ router.put('/email', verifyRequest('app.user.settings.email.write'), limiter(10)
 });
 
 router.put('/username', verifyRequest('app.user.settings.username.write'), limiter(10), async (req, res) => {
-    const body = await userUsernameSchema.validateAsync(await req.json());
+    const body = await userUsernameSchema.validateAsync(req.body);
     const user_id = req.user.user_data.id;
 
     await updateUserUserName(user_id, body.username);
@@ -130,7 +130,7 @@ router.put('/username', verifyRequest('app.user.settings.username.write'), limit
 });
 
 router.put('/password', verifyRequest('app.user.settings.password.write'), limiter(10), async (req, res) => {
-    const body = await userPasswordSchema.validateAsync(await req.json());
+    const body = await userPasswordSchema.validateAsync(req.body);
     const user_id = req.user.user_data.id;
 
     const currentPasswordHash = await getUserPassword(user_id);
@@ -145,7 +145,7 @@ router.put('/password', verifyRequest('app.user.settings.password.write'), limit
 });
 
 router.put('/language', verifyRequest('app.user.settings.language.write'), limiter(10), async (req, res) => {
-    const body = await userLanguageSchema.validateAsync(await req.json());
+    const body = await userLanguageSchema.validateAsync(req.body);
     const user_id = req.user.user_data.id;
 
     await updateUserLanguage(user_id, body.language);

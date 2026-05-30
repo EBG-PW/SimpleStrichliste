@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 const plugins = [];
 const Preplugins = [];

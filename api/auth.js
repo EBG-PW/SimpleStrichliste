@@ -8,8 +8,8 @@ const Joi = require('@lib/sanitizer');
 const useragent = require('express-useragent');
 const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
-const HyperExpress = require('hyper-express');
-const router = new HyperExpress.Router();
+const express = require('ultimate-express');
+const router = new express.Router();
 
 
 /* Plugin info*/
@@ -23,7 +23,7 @@ const loginSchema = Joi.object({
 });
 
 router.post('/login', async (req, res) => {
-    const body = await loginSchema.validateAsync(await req.json());
+    const body = await loginSchema.validateAsync(req.body);
 
     const user = await findUserByUsername(body.username);
     if (!user) {
