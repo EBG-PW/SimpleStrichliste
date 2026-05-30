@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
+const { countUsers, countTransactions, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
 const { removeWebtoken } = require('@lib/cache');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
@@ -62,8 +62,9 @@ router.get('/overview', verifyRequest('app.admin.overview.read'), limiter(10), a
     const usercount = await countUsers();
     const categoriescount = await countCategories();
     const itemscount = await countItems();
+    const transactionscount = await countTransactions();
     const appversion = package.version;
-    return res.json({ usercount, categoriescount, itemscount, appversion });
+    return res.json({ usercount, categoriescount, itemscount, transactionscount, appversion });
 });
 
 router.get('/user/:uuid', verifyRequest('app.admin.users.read'), limiter(1), async (req, res) => {

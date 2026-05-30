@@ -16,6 +16,10 @@
         "CategoriesCount_plural": "{{count}} Kategorien",
         "ItemsCount": "{{count}} Artikel",
         "ItemsCount_plural": "{{count}} Artikel",
+        "StatisticsCount": "{{count}} Graphen",
+        "StatisticsCount_plural": "{{count}} Graphen",
+        "TransactionsCount": "{{count}} Transaktion",
+        "TransactionsCount_plural": "{{count}} Transaktionen",
         "AppVersion": "Version: {{version}}"
     }
 }
