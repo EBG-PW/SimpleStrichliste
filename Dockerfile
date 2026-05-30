@@ -22,6 +22,11 @@ ENV NODE_ENV=production
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fontconfig \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
 COPY . .
