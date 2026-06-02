@@ -111,16 +111,14 @@
 
         const createTransactionHTML = (tx) => {
           const { time } = formatTimestamp(tx.transaction_timestamp);
-          const totalAmount = tx.price_at_transaction * tx.quantity;
+          let totalAmount = tx.price_at_transaction * tx.quantity;
 
           let transaction_type;
           let iconOrImage;
-          let isPurchase;
           let title;
           switch (tx.item_uuid) {
             case "13620506-b9f8-44d7-a9ff-d1b58ddee93f": // System
               transaction_type = "purchase";
-              isPurchase = true;
               title = i18next.t("Items.SystemTransaction");
               iconOrImage = `<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full">
                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
@@ -128,7 +126,6 @@
               break;
             case "80a38ccf-013f-404f-9099-b2a63e958aa8": // Restock (Purchase was made and added via restock)
               transaction_type = "restock";
-              isPurchase = true;
               title = i18next.t("Items.SystemPurchase");
               iconOrImage = `<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full">
                             <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M17 17h-11v-14h-2" /><path d="M6 5l14 1l-1 7h-13" /></svg>
@@ -136,7 +133,7 @@
               break;
             default:
               transaction_type = "purchase";
-              isPurchase = false;
+              totalAmount = totalAmount * -1; // Invert amount for purchases
               title = i18next.t("Items.PurchaseTitle", { count: tx.quantity, name: tx.item_name });
               iconOrImage = `<img src="/i/items/${tx.item_uuid}" alt="${tx.item_name}" class="w-12 h-12 object-cover rounded-full">`;
           }
