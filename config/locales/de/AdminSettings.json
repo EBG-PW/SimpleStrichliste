@@ -28,6 +28,10 @@
     "Description": "Aktiviere diese Funktion um Benutzern zu erlauben, die Einkaufsliste nutzen zu können.",
     "ToggleLabel": "Einkaufslisten für normale Benutzer aktivieren"
   },
+  "Features": {
+    "Title": "Features",
+    "Description": "Aktiviere oder deaktiviere optionale Funktionen."
+  },
   "DBAutoVaccum": {
     "Title": "Automatische DB-Vakuumierung",
     "Description": "Aktiviere diese Funktion um das automatische Vacuum der Datenbank zu ermöglichen, dies reduziert die Fragmentierung und verbessert die Leistung.",

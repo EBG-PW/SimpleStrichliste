@@ -7,6 +7,7 @@
     <%- html_content.manifest %>
     <script>
       const lang = <%- JSON.stringify(language) %>;
+      const features = <%- JSON.stringify(features) %>;
     </script>
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
@@ -112,6 +113,24 @@
             </p>
           </div>
         </a>
+
+        <% Object.entries(features).forEach(([featureName, enabled]) => { %>
+          <% const feature = featureDefinitions[featureName]; %>
+          <% if (enabled) { %>
+            <% const translationKeyBase = feature?.translationKeyBase || `Admin.FeatureCards.${featureName}`; %>
+            <a href="<%= feature?.href || `/admin/${featureName}` %>" class="group block bg-white rounded-xl shadow-lg p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
+              <div class="flex justify-between items-start">
+                <h2 class="font-bold text-xl text-gray-800" data-translate="<%= translationKeyBase %>.Title"></h2>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M5 8l1.5 11h11L19 8M8 8V6a4 4 0 118 0v2" />
+                </svg>
+              </div>
+              <div class="mt-3">
+                <p class="text-sm text-gray-600" data-translate="<%= translationKeyBase %>.Description"></p>
+              </div>
+            </a>
+          <% } %>
+        <% }); %>
       </div>
     </main>
 

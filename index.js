@@ -16,8 +16,10 @@ process.log = log;
 /* Load some config data, thats needed to render the HTML pages on startup */
 // Get all translation files from \public\dist\locales and generate a context object ({ [language]: [file key.language] })
 const localesDir = path.join(__dirname, 'config', 'locales');
+const featureLocalesDir = path.join(__dirname, 'config', 'Features_locals');
 
 let availableLanguages = {};
+let availableFeatureLanguages = {};
 let countryConfig = {};
 
 // Recursive loader for language components
@@ -45,12 +47,24 @@ languages.forEach(langCode => {
     const langDir = path.join(localesDir, langCode);
     if (fs.lstatSync(langDir).isDirectory()) {
         availableLanguages[langCode] = loadLanguageComponents(langDir);
+        const featureLangDir = path.join(featureLocalesDir, langCode);
+        availableFeatureLanguages[langCode] = {};
+        if (fs.existsSync(featureLangDir) && fs.lstatSync(featureLangDir).isDirectory()) {
+            fs.readdirSync(featureLangDir)
+                .filter(file => file.endsWith('.json'))
+                .forEach(file => {
+                    const featureName = path.basename(file, '.json');
+                    const fileContents = fs.readFileSync(path.join(featureLangDir, file), 'utf8');
+                    availableFeatureLanguages[langCode][featureName] = JSON.parse(fileContents);
+                });
+        }
         countryConfig[langCode] = availableLanguages[langCode].LocalLanguages.local;
     }
 });
 
 // Expose globals
 process.availableLanguages = availableLanguages; // Used for template rendering for different languages
+process.availableFeatureLanguages = availableFeatureLanguages; // Feature-owned translations, injected only when enabled
 process.countryConfig = countryConfig; // Used for language dropdowns
 process.localsMap = require('@config/locals_map.js'); // Used for template rendering for different languages
 process.permissions_config = require('@config/permissions.js');

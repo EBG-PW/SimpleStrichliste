@@ -69,6 +69,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             navbardesktop.innerHTML += `<a href="/settings" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Settings')}</a>`
         }
 
+        // Dynamically add toggable features to the navbar if they are enabled
+        if (typeof features !== 'undefined' && features.foodorders === true) {
+            navbarmobile.innerHTML += `<a href="/foodorders" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.FoodOrders')}</a>`
+            navbardesktop.innerHTML += `<a href="/foodorders" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.FoodOrders')}</a>`
+        }
+
         if (checkPermission('app.admin.*').result) {
             navbarmobile.innerHTML += `<a href="/admin/index" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
             navbardesktop.innerHTML += `<a href="/admin/index" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
