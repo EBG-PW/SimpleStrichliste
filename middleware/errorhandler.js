@@ -1,6 +1,8 @@
 const path = require('path');
 const ejs = require('ejs');
 
+const { log_errors } = require('@config/errors')
+
 /**
  * Handle errors and send appropriate responses
  * @param {Error} error 

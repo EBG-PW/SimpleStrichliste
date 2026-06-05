@@ -41,8 +41,6 @@ app.use((req, res, next) => {
     next();
 });
 
-const { log_errors } = require('@config/errors')
-
 let defaultRoute = '/overview';
 const dbMigration = getDBMigration();
 if (dbMigration === 0) {
