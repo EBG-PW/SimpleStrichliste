@@ -55,29 +55,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         const navbardesktop = document.getElementById('desktop-menu');
 
 
+        const addNavLink = (href, label) => {
+            const mobileLink = document.createElement('a');
+            mobileLink.href = href;
+            mobileLink.className = 'block py-2 text-gray-600 hover:text-blue-500';
+            mobileLink.textContent = label;
+            navbarmobile.appendChild(mobileLink);
+
+            const desktopLink = document.createElement('a');
+            desktopLink.href = href;
+            desktopLink.className = 'text-gray-600 hover:text-blue-500';
+            desktopLink.textContent = label;
+            navbardesktop.appendChild(desktopLink);
+        };
+
         // Add Home
-        navbarmobile.innerHTML += `<a href="/" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Overview')}</a>`
-        navbardesktop.innerHTML += `<a href="/" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Overview')}</a>`
+        addNavLink('/', i18next.t('Navbar.Overview'));
 
         if (checkPermission('app.user.history.*').result) {
-            navbarmobile.innerHTML += `<a href="/transaction_history" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_history')}</a>`
-            navbardesktop.innerHTML += `<a href="/transaction_history" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Purchase_history')}</a>`
+            addNavLink('/transaction_history', i18next.t('Navbar.Purchase_history'));
         }
 
         if (checkPermission('app.user.settings.*').result) {
-            navbarmobile.innerHTML += `<a href="/settings" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Settings')}</a>`
-            navbardesktop.innerHTML += `<a href="/settings" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Settings')}</a>`
+            addNavLink('/settings', i18next.t('Navbar.Settings'));
         }
 
-        // Dynamically add toggable features to the navbar if they are enabled
-        if (typeof features !== 'undefined' && features.foodorders === true) {
-            navbarmobile.innerHTML += `<a href="/foodorders" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.FoodOrders')}</a>`
-            navbardesktop.innerHTML += `<a href="/foodorders" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.FoodOrders')}</a>`
+        if (typeof features !== 'undefined') {
+            Object.entries(features)
+                .map(([featureName, feature]) => ({
+                    name: featureName,
+                    config: typeof feature === 'object' ? feature : { enabled: feature === true },
+                }))
+                .filter(({ config }) => config.enabled === true && config.navbar?.insert === true)
+                .filter(({ config }) => !config.navbar.permission || checkPermission(config.navbar.permission).result)
+                .sort((left, right) => (left.config.navbar.order || 100) - (right.config.navbar.order || 100))
+                .forEach(({ name, config }) => {
+                    const href = config.navbar.href || `/${name}`;
+                    const translationKey = config.navbar.translationKey || `Navbar.Features.${name}`;
+                    addNavLink(href, i18next.t(translationKey));
+                });
         }
 
         if (checkPermission('app.admin.*').result) {
-            navbarmobile.innerHTML += `<a href="/admin/index" class="block py-2 text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
-            navbardesktop.innerHTML += `<a href="/admin/index" class="text-gray-600 hover:text-blue-500">${i18next.t('Navbar.Admin')}</a>`;
+            addNavLink('/admin/index', i18next.t('Navbar.Admin'));
         }
     }
 });

@@ -128,7 +128,7 @@
           <div class="space-y-5">
             <% Object.entries(featureSettingsDefinitions).forEach(([featureName, feature]) => { %>
               <% const settingKey = `feature_${featureName}`; %>
-              <% const translationKeyBase = feature.settingsTranslationKeyBase || `AdminSettings.Features.${featureName}`; %>
+              <% const translationKeyBase = feature.settings?.translationKeyBase || feature.settingsTranslationKeyBase || `AdminSettings.Features.${featureName}`; %>
               <div class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
                 <div class="flex items-center justify-between gap-4">
                   <div>

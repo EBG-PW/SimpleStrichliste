@@ -9,7 +9,8 @@
     "dev": "nodemon -e js,ejs,json .\\index.js",
     "migrate:apply": "node migrate.js apply",
     "migrate:create": "node migrate.js create",
-    "migrate:seed": "node migrate.js seed"
+    "migrate:seed": "node migrate.js seed",
+    "feature:uninstall": "node tools/uninstallFeature.js"
   },
   "_moduleAliases": {
     "@src": "./src",

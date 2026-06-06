@@ -5,33 +5,71 @@ const Database = require('better-sqlite3');
 const DB_PATH = './storage/application.db';
 const MIGRATIONS_DIR = 'migrations';
 const SEEDER_FILE = 'seeder.sql';
+const FEATURE_CONFIG_DIR = path.join('config', 'features');
 
-if(!fs.existsSync(path.dirname(DB_PATH))) {
+if (!fs.existsSync(path.dirname(DB_PATH))) {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     console.log(`Created database directory: '${path.dirname(DB_PATH)}'`);
 }
 
-/**
- * Applies data from the seeder file.
- * @param {Database.Database} db The database instance.
- */
-function applySeeder(db) {
-    if (!fs.existsSync(SEEDER_FILE)) {
-        console.log(`Seeder file '${SEEDER_FILE}' not found, skipping.`);
-        return;
-    }
-
-    console.log(`Applying data from seeder file: ${SEEDER_FILE}...`);
+function execSqlFile(db, filePath, label) {
+    console.log(`Applying SQL from ${label}: ${filePath}...`);
     try {
-        const sql = fs.readFileSync(SEEDER_FILE, 'utf8');
+        const sql = fs.readFileSync(filePath, 'utf8');
         db.exec(sql);
-        console.log(`✅ Successfully applied seeder data.`);
+        console.log(`Successfully applied ${label}.`);
     } catch (err) {
-        console.error(`❌ FAILED to apply seeder file '${SEEDER_FILE}'.`);
+        console.error(`FAILED to apply ${label} '${filePath}'.`);
         throw err;
     }
 }
 
+const loadInstalledFeatureConfigs = () => {
+    if (!fs.existsSync(FEATURE_CONFIG_DIR)) return [];
+
+    return fs.readdirSync(FEATURE_CONFIG_DIR)
+        .filter(file => file.endsWith('.json'))
+        .map(file => {
+            const configPath = path.join(FEATURE_CONFIG_DIR, file);
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            return {
+                name: config.name || path.basename(file, '.json'),
+                config,
+            };
+        });
+};
+
+const getFeatureSqlFiles = (feature, type) => {
+    const configuredFiles = Array.isArray(feature.config?.db?.[type]) ? feature.config.db[type] : [];
+    const cwd = process.cwd();
+
+    return configuredFiles
+        .map(file => path.normalize(file))
+        .filter(file => {
+            const resolvedPath = path.normalize(path.join(cwd, file));
+            const relativePath = path.relative(cwd, resolvedPath);
+            return !relativePath.startsWith('..') && !path.isAbsolute(relativePath) && fs.existsSync(resolvedPath) && file.endsWith('.sql');
+        })
+        .sort();
+};
+
+/**
+ * Applies data from the seeder files.
+ * @param {Database.Database} db The database instance.
+ */
+function applySeeder(db) {
+    if (fs.existsSync(SEEDER_FILE)) {
+        execSqlFile(db, SEEDER_FILE, 'base seeder');
+    } else {
+        console.log(`Seeder file '${SEEDER_FILE}' not found, skipping.`);
+    }
+
+    loadInstalledFeatureConfigs().forEach(feature => {
+        getFeatureSqlFiles(feature, 'seeds').forEach(seedFile => {
+            execSqlFile(db, seedFile, `feature seeder ${feature.name}`);
+        });
+    });
+}
 
 function applyMigrations() {
     console.log('Starting database migration process...');
@@ -63,38 +101,49 @@ function applyMigrations() {
         console.log(`Migrations directory '${MIGRATIONS_DIR}' not found. Nothing to do.`);
     }
 
-
-    const allMigrationFiles = fs.existsSync(MIGRATIONS_DIR)
+    const baseMigrationFiles = fs.existsSync(MIGRATIONS_DIR)
         ? fs.readdirSync(MIGRATIONS_DIR)
             .filter(file => file.endsWith('.sql'))
             .sort()
+            .map(file => ({
+                displayName: file,
+                filePath: path.join(MIGRATIONS_DIR, file),
+                version: file.split('-')[0],
+            }))
         : [];
 
-    const pendingMigrations = allMigrationFiles.filter(file => {
-        const version = file.split('-')[0];
-        return !appliedVersions.has(version);
+    const featureMigrationFiles = loadInstalledFeatureConfigs().flatMap(feature => {
+        return getFeatureSqlFiles(feature, 'migrations').map(file => {
+            const filename = path.basename(file);
+            return {
+                displayName: `${feature.name}/${filename}`,
+                filePath: file,
+                version: `feature:${feature.name}:${filename.split('-')[0]}`,
+            };
+        });
     });
+
+    const pendingMigrations = [...baseMigrationFiles, ...featureMigrationFiles]
+        .filter(migration => !appliedVersions.has(migration.version));
 
     if (pendingMigrations.length === 0) {
         console.log('Database schema is up to date. No new migrations to apply.');
     } else {
         console.log(`Found ${pendingMigrations.length} pending migrations to apply.`);
 
-        for (const migrationFile of pendingMigrations) {
+        for (const migration of pendingMigrations) {
             const applyMigrationTx = db.transaction(() => {
                 try {
-                    const migrationPath = path.join(MIGRATIONS_DIR, migrationFile);
-                    const sql = fs.readFileSync(migrationPath, 'utf8');
+                    const sql = fs.readFileSync(migration.filePath, 'utf8');
 
                     db.exec(sql);
 
-                    const version = migrationFile.split('-')[0];
                     const recordMigrationStmt = db.prepare(`INSERT INTO schema_migrations (version) VALUES (?)`);
-                    recordMigrationStmt.run(version);
+                    recordMigrationStmt.run(migration.version);
 
-                    console.log(`✅ Successfully applied migration: ${migrationFile}`);
+                    console.log(`Successfully applied migration: ${migration.displayName}`);
                 } catch (err) {
-                    console.error(`❌ FAILED to apply migration ${migrationFile}. Rolling back.`);
+                    console.error(`FAILED to apply migration ${migration.displayName}. Rolling back.`);
                     throw err;
                 }
             });
@@ -122,12 +171,12 @@ function applyMigrations() {
 }
 
 /**
- * Creates a new, empty .sql file in the
+ * Creates a new, empty .sql file in the migrations directory.
  * @param {string} name
  */
 function createMigration(name) {
     if (!name) {
-        console.error('❌ Migration name is required. Usage: node migrate.js create <MigrationName>');
+        console.error('Migration name is required. Usage: node migrate.js create <MigrationName>');
         process.exit(1);
     }
 
@@ -143,7 +192,7 @@ function createMigration(name) {
 
     fs.writeFileSync(filepath, `-- Add your SQL migration statements here for ${filename}\n`);
 
-    console.log(`✅ Created new migration file: ${filepath}`);
+    console.log(`Created new migration file: ${filepath}`);
 }
 
 function main() {
@@ -162,12 +211,11 @@ function main() {
             break;
         case 'setup':
             applyMigrations();
-            applySeeder(new Database(DB_PATH));
             break;
         default:
             console.log('Usage:');
             console.log('  node migrate.js <command> [args]');
-            console.log('  node migrate.js seed            - Applies data from the seeder file.');
+            console.log('  node migrate.js seed            - Applies data from the seeder files.');
             console.log('  node migrate.js apply           - Applies pending migrations and seeds data.');
             console.log('  node migrate.js create <Name>   - Creates a new, empty migration file.');
             process.exit(1);

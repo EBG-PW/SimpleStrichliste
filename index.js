@@ -12,11 +12,13 @@ const path = require('node:path');
 process.log = {};
 process.log = log;
 
+const { installFeatures, featureLocalesDir } = require('@lib/features');
+installFeatures();
+
 // Render Templates
 /* Load some config data, thats needed to render the HTML pages on startup */
 // Get all translation files from \public\dist\locales and generate a context object ({ [language]: [file key.language] })
 const localesDir = path.join(__dirname, 'config', 'locales');
-const featureLocalesDir = path.join(__dirname, 'config', 'Features_locals');
 
 let availableLanguages = {};
 let availableFeatureLanguages = {};

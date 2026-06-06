@@ -142,3 +142,7 @@ dist
 /storage
 key.pem
 cert.pem
+
+# Ignore installed features and config files
+/installed_features/*
+/config/features/*

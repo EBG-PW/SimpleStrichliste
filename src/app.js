@@ -13,6 +13,8 @@ const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
 const { getStaticFilePath } = require('@lib/imageStore');
+const { loadFeatureDefinitions, getFeaturePublicFilePath } = require('@lib/features');
+const { ensureFeatureSettings } = require('@lib/sqlite/settings');
 
 let options = {};
 
@@ -70,6 +72,7 @@ if (dbMigration === 0) {
     execSync('node migrate.js seed', { stdio: 'inherit' });
 }
 
+ensureFeatureSettings(loadFeatureDefinitions());
 backfillStatistics(); // Backfill statistics data
 
 // Redirect root to setup
@@ -127,6 +130,54 @@ app.get('/manifest.json', async (req, res) => {
     res.header('Content-Type', 'application/json');
     const manifest = await getManifest();
     res.json(manifest);
+});
+
+app.get('/features/*', (req, res) => {
+    const rawFeaturePath = decodeURIComponent(req.url.split('?')[0].replace(/^\/features\//, ''));
+    const [featureName, ...fileParts] = rawFeaturePath.split('/').filter(Boolean);
+    const relativeFilePath = fileParts.join('/');
+
+    if (!featureName || !relativeFilePath) {
+        res.status(404);
+        return res.json({ message: "Page not found", info: "Request can not be served", reason: "The requested feature file was not found" });
+    }
+
+    try {
+        const filePath = getFeaturePublicFilePath(featureName, relativeFilePath);
+        if (!filePath) throw new Error(`Feature public file not found - ${rawFeaturePath}`);
+
+        switch (filePath.split('.').pop()) {
+            case 'js':
+                res.header('Content-Type', 'text/javascript');
+                break;
+            case 'css':
+                res.header('Content-Type', 'text/css');
+                break;
+            case 'png':
+                res.header('Content-Type', 'image/png');
+                break;
+            case 'jpg':
+            case 'jpeg':
+                res.header('Content-Type', 'image/jpg');
+                break;
+            case 'svg':
+                res.header('Content-Type', 'image/svg+xml');
+                break;
+            case 'json':
+                res.header('Content-Type', 'application/json');
+                break;
+            default:
+                res.header('Content-Type', 'text/plain');
+                break;
+        }
+
+        res.header('Cache-Control', 'public, max-age=172800');
+        res.send(fs.readFileSync(filePath));
+    } catch (error) {
+        process.log.error(error);
+        res.status(404);
+        return res.json({ message: "Page not found", info: "Request can not be served", reason: "The requested feature file was not found" });
+    }
 });
 
 const manifestIconTypes = {

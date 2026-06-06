@@ -16,7 +16,7 @@ const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const { generateManifest } = require('@lib/manifest');
 const { InvalidRouteInput } = require('@lib/errors');
 const { ViewRenderer } = require('@lib/template');
-const { featureDefinitions } = require('@config/features');
+const { loadFeatureDefinitions } = require('@lib/features');
 const Joi = require('@lib/sanitizer');
 const express = require('ultimate-express');
 const router = new express.Router();
@@ -34,8 +34,9 @@ const uploadHandler = multer({
     limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB file size limit
 });
 
-const settingsToggleSchema = Joi.object({
-    setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING', ...Object.keys(featureDefinitions).map((featureName) => `feature_${featureName}`)).required(),
+// Dynamically generate the schema for toggling settings based on available features
+const getSettingsToggleSchema = () => Joi.object({
+    setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING', ...Object.keys(loadFeatureDefinitions()).map((featureName) => `feature_${featureName}`)).required(),
 });
 
 const settingsManifestSchema = Joi.object({
@@ -58,7 +59,7 @@ router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req
 });
 
 router.post('/toggle', verifyRequest('app.admin.settings.write'), limiter(1), async (req, res) => {
-    const body = await settingsToggleSchema.validateAsync(req.body);
+    const body = await getSettingsToggleSchema().validateAsync(req.body);
     const result = await toggleSetting(body.setting_key);
     if (body.setting_key.startsWith('feature_')) {
         new ViewRenderer().flushAllCachesAndRenderStaticPages();
