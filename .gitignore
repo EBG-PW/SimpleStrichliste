@@ -146,3 +146,5 @@ cert.pem
 # Ignore installed features and config files
 /installed_features/*
 /config/features/*
+/migrations/features
+/seeds/features

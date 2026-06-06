@@ -58,18 +58,19 @@ if (dbMigration === 0) {
     }
     defaultRoute = '/setup';
 } else {
-    if (dbMigration < dbVersion) {
-        try {
+    try {
+        if (dbMigration < dbVersion) {
             process.log.system(`Database migration required. Current version: ${dbMigration}, Required version: ${dbVersion}`);
-            execSync('node migrate.js setup', { stdio: 'inherit' });
-            process.log.system('Database migration completed successfully.');
-        } catch (error) {
-            process.log.error('Failed to run database migration script:');
-            console.error(error);
-            process.exit(1);
+        } else {
+            process.log.system('Checking database migrations and seed data...');
         }
+        execSync('node migrate.js setup', { stdio: 'inherit' });
+        process.log.system('Database migration completed successfully.');
+    } catch (error) {
+        process.log.error('Failed to run database migration script:');
+        console.error(error);
+        process.exit(1);
     }
-    execSync('node migrate.js seed', { stdio: 'inherit' });
 }
 
 ensureFeatureSettings(loadFeatureDefinitions());

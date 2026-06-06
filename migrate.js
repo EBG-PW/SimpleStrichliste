@@ -6,10 +6,18 @@ const DB_PATH = './storage/application.db';
 const MIGRATIONS_DIR = 'migrations';
 const SEEDER_FILE = 'seeder.sql';
 const FEATURE_CONFIG_DIR = path.join('config', 'features');
+const { installFeatures } = require('./lib/features');
+let featuresInstalled = false;
 
 if (!fs.existsSync(path.dirname(DB_PATH))) {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     console.log(`Created database directory: '${path.dirname(DB_PATH)}'`);
+}
+
+function installCurrentFeatures() {
+    if (featuresInstalled) return;
+    installFeatures();
+    featuresInstalled = true;
 }
 
 function execSqlFile(db, filePath, label) {
@@ -58,6 +66,8 @@ const getFeatureSqlFiles = (feature, type) => {
  * @param {Database.Database} db The database instance.
  */
 function applySeeder(db) {
+    installCurrentFeatures();
+
     if (fs.existsSync(SEEDER_FILE)) {
         execSqlFile(db, SEEDER_FILE, 'base seeder');
     } else {
@@ -73,6 +83,7 @@ function applySeeder(db) {
 
 function applyMigrations() {
     console.log('Starting database migration process...');
+    installCurrentFeatures();
 
     const db = new Database(DB_PATH, {
         // verbose: console.log

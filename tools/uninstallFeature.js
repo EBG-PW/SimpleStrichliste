@@ -4,6 +4,7 @@ const path = require('node:path');
 const appRoot = path.join(__dirname, '..');
 const featureConfigDir = path.join(appRoot, 'config', 'features');
 const installedFeaturesDir = path.join(appRoot, 'installed_features');
+const localsMapPath = path.join(appRoot, 'config', 'locals_map.js');
 
 const featureName = process.argv[2];
 const removeSource = process.argv.includes('--remove-source');
@@ -47,8 +48,33 @@ if (!fs.existsSync(configPath)) {
 }
 
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+const removeLocalsMapEntries = (featureConfig) => {
+    const featureLocalsMap = featureConfig.localsMap || {};
+    if (Object.keys(featureLocalsMap).length === 0 || !fs.existsSync(localsMapPath)) return;
+
+    delete require.cache[require.resolve(localsMapPath)];
+    const localsMap = require(localsMapPath);
+
+    Object.keys(featureLocalsMap).forEach(route => {
+        delete localsMap[route];
+    });
+
+    const sortedMap = Object.keys(localsMap).sort().reduce((result, route) => {
+        result[route] = localsMap[route];
+        return result;
+    }, {});
+
+    fs.writeFileSync(localsMapPath, `module.exports = ${JSON.stringify(sortedMap, null, 4)}\n`);
+    console.log(`Updated config/locals_map.js for ${featureName}`);
+};
+
+removeLocalsMapEntries(config);
+
 const installedFiles = Array.isArray(config.installedFiles) ? config.installedFiles : [];
-const filesToRemove = [...new Set([...installedFiles, `config/features/${featureName}.json`])].sort().reverse();
+const filesToRemove = [...new Set([...installedFiles, `config/features/${featureName}.json`])]
+    .filter(relativePath => relativePath !== `config/locals_map.js:${featureName}`)
+    .sort()
+    .reverse();
 
 filesToRemove.forEach(relativePath => {
     const targetPath = resolveInsideAppRoot(relativePath);
