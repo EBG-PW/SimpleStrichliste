@@ -27,4 +27,5 @@ services:
     volumes:
       # Mount single volume for all persistent data
       - ~/strichliste_data:/app/storage
+      - ~/strichliste_installed_features:/app/installed_features
     restart: unless-stopped

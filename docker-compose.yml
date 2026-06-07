@@ -26,4 +26,5 @@ services:
     volumes:
       # Mount single volume for all persistent data
       - ./storage:/app/storage
+      - ./installed_features:/app/installed_features
     restart: unless-stopped
