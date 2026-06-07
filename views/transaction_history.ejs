@@ -120,7 +120,12 @@
           switch (tx.item_uuid) {
             case "13620506-b9f8-44d7-a9ff-d1b58ddee93f": // System
               transaction_type = "purchase";
-              title = i18next.t("Items.SystemTransaction");
+              if (tx.custom_item_text) {
+                totalAmount = totalAmount * -1;
+                title = tx.custom_item_text;
+              } else {
+                title = i18next.t("Items.SystemTransaction");
+              }
               iconOrImage = `<div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full">
                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                        </div>`;
