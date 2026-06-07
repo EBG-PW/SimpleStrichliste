@@ -16,13 +16,23 @@ module.exports = {
         "Navbar",
         "Categories"
     ],
-    "/admin/edituser": [
+    "/admin/:uuid/edituser": [
         "Admin",
         "Error",
         "Page",
         "Setup",
+        "Settings",
         "Navbar",
-        "AdminUser"
+        "AdminUsers"
+    ],
+    "/admin/:uuid/edititems": [
+        "Admin",
+        "Error",
+        "Page",
+        "Setup",
+        "Items",
+        "Navbar",
+        "AdminUsers"
     ],
     "/admin/index": [
         "Admin",

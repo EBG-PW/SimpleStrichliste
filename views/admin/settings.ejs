@@ -123,30 +123,6 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Features.Title"></h2>
-          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Features.Description"></p>
-          <div class="space-y-5">
-            <% Object.entries(featureSettingsDefinitions).forEach(([featureName, feature]) => { %>
-              <% const settingKey = `feature_${featureName}`; %>
-              <% const translationKeyBase = feature.settings?.translationKeyBase || feature.settingsTranslationKeyBase || `AdminSettings.Features.${featureName}`; %>
-              <div class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
-                <div class="flex items-center justify-between gap-4">
-                  <div>
-                    <h3 class="font-semibold text-gray-700" data-translate="<%= translationKeyBase %>.Title"></h3>
-                    <p class="mt-1 text-sm text-gray-600" data-translate="<%= translationKeyBase %>.Description"></p>
-                  </div>
-                  <label for="feature-<%= featureName %>-toggle" class="relative inline-flex shrink-0 items-center cursor-pointer">
-                    <input type="checkbox" value="" onchange="toggleSetting('<%= settingKey %>')" id="feature-<%= featureName %>-toggle" data-feature-toggle="<%= featureName %>" class="sr-only peer" />
-                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                  </label>
-                </div>
-                <span class="sr-only" data-translate="<%= translationKeyBase %>.ToggleLabel"></span>
-              </div>
-            <% }); %>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.DBAutoVaccum.Title"></h2>
           <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.DBAutoVaccum.Description"></p>
           <div class="flex items-center justify-between mb-4">
@@ -253,6 +229,30 @@
               </div>
             </div>
           </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Features.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Features.Description"></p>
+          <div class="space-y-5">
+            <% Object.entries(featureSettingsDefinitions).forEach(([featureName, feature]) => { %>
+              <% const settingKey = `feature_${featureName}`; %>
+              <% const translationKeyBase = feature.settings?.translationKeyBase || feature.settingsTranslationKeyBase || `AdminSettings.Features.${featureName}`; %>
+              <div class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 class="font-semibold text-gray-700" data-translate="<%= translationKeyBase %>.Title"></h3>
+                    <p class="mt-1 text-sm text-gray-600" data-translate="<%= translationKeyBase %>.Description"></p>
+                  </div>
+                  <label for="feature-<%= featureName %>-toggle" class="relative inline-flex shrink-0 items-center cursor-pointer">
+                    <input type="checkbox" value="" onchange="toggleSetting('<%= settingKey %>')" id="feature-<%= featureName %>-toggle" data-feature-toggle="<%= featureName %>" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                  </label>
+                </div>
+                <span class="sr-only" data-translate="<%= translationKeyBase %>.ToggleLabel"></span>
+              </div>
+            <% }); %>
+          </div>
         </div>
       </div>
 
