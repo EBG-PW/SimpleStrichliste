@@ -1,5 +1,120 @@
 # SimpleStrichliste
 
+SimpleStrichliste is a small self-hosted balance and store application with the support for optional features that add more functionality.
+
+## Setup With Docker
+
+The easiest way to run the application is Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+The default `docker-compose.yml` starts the app on:
+
+```text
+http://localhost:3000
+```
+
+Persistent data is stored in mounted folders:
+
+```text
+./storage:/app/storage
+./installed_features:/app/installed_features
+```
+
+`storage` contains the SQLite database, uploaded images, generated assets, and backups. Keep this folder when updating or recreating the container.
+
+For local development with a locally built image, use:
+
+```bash
+docker compose -f docker-compose.dev.wsl.yml up -d --build
+```
+
+On first startup the app creates/migrates the database automatically. If no users exist, the setup page lets you create the first user. The first user is created as an administrator by default. When OAuth is enabled, the first successful OAuth login also creates the first local user as an administrator.
+
+## Configuration
+
+Most runtime configuration is done through environment variables in Docker Compose or `.env`.
+
+Common settings:
+
+```env
+APPLICATION=Strichliste
+DOMAIN=http://localhost:3000
+FALLBACKLANG=de
+PORT=3000
+BINDIP=0.0.0.0
+SALTROUNDS=12
+WebTokenDurationH=9600
+```
+
+`DOMAIN` must match the public URL users open in their browser. This matters for generated links, static assets, manifests, and OAuth callbacks.
+
+## OAuth Login
+
+When `EBG_OAUTH_URL` is set, local password login and local registration are replaced by OAuth. In this mode:
+
+- `/login` and `/register` show OAuth buttons instead of local forms.
+- Local password login and local registration API calls are rejected.
+- The registration-code settings are hidden because registration is managed by the OAuth provider.
+- Users cannot change their local password in user settings, because OAuth users do not log in with that password.
+- The first OAuth-created local user becomes admin automatically.
+
+Required OAuth environment variables:
+
+```env
+EBG_OAUTH_URL=https://ebg.pw
+EBG_OAUTH_CLIENT_ID=your-client-id
+EBG_OAUTH_CLIENT_SECRET=your-client-secret
+EBG_OAUTH_SCOPE=your-scope
+```
+
+Default OAuth endpoints derived from `EBG_OAUTH_URL`:
+
+```text
+Authorize user:  /auth/oauth
+Exchange code:   /oauth/authorize
+Load user data:  /oauth/user
+Callback URL:    <DOMAIN>/auth/oauth/callback
+```
+
+## Backups And Import
+
+Backups can be managed from the admin settings page.
+
+Creating a backup stores a zip file in:
+
+```text
+storage/backups
+```
+
+Each backup contains:
+
+- `application.db`, the SQLite database
+- item images from storage
+- static stored images such as favicons or warning images
+
+Admins can create, list, download, and delete backups from the admin settings page.
+
+### Import / Restore
+
+Backup import is available only while the application has zero users. This is intentional so a restore cannot overwrite an active installation from inside a logged-in session.
+
+To restore:
+
+1. Start the app with an empty database or no users.
+2. Open the setup page.
+3. Upload a backup `.zip`.
+4. The app restores `application.db` and stored images.
+5. The app exits after restore so it can restart cleanly with the restored database.
+
+With Docker Compose, the container uses `restart: unless-stopped`, so it should start again automatically after restore. If it does not, run:
+
+```bash
+docker compose up -d
+```
+
 ## Optional Features
 
 Optional features are installed from independent folders in `installed_features`.
