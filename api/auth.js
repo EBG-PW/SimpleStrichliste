@@ -1,10 +1,11 @@
 // const { limiter } = require('@middleware/limiter');
-const { findUserByUsername } = require('@lib/sqlite/users');
+const { findUserByEmail } = require('@lib/sqlite/users');
 const { PermissionsError, InvalidLogin } = require('@lib/errors');
 const { mergePermissions, checkPermission } = require('@lib/permissions');
 const { addWebtoken } = require('@lib/cache');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const Joi = require('@lib/sanitizer');
+const { isEBGOAuthEnabled } = require('@lib/oauth');
 const useragent = require('express-useragent');
 const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
@@ -18,21 +19,25 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const loginSchema = Joi.object({
-    username: Joi.fullysanitizedString().min(3).max(30).required(),
+    email: Joi.string().email().required(),
     password: Joi.string().min(8).max(56).required(),
 });
 
 router.post('/login', async (req, res) => {
+    if (isEBGOAuthEnabled()) {
+        return res.status(403).json({ message: 'OAuth login is enabled' });
+    }
+
     const body = await loginSchema.validateAsync(req.body);
 
-    const user = await findUserByUsername(body.username);
+    const user = await findUserByEmail(body.email);
     if (!user) {
-        throw new InvalidLogin('Unknown or invalid username and password');
+        throw new InvalidLogin('Unknown or invalid email and password');
     }
 
     const isValidPassword = await bcrypt.compare(body.password, user.password_hash);
     if (!isValidPassword) {
-        throw new InvalidLogin('Invalid username or password');
+        throw new InvalidLogin('Invalid email or password');
     }
 
     const Formated_Permissions = mergePermissions([], user.user_role); // Format the permissions to a array

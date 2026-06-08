@@ -8,6 +8,7 @@
     <script>
       const lang = <%- JSON.stringify(language) %>;
       const features = <%- JSON.stringify(features) %>;
+      const isOAuthEnabled = <%- JSON.stringify(ebgOAuth.enabled) %>;
     </script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
@@ -78,6 +79,7 @@
           </div>
         </div>
 
+        <% if (!ebgOAuth.enabled) { %>
         <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
           <div class="p-8 md:p-12">
             <h2 class="text-2xl font-bold text-gray-900 mb-2" data-translate="Settings.Form.PasswordHeadline"></h2>
@@ -101,6 +103,7 @@
             </form>
           </div>
         </div>
+        <% } %>
 
         <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
           <div class="p-8 md:p-12">
@@ -496,7 +499,7 @@
           });
 
           if (response.ok) {
-            showMessage(i18next.t("Settings.AllSessionsTerminatedSuccess"));
+            showMessage(i18next.t("Settings.SessionTerminatedSuccess"));
             loadSessions();
           } else {
             const errorData = await response.json();
@@ -512,7 +515,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         loadUserData();
         loadSessions();
-        passwordForm.addEventListener("submit", changePassword);
+        if (!isOAuthEnabled) passwordForm.addEventListener("submit", changePassword);
         terminateAllButton.addEventListener("click", terminateAllOtherSessions);
       });
     </script>

@@ -15,6 +15,7 @@ const { backfillStatistics } = require('@lib/sqlite/stats');
 const { getStaticFilePath } = require('@lib/imageStore');
 const { loadFeatureDefinitions, getFeaturePublicFilePath } = require('@lib/features');
 const { ensureFeatureSettings } = require('@lib/sqlite/settings');
+const { isEBGOAuthEnabled } = require('@lib/oauth');
 
 let options = {};
 
@@ -56,7 +57,7 @@ if (dbMigration === 0) {
         console.error(error);
         process.exit(1);
     }
-    defaultRoute = '/setup';
+    defaultRoute = isEBGOAuthEnabled() ? '/login' : '/setup';
 } else {
     try {
         if (dbMigration < dbVersion) {
@@ -79,7 +80,7 @@ backfillStatistics(); // Backfill statistics data
 // Redirect root to setup
 app.get('/', async (req, res) => {
     // Reset to overview when a user was created
-    if (defaultRoute === '/setup') {
+    if (defaultRoute === '/setup' || defaultRoute === '/login') {
         const currentUserCount = await countUsers();
         if (currentUserCount > 0) {
             defaultRoute = '/overview';
@@ -121,11 +122,11 @@ renderer.registerDynamicRoutes();
 
 const apiv1 = require('@api');
 const images_handler = require('@static_api/images');
-// const auth_handler = require('@static_api/auth');
+const auth_handler = require('@static_api/auth');
 
 app.use('/api/v1', apiv1);
 app.use('/i', images_handler);
-// app.use('/auth', auth_handler);
+app.use('/auth', auth_handler);
 
 app.get('/manifest.json', async (req, res) => {
     res.header('Content-Type', 'application/json');

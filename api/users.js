@@ -4,6 +4,7 @@ const { removeWebtoken, removeWebtokenFromCache } = require('@lib/cache');
 const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
+const { isEBGOAuthEnabled } = require('@lib/oauth');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
 const express = require('ultimate-express');
@@ -63,6 +64,10 @@ router.get('/hasUsers', limiter(10), async (req, res) => {
  * Generate a new Admin User, is only avaible on a empty DB
  */
 router.post('/admin', limiter(20), async (req, res) => {
+    if (isEBGOAuthEnabled()) {
+        return res.status(403).json({ error: 'OAuth registration is enabled' });
+    }
+
     const body = await userSchema.validateAsync(req.body);
     const usercount = await countUsers();
     if (usercount > 0) {
@@ -86,6 +91,10 @@ router.post('/admin', limiter(20), async (req, res) => {
  * Create a normal user
  */
 router.post('/', limiter(20), async (req, res) => {
+    if (isEBGOAuthEnabled()) {
+        return res.status(403).json({ error: 'OAuth registration is enabled' });
+    }
+
     const body = await userSchema.validateAsync(req.body);
 
     if (await checkIfSettingTrue('REG_CODE_ACTIVE')) {

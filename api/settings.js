@@ -17,6 +17,7 @@ const { generateManifest } = require('@lib/manifest');
 const { InvalidRouteInput } = require('@lib/errors');
 const { ViewRenderer } = require('@lib/template');
 const { loadFeatureDefinitions } = require('@lib/features');
+const { isEBGOAuthEnabled } = require('@lib/oauth');
 const Joi = require('@lib/sanitizer');
 const express = require('ultimate-express');
 const router = new express.Router();
@@ -35,9 +36,14 @@ const uploadHandler = multer({
 });
 
 // Dynamically generate the schema for toggling settings based on available features
-const getSettingsToggleSchema = () => Joi.object({
-    setting_key: Joi.fullysanitizedString().valid('REG_CODE_ACTIVE', 'USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING', ...Object.keys(loadFeatureDefinitions()).map((featureName) => `feature_${featureName}`)).required(),
-});
+const getSettingsToggleSchema = () => {
+    const settingKeys = ['USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING', ...Object.keys(loadFeatureDefinitions()).map((featureName) => `feature_${featureName}`)];
+    if (!isEBGOAuthEnabled()) settingKeys.unshift('REG_CODE_ACTIVE');
+
+    return Joi.object({
+        setting_key: Joi.fullysanitizedString().valid(...settingKeys).required(),
+    });
+};
 
 const settingsManifestSchema = Joi.object({
     APP_NAME: Joi.fullysanitizedString().min(1).max(100).required(),
@@ -55,6 +61,9 @@ const settingsLowFundsSchema = Joi.object({
 
 router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req, res) => {
     const settings = await getSettings();
+    if (isEBGOAuthEnabled()) {
+        return res.json(settings.filter((setting) => !['REG_CODE', 'REG_CODE_ACTIVE'].includes(setting.setting_key)));
+    }
     return res.json(settings);
 });
 
@@ -68,6 +77,10 @@ router.post('/toggle', verifyRequest('app.admin.settings.write'), limiter(1), as
 });
 
 router.put('/regcode', verifyRequest('app.admin.settings.write'), limiter(1), async (req, res) => {
+    if (isEBGOAuthEnabled()) {
+        return res.status(403).json({ error: 'Registration code is managed by OAuth provider' });
+    }
+
     const newCode = crypto.randomBytes(16).toString('hex');
     await updateSetting('REG_CODE', newCode);
     return res.json({ success: true, new_reg_code: newCode });

@@ -9,6 +9,7 @@
     <script>
       const lang = <%- JSON.stringify(language) %>;
       const features = <%- JSON.stringify(features) %>;
+      const isOAuthEnabled = <%- JSON.stringify(ebgOAuth.enabled) %>;
     </script>
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
@@ -93,6 +94,7 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <% if (!ebgOAuth.enabled) { %>
         <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.REGCode.Title"></h2>
           <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.REGCode.Description"></p>
@@ -109,6 +111,7 @@
             <button id="regenerate-reg-code-btn" onclick="regenerateRegCode()" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed" data-translate="AdminSettings.REGCode.RegenerateButton" disabled></button>
           </div>
         </div>
+        <% } %>
 
         <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.UserShoppinglist.Title"></h2>
@@ -357,7 +360,7 @@
               return;
             }
             await getSettings();
-            updateRegCodeButtonsState();
+            if (!isOAuthEnabled) updateRegCodeButtonsState();
             updateLowFundsSettingsState();
           }
         } catch (error) {
@@ -370,7 +373,10 @@
           const response = await apiFetch("/api/v1/settings");
           if (!response.ok) throw new Error("Network response was not ok");
           const settings = await response.json();
-          document.getElementById("reg-code-toggle").checked = settings.find((s) => s.setting_key === "REG_CODE_ACTIVE")?.setting_value === "true";
+          if (!isOAuthEnabled) {
+            document.getElementById("reg-code-toggle").checked = settings.find((s) => s.setting_key === "REG_CODE_ACTIVE")?.setting_value === "true";
+            regCode = settings.find((s) => s.setting_key === "REG_CODE")?.setting_value || "";
+          }
           document.getElementById("user-shoppinglist-toggle").checked = settings.find((s) => s.setting_key === "USER_SHOPPINGLIST_ACTIVE")?.setting_value === "true";
           document.querySelectorAll("[data-feature-toggle]").forEach((toggle) => {
             const featureName = toggle.getAttribute("data-feature-toggle");
@@ -378,7 +384,6 @@
           });
           document.getElementById("db-autovacuum-toggle").checked = settings.find((s) => s.setting_key === "DB_AUTOVACUUM")?.setting_value === "true";
           document.getElementById("low-funds-toggle").checked = settings.find((s) => s.setting_key === "LOW_FUNDS_WARNING")?.setting_value === "true";
-          regCode = settings.find((s) => s.setting_key === "REG_CODE")?.setting_value || "";
           document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";
           document.getElementById("app-short-name").value = settings.find((s) => s.setting_key === "APP_SHORT_NAME")?.setting_value || "";
           document.getElementById("app-description").value = settings.find((s) => s.setting_key === "APP_DESCRIPTION")?.setting_value || "";
@@ -849,6 +854,8 @@
       }
 
       async function updateRegCodeButtonsState() {
+        if (isOAuthEnabled) return;
+
         const regCodeToggle = document.getElementById("reg-code-toggle");
         const displayBtn = document.getElementById("display-qr-code-btn");
         const regenerateBtn = document.getElementById("regenerate-reg-code-btn");
@@ -885,7 +892,7 @@
       document.addEventListener("DOMContentLoaded", async () => {
         await loadSystemStats();
         await getSettings();
-        await updateRegCodeButtonsState();
+        if (!isOAuthEnabled) await updateRegCodeButtonsState();
         updateLowFundsSettingsState();
 
         document.getElementById("favicon").addEventListener("change", handleFaviconSelection);

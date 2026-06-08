@@ -22,6 +22,11 @@
               <h1 class="text-2xl font-bold text-gray-800" data-translate="Setup.WelcomeUser"></h1>
               <p class="text-gray-600 mt-2" data-translate="Setup.WelcomeDescriptionUser"></p>
             </div>
+            <% if (ebgOAuth.enabled) { %>
+            <a href="/auth/oauth" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              Mit EBG registrieren
+            </a>
+            <% } else { %>
             <form id="reg-form" class="space-y-4">
               <div>
                 <label for="name" class="block text-sm font-medium text-gray-700" data-translate="Setup.Form.Name"></label>
@@ -50,6 +55,7 @@
               <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-translate="Setup.Form.Submit"></button>
             </form>
             <div id="form-feedback" class="mt-4 text-center"></div>
+            <% } %>
           </div>
         </div>
       </div>
@@ -58,6 +64,7 @@
     <%- html_content.footer %>
 
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <% if (!ebgOAuth.enabled) { %>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const regContainer = document.getElementById("reg-container");
@@ -152,5 +159,6 @@
         }
       });
     </script>
+    <% } %>
   </body>
 </html>

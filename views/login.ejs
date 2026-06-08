@@ -23,10 +23,15 @@
             <h1 class="text-2xl font-bold text-gray-800" data-translate="Login.Title"></h1>
             <p class="text-gray-600 mt-2" data-translate="Login.Welcome"></p>
           </div>
+          <% if (ebgOAuth.enabled) { %>
+          <a href="/auth/oauth" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Mit EBG anmelden
+          </a>
+          <% } else { %>
           <form id="login-form" class="space-y-4">
             <div>
-              <label for="username" class="block text-sm font-medium text-gray-700" data-translate="Login.Username"></label>
-              <input type="text" id="username" name="username" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+              <label for="email" class="block text-sm font-medium text-gray-700" data-translate="Login.Email"></label>
+              <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
             </div>
             <div>
               <label for="password" class="block text-sm font-medium text-gray-700" data-translate="Login.Password"></label>
@@ -44,6 +49,7 @@
               <a href="/register" class="font-medium text-blue-600 hover:text-blue-500" data-translate="Login.Register"></a>
             </p>
           </div>
+          <% } %>
         </div>
       </div>
     </main>
@@ -51,6 +57,7 @@
     <%- html_content.footer %>
 
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <% if (!ebgOAuth.enabled) { %>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const loginForm = document.getElementById("login-form");
@@ -74,7 +81,7 @@
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                username: loginForm.username.value,
+                email: loginForm.email.value,
                 password: loginForm.password.value,
               }),
             });
@@ -107,5 +114,6 @@
         loginForm.addEventListener("submit", handleLoginSubmit);
       });
     </script>
+    <% } %>
   </body>
 </html>
