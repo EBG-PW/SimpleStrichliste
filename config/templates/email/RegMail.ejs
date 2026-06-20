@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="<%= language %>">
+<head>
+    <meta charset="utf-8">
+    <title><%= t('emails.RegMail.subject', { application }) %></title>
+</head>
+<body>
+    <h1><%= t('emails.RegMail.heading', { application }) %></h1>
+    <p><%= t('emails.greeting', { name }) %></p>
+    <p><%= t('emails.RegMail.body', { application }) %></p>
+    <% if (domain) { %>
+        <p><a href="<%= domain %>"><%= domain %></a></p>
+    <% } %>
+</body>
+</html>

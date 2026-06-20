@@ -2,6 +2,7 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const { countUsers, countTransactions, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
 const { removeWebtoken } = require('@lib/cache');
+const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
@@ -142,6 +143,13 @@ router.delete('/user/:uuid', verifyRequest('app.admin.users.write'), limiter(10)
         return res.status(404).json({ error: 'User not found' });
     }
 
+    await sendNotification(
+        result.user.id,
+        0,
+        NOTIFICATION_TYPES.DELETE_ACCOUNT,
+        null,
+        result.user
+    );
     result.sessionTokens.forEach((token) => removeWebtoken(token));
     return res.json({ message: 'User deleted successfully' });
 });

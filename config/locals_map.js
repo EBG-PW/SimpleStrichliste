@@ -1,4 +1,22 @@
 module.exports = {
+    "/admin/:uuid/edititems": [
+        "Admin",
+        "Error",
+        "Page",
+        "Setup",
+        "Items",
+        "Navbar",
+        "AdminUsers"
+    ],
+    "/admin/:uuid/edituser": [
+        "Admin",
+        "Error",
+        "Page",
+        "Setup",
+        "Settings",
+        "Navbar",
+        "AdminUsers"
+    ],
     "/admin/additems": [
         "Admin",
         "Error",
@@ -15,24 +33,6 @@ module.exports = {
         "Setup",
         "Navbar",
         "Categories"
-    ],
-    "/admin/:uuid/edituser": [
-        "Admin",
-        "Error",
-        "Page",
-        "Setup",
-        "Settings",
-        "Navbar",
-        "AdminUsers"
-    ],
-    "/admin/:uuid/edititems": [
-        "Admin",
-        "Error",
-        "Page",
-        "Setup",
-        "Items",
-        "Navbar",
-        "AdminUsers"
     ],
     "/admin/index": [
         "Admin",

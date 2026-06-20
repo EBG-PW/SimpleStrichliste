@@ -8,6 +8,7 @@ const { OAuthError, PermissionsError } = require('@lib/errors');
 const { checkPermission, mergePermissions } = require('@lib/permissions');
 const { countUsers, createAdminUser, createUser, findUserByEmail } = require('@lib/sqlite/users');
 const { getEBGOAuthConfig, isEBGOAuthEnabled } = require('@lib/oauth');
+const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const Joi = require('@lib/sanitizer');
 
 const router = new express.Router();
@@ -160,15 +161,16 @@ const findOrCreateOAuthUser = async (oauthUser) => {
     const firstUser = await countUsers() === 0;
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), parseInt(process.env.SALTROUNDS, 10));
 
+    let userId;
     if (firstUser) {
-        await createAdminUser(
+        userId = await createAdminUser(
             normalizedUser.name,
             normalizedUser.email,
             normalizedUser.username,
             passwordHash,
         );
     } else {
-        await createUser(
+        userId = await createUser(
             normalizedUser.name,
             normalizedUser.email,
             normalizedUser.username,
@@ -176,6 +178,7 @@ const findOrCreateOAuthUser = async (oauthUser) => {
         );
     }
 
+    await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
     const createdUser = await findUserByEmail(normalizedUser.email);
     if (!createdUser) throw new OAuthError('OAuth user creation failed');
     return createdUser;

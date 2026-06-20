@@ -5,6 +5,7 @@ const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updat
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
+const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
 const express = require('ultimate-express');
@@ -76,7 +77,8 @@ router.post('/admin', limiter(20), async (req, res) => {
 
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
     try {
-        await createAdminUser(body.name, body.email, body.username, password_hash);
+        const userId = await createAdminUser(body.name, body.email, body.username, password_hash);
+        await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
         return res.status(201).json({ message: 'Admin user created successfully' });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -105,8 +107,9 @@ router.post('/', limiter(20), async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
-        await createUser(body.name, body.email, body.username, password_hash);
-        return res.status(201).json({ message: 'User created successfully' });
+    const userId = await createUser(body.name, body.email, body.username, password_hash);
+    await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
+    return res.status(201).json({ message: 'User created successfully' });
 });
 
 router.get('/', verifyRequest('web.user.read'), limiter(1), async (req, res) => {

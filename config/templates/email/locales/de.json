@@ -1,0 +1,22 @@
+{
+    "emails": {
+        "greeting": "Hallo {{name}},",
+        "RegMail": {
+            "subject": "Willkommen bei {{application}}",
+            "heading": "Willkommen bei {{application}}",
+            "body": "Dein Konto bei {{application}} wurde registriert.",
+            "text": "Hallo {{name}},\n\nDein Konto bei {{application}} wurde registriert.\n\n{{domain}}"
+        },
+        "DeleteAcc": {
+            "subject": "Dein {{application}}-Konto wurde gelöscht",
+            "heading": "Konto gelöscht",
+            "body": "Dein Konto bei {{application}} wurde gelöscht.",
+            "text": "Hallo {{name}},\n\nDein Konto bei {{application}} wurde gelöscht."
+        },
+        "Custom": {
+            "subject": "Benachrichtigung von {{application}}",
+            "heading": "Benachrichtigung von {{application}}",
+            "text": "Hallo {{name}},\n\n{{message}}"
+        }
+    }
+}

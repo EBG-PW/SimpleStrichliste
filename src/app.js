@@ -16,6 +16,7 @@ const { getStaticFilePath } = require('@lib/imageStore');
 const { loadFeatureDefinitions, getFeaturePublicFilePath } = require('@lib/features');
 const { ensureFeatureSettings } = require('@lib/sqlite/settings');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
+const { startNotificationWorker } = require('@lib/notifications');
 
 let options = {};
 
@@ -76,6 +77,7 @@ if (dbMigration === 0) {
 
 ensureFeatureSettings(loadFeatureDefinitions());
 backfillStatistics(); // Backfill statistics data
+startNotificationWorker();
 
 // Redirect root to setup
 app.get('/', async (req, res) => {

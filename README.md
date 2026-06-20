@@ -51,6 +51,22 @@ WebTokenDurationH=9600
 
 `DOMAIN` must match the public URL users open in their browser. This matters for generated links, static assets, manifests, and OAuth callbacks.
 
+Email notifications use an SQLite-backed queue. Configure an SMTP server with:
+
+```env
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=notifications@example.com
+SMTP_PASSWORD=change-me
+SMTP_FROM=notifications@example.com
+EMAIL_MAX_RETRIES=5
+```
+
+`SMTP_SECURE=true` enables implicit TLS. Port `465` also enables it automatically. Failed sends are retried by the notification worker until `EMAIL_MAX_RETRIES` is reached.
+
+Email HTML templates live in `config/templates/email/*.ejs`. Their i18next translations live in `config/templates/email/locales/<language>.json`; the recipient's saved language is used with `FALLBACKLANG` as fallback.
+
 ## OAuth Login
 
 When `EBG_OAUTH_URL` is set, local password login and local registration are replaced by OAuth. In this mode:
