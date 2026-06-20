@@ -2,7 +2,9 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
 const { checkPermission } = require('@lib/permissions');
-const { createItem, getItemByUUID, getItemBuyers, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking, updateItemsBought } = require('@lib/sqlite/items');
+const { createItem, clearExpiredDiscountByUUID, getActiveDiscounts, getItemByUUID, getItemBuyers, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking, updateItemsBought } = require('@lib/sqlite/items');
+const { getNotificationSubscribers } = require('@lib/sqlite/userNotifications');
+const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const { checkIfSettingTrue } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const { writeImage, deleteImage } = require('@lib/imageStore');
@@ -34,7 +36,13 @@ const newItemSchema = Joi.object({
     targetStock: Joi.number().integer().min(0).required(),
     packSize: Joi.number().integer().min(1).required(),
     packPrice: Joi.number().positive().min(1).required(),
-    category: Joi.fullysanitizedString().valid(...Object.keys(gategories_conf)).required()
+    category: Joi.fullysanitizedString().valid(...Object.keys(gategories_conf)).required(),
+    discountPrice: Joi.number().positive().allow('', null).optional(),
+    discountUntil: Joi.string().isoDate().allow('', null).optional()
+});
+
+const discountNotificationSchema = Joi.object({
+    items: Joi.array().items(Joi.string().uuid()).min(1).max(100).unique().required()
 });
 
 const uuidItemArraySchema = Joi.object({
@@ -48,8 +56,26 @@ const validateUUID = Joi.object({
     uuid: Joi.string().uuid().required()
 });
 
+const validateDiscount = (item) => {
+    const hasPrice = item.discountPrice !== '' && item.discountPrice !== null && item.discountPrice !== undefined;
+    const hasUntil = item.discountUntil !== '' && item.discountUntil !== null && item.discountUntil !== undefined;
+
+    if (hasPrice !== hasUntil) {
+        return 'Discount price and expiration must both be set';
+    }
+    if (hasPrice && item.discountPrice >= item.price) {
+        return 'Discount price must be lower than the regular price';
+    }
+    if (hasUntil && new Date(item.discountUntil).getTime() <= Date.now()) {
+        return 'Discount expiration must be in the future';
+    }
+    return null;
+};
+
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
     const body = await newItemSchema.validateAsync(req.body);
+    const discountError = validateDiscount(body);
+    if (discountError) return res.status(400).json({ error: discountError });
     const validImage = await verifyBufferIsJPG(req.file.buffer, 512, 512);
     if (!validImage) throw new InvalidRouteInput('Invalid Image');
 
@@ -104,8 +130,29 @@ router.get('/buyers/:uuid', verifyRequest('web.admin.items.read'), limiter(4), a
     });
 });
 
+router.get('/discounts', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
+    return res.json({ discounts: getActiveDiscounts() });
+});
+
+router.post('/discounts/notify', verifyRequest('web.admin.items.write'), limiter(2), async (req, res) => {
+    const body = await discountNotificationSchema.validateAsync(req.body);
+    const selected = getActiveDiscounts().filter((item) => body.items.includes(item.uuid));
+    if (selected.length !== body.items.length) {
+        return res.status(400).json({ error: 'One or more discounts are no longer active' });
+    }
+
+    const message = JSON.stringify({ items: selected });
+    const subscribers = getNotificationSubscribers('discount', 'email', true);
+    await Promise.all(subscribers.map((user) =>
+        sendNotification(user.id, 0, NOTIFICATION_TYPES.DISCOUNTS, message, user)
+    ));
+
+    return res.json({ queued: subscribers.length, discounts: selected.length });
+});
+
 router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
     const params = await validateUUID.validateAsync(req.params);
+    clearExpiredDiscountByUUID(params.uuid);
     const item = await getItemByUUID(params.uuid);
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
@@ -115,6 +162,8 @@ router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (r
 router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
     const params = await validateUUID.validateAsync(req.params);
     const body = await newItemSchema.validateAsync(req.body);
+    const discountError = validateDiscount(body);
+    if (discountError) return res.status(400).json({ error: discountError });
 
     // Image is only in the request if it was modified
     if (req.file) {

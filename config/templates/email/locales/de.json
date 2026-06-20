@@ -13,6 +13,13 @@
             "body": "Dein Konto bei {{application}} wurde gelöscht.",
             "text": "Hallo {{name}},\n\nDein Konto bei {{application}} wurde gelöscht."
         },
+        "Discounts": {
+            "subject": "Aktuelle Angebote bei {{application}}",
+            "heading": "Aktuelle Angebote",
+            "body": "Diese Artikel sind aktuell reduziert:",
+            "until": "bis {{date}}",
+            "text": "Hallo {{name}},\n\nBei {{application}} gibt es aktuell neue Angebote. Öffne die Anwendung, um sie anzusehen."
+        },
         "Custom": {
             "subject": "Benachrichtigung von {{application}}",
             "heading": "Benachrichtigung von {{application}}",

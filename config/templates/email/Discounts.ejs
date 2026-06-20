@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="<%= language %>">
+<head>
+    <meta charset="utf-8">
+    <title><%= t('emails.Discounts.subject', { application }) %></title>
+</head>
+<body>
+    <h1><%= t('emails.Discounts.heading', { application }) %></h1>
+    <p><%= t('emails.greeting', { name }) %></p>
+    <p><%= t('emails.Discounts.body') %></p>
+    <ul>
+        <% discountItems.forEach((item) => { %>
+            <li>
+                <strong><%= item.name %></strong>:
+                <s><%= Number(item.original_price).toFixed(2) %> €</s>
+                <%= Number(item.discount_price).toFixed(2) %> €
+                (<%= t('emails.Discounts.until', { date: new Date(item.discount_until).toLocaleString(language) }) %>)
+            </li>
+        <% }) %>
+    </ul>
+    <% if (domain) { %><p><a href="<%= domain %>"><%= application %></a></p><% } %>
+</body>
+</html>

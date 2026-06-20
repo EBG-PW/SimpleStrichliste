@@ -535,7 +535,7 @@
         const createItemCardHTML = (item) => {
           const stockColor = item.stock < item.target_stock * 0.25 ? "text-red-500" : item.stock < item.target_stock * 0.5 ? "text-orange-500" : item.stock < item.target_stock * 0.75 ? "text-yellow-500" : "text-green-500";
 
-          const adminSettingsButton =
+            const adminSettingsButton =
             typeof checkPermission === "function" && checkPermission("app.admin")
               ? `
           <a href="/admin/${item.uuid}/edititems"
@@ -543,16 +543,23 @@
               aria-label="Artikel bearbeiten">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-settings"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>
           </a>`
-              : "";
+                : "";
+            const priceHtml = item.is_discounted
+              ? `<div class="flex items-center gap-2">
+                   <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">${t("Items.Sale")}</span>
+                   <span class="text-sm text-gray-400 line-through">${t("Overview.Price", { price: item.original_price.toFixed(2) })}</span>
+                   <span class="font-semibold text-red-600">${t("Overview.Price", { price: item.price.toFixed(2) })}</span>
+                 </div>`
+              : `<p class="text-green-600 font-semibold text-md">${t("Overview.Price", { price: item.price.toFixed(2) })}</p>`;
 
-          return `
-          <div class="relative">
-            <div class="buy-overlay-trigger item-card bg-white rounded-xl shadow-lg p-5 h-full flex items-center gap-4 transition-all duration-200 will-change-transform hover:shadow-xl cursor-pointer" data-uuid="${item.uuid}">
+            return `
+            <div class="relative">
+              <div class="buy-overlay-trigger item-card ${item.is_discounted ? "border-2 border-red-300 bg-red-50" : "bg-white"} rounded-xl shadow-lg p-5 h-full flex items-center gap-4 transition-all duration-200 will-change-transform hover:shadow-xl cursor-pointer" data-uuid="${item.uuid}">
               <img src="/i/items/${item.uuid}" alt="${item.name}" class="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0 pointer-events-none">
               <div class="flex-grow flex flex-col min-w-0 pointer-events-none">
-                <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
-                <div class="mt-2 flex items-baseline gap-4 flex-wrap">
-                  <p class="text-green-600 font-semibold text-md">${t("Overview.Price", { price: item.price.toFixed(2) })}</p>
+                  <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
+                  <div class="mt-2 flex items-baseline gap-4 flex-wrap">
+                    ${priceHtml}
                   <p class="text-sm ${stockColor}">${t("Items.InStock", { count: item.stock })}</p>
                 </div>
               </div>
@@ -669,7 +676,9 @@
           popupContent.dataset.stock = item.stock;
           document.getElementById("popup-item-image").src = `/i/items/${uuid}`;
           document.getElementById("popup-item-name").textContent = item.name;
-          document.getElementById("popup-item-price-single").textContent = t("Overview.PricePerItem", { price: item.price.toFixed(2) });
+          document.getElementById("popup-item-price-single").textContent = item.is_discounted
+            ? `${t("Items.Sale")}: ${t("Overview.PricePerItem", { price: item.price.toFixed(2) })}`
+            : t("Overview.PricePerItem", { price: item.price.toFixed(2) });
           document.getElementById("popup-stock-info").textContent = `Lager: ${item.stock}`;
           updatePopupQuantity(item.stock > 0 ? 1 : 0);
           popupWrapper.classList.add("active");

@@ -2,6 +2,7 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const { removeWebtoken, removeWebtokenFromCache } = require('@lib/cache');
 const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
+const { getUserNotifications, setUserNotificationState } = require('@lib/sqlite/userNotifications');
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
@@ -44,6 +45,15 @@ const userPasswordSchema = Joi.object({
 
 const userLanguageSchema = Joi.object({
     language: Joi.fullysanitizedString().min(2).max(2).required()
+});
+
+const notificationStateSchema = Joi.object({
+    enabled: Joi.boolean().required()
+});
+
+const notificationParamsSchema = Joi.object({
+    key: Joi.fullysanitizedString().pattern(/^[a-z0-9_-]+$/).min(1).max(64).required(),
+    type: Joi.fullysanitizedString().valid('email').required()
 });
 
 const validateUUID = Joi.object({
@@ -113,7 +123,8 @@ router.post('/', limiter(20), async (req, res) => {
 });
 
 router.get('/', verifyRequest('web.user.read'), limiter(1), async (req, res) => {
-    const user_data = await getUser(req.user.user_data.id)
+    const user_data = await getUser(req.user.user_data.id);
+    user_data.notifications = getUserNotifications(req.user.user_data.id);
     return res.json(user_data)
 });
 
@@ -163,6 +174,13 @@ router.put('/language', verifyRequest('app.user.settings.language.write'), limit
     await updateUserLanguage(user_id, body.language);
     removeWebtokenFromCache(req.authorization);
     return res.json({ message: 'Language updated successfully' });
+});
+
+router.put('/notifications/:key/:type', verifyRequest('app.user.settings.email.write'), limiter(10), async (req, res) => {
+    const params = await notificationParamsSchema.validateAsync(req.params);
+    const body = await notificationStateSchema.validateAsync(req.body);
+    setUserNotificationState(req.user.user_data.id, params.key, params.type, body.enabled);
+    return res.json({ message: 'Notification preference updated successfully' });
 });
 
 router.get('/sessions', verifyRequest('web.user.sessions.read'), limiter(2), async (req, res) => {

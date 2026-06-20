@@ -54,6 +54,29 @@ test('buildEmail renders registration and deletion confirmations', async () => {
     assert.match(deletionEmail.html, /gel(?:ö|Ã¶)scht/);
 });
 
+test('buildEmail renders selected discounts', async () => {
+    const email = await buildEmail({
+        type: 'Discounts',
+        name: 'Ada',
+        username: 'ada',
+        email: 'ada@example.com',
+        uuid: 'test-uuid',
+        language: 'de',
+        custom_message: JSON.stringify({
+            items: [{
+                name: 'Testartikel',
+                original_price: 2.5,
+                discount_price: 1.5,
+                discount_until: '2030-01-01T12:00:00.000Z',
+            }],
+        }),
+    });
+
+    assert.match(email.subject, /Angebote/);
+    assert.match(email.html, /Testartikel/);
+    assert.match(email.html, /1\.50/);
+});
+
 test('sendNotification rejects unsupported types', async () => {
     await assert.rejects(
         sendNotification(1, 0, 'Unknown'),

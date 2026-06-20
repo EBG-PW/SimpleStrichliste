@@ -63,6 +63,11 @@
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label for="discountPrice" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.DiscountPrice"></label> <input type="number" name="discountPrice" id="discountPrice" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" /></div>
+                <div><label for="discountUntil" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.DiscountUntil"></label> <input type="datetime-local" name="discountUntil" id="discountUntil" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" /></div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><label for="stock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.Stock"></label> <input type="number" name="stock" id="stock" step="0.01" min="0" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
 
                 <div><label for="targetStock" class="block text-sm font-medium text-gray-700" data-translate="Items.Form.TargetStock"></label> <input type="number" name="targetStock" id="targetStock" min="0" class="mt-1 block w-full px-4 py-3 bg-gray-100 border-gray-400 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" required /></div>
@@ -155,6 +160,12 @@
       const packSizeInput = document.getElementById("packSize");
       const packPriceInput = document.getElementById("packPrice");
       const priceInput = document.getElementById("price");
+      const toLocalDateTimeInput = (value) => {
+        if (!value) return "";
+        const date = new Date(value);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        return date.toISOString().slice(0, 16);
+      };
 
       async function deleteItem() {
         try {
@@ -284,6 +295,8 @@
 
           document.getElementById("name").value = item.name;
           document.getElementById("price").value = item.price;
+          document.getElementById("discountPrice").value = item.discount_price ?? "";
+          document.getElementById("discountUntil").value = toLocalDateTimeInput(item.discount_until);
           document.getElementById("packSize").value = item.pack_size;
           document.getElementById("packPrice").value = item.pack_price;
           document.getElementById("stock").value = item.stock;
@@ -314,6 +327,8 @@
         submitButton.innerHTML = `<span>${i18next.t("Items.Button.Saving")}</span>`;
 
         const formData = new FormData(editItemForm);
+        const discountUntil = formData.get("discountUntil");
+        if (discountUntil) formData.set("discountUntil", new Date(discountUntil).toISOString());
         if (croppedImageBlob) {
           // A new image has been selected and cropped
           formData.set("image", croppedImageBlob, "cropped_image.png");

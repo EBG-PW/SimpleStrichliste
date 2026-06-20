@@ -13,6 +13,18 @@
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
     "GroupByDay": "Nach Tag gruppieren",
+    "Sale": "Angebot",
+    "Discounts": {
+        "Manage": "Rabatte benachrichtigen",
+        "Title": "Aktuelle Rabatte",
+        "Notify": "Per E-Mail benachrichtigen",
+        "Loading": "Rabatte werden geladen...",
+        "Empty": "Keine aktiven Rabatte vorhanden.",
+        "LoadFailed": "Rabatte konnten nicht geladen werden.",
+        "Sending": "Benachrichtigungen werden eingereiht...",
+        "SendFailed": "Benachrichtigungen konnten nicht erstellt werden.",
+        "Queued": "{{count}} E-Mails wurden eingereiht."
+    },
     "Buyers": {
         "ButtonLabel": "Käufer anzeigen",
         "Title": "Käufer von {{item}}",
@@ -41,6 +53,8 @@
     "Form": {
         "Name": "Artikelname",
         "Price": "Einzelpreis",
+        "DiscountPrice": "Rabattpreis",
+        "DiscountUntil": "Rabatt gültig bis",
         "Stock": "Lagerbestand",
         "TargetStock": "Sollbestand",
         "PackSize": "Packungsgröße",
