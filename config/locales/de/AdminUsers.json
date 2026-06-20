@@ -1,6 +1,7 @@
 {
     "PageTitle": "Benutzerverwaltung",
     "SearchPlaceholder": "Benutzer suchen...",
+    "TransactionHistoryButton": "Transaktionsverlauf anzeigen",
     "Table": {
         "Name": "Name",
         "Username": "Benutzername",

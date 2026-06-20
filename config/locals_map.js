@@ -17,6 +17,15 @@ module.exports = {
         "Navbar",
         "AdminUsers"
     ],
+    "/admin/:uuid/transactions": [
+        "Admin",
+        "AdminUsers",
+        "Error",
+        "Page",
+        "Setup",
+        "Navbar",
+        "Items"
+    ],
     "/admin/additems": [
         "Admin",
         "Error",
@@ -69,6 +78,7 @@ module.exports = {
     ],
     "/admin/transaction_history": [
         "Admin",
+        "AdminUsers",
         "Error",
         "Page",
         "Setup",
