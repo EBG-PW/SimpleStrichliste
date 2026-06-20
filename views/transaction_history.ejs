@@ -103,7 +103,10 @@
         });
 
         const formatTimestamp = (isoString) => {
-          const date = new Date(isoString);
+          const utcTimestamp = /(?:Z|[+-]\d{2}:\d{2})$/.test(isoString)
+            ? isoString
+            : `${isoString.replace(" ", "T")}Z`;
+          const date = new Date(utcTimestamp);
           return {
             date: date.toLocaleDateString(t("Page.LangKey"), { year: "numeric", month: "long", day: "numeric" }),
             time: date.toLocaleTimeString(t("Page.LangKey"), { hour: "2-digit", minute: "2-digit" }),

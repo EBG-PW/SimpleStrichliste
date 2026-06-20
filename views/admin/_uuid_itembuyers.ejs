@@ -60,10 +60,15 @@
         let currentPage = 1;
         let searchTimer;
 
-        const formatDate = (value) => new Date(value).toLocaleString(i18next.t("Page.LangKey"), {
-          dateStyle: "medium",
-          timeStyle: "short",
-        });
+        const formatDate = (value) => {
+          const utcTimestamp = /(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+            ? value
+            : `${value.replace(" ", "T")}Z`;
+          return new Date(utcTimestamp).toLocaleString(i18next.t("Page.LangKey"), {
+            dateStyle: "medium",
+            timeStyle: "short",
+          });
+        };
 
         const renderBuyer = (buyer) => {
           const row = document.createElement("a");
