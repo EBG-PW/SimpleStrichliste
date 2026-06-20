@@ -67,6 +67,53 @@ EMAIL_MAX_RETRIES=5
 
 Email HTML templates live in `config/templates/email/*.ejs`. Their i18next translations live in `config/templates/email/locales/<language>.json`; the recipient's saved language is used with `FALLBACKLANG` as fallback.
 
+Features can register additional queued email types while their startup module is loaded:
+
+Place feature-owned templates inside the feature package:
+
+```text
+installed_features/foodorders/templates/email/FoodOrderReady.ejs
+```
+
+During feature installation, `templates/` is copied into the application's
+`config/templates/` directory. The example above becomes:
+
+```text
+config/templates/email/FoodOrderReady.ejs
+```
+
+```js
+const {
+  registerNotificationType,
+  sendNotification,
+} = require('@lib/notifications');
+
+registerNotificationType({
+  type: 'FoodOrderReady',
+  constant: 'FOOD_ORDER_READY',
+  templatePath: 'config/templates/email/FoodOrderReady.ejs',
+  translations: {
+    de: {
+      emails: {
+        FoodOrderReady: {
+          subject: 'Deine Bestellung ist fertig',
+          heading: 'Bestellung abholbereit',
+        },
+      },
+    },
+  },
+  requiresMessage: true,
+  buildContext: (task) => ({
+    order: JSON.parse(task.custom_message),
+  }),
+  buildText: (context) => `${context.name}, deine Bestellung ist fertig.`,
+});
+
+await sendNotification(userId, 0, 'FoodOrderReady', JSON.stringify(order));
+```
+
+The type is stored in `email_tasks.type`. `templatePath` may be absolute or relative to the application root. Copied template files are tracked in the feature manifest and removed by the feature uninstaller. Feature API modules are loaded before the email worker starts, so their registrations are available when queued tasks are processed.
+
 ## OAuth Login
 
 When `EBG_OAUTH_URL` is set, local password login and local registration are replaced by OAuth. In this mode:
@@ -163,7 +210,7 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
 
 On startup the app scans `installed_features/<featureName>`. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
 
-Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. Feature translations live in:
+Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. A top-level `templates` folder is installed into `config/templates`. Feature translations live in:
 
 ```text
 installed_features/<featureName>/local/<language>/<featureName>.json

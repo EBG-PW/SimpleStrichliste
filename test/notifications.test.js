@@ -1,5 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 require('module-alias/register');
 process.log = process.log || {
@@ -9,8 +12,45 @@ process.log = process.log || {
 
 const {
     buildEmail,
+    registerNotificationType,
     sendNotification,
 } = require('@lib/notifications');
+
+const featureTemplateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'simplestrichliste-notification-'));
+const featureTemplatePath = path.join(featureTemplateDir, 'FeatureMail.ejs');
+fs.writeFileSync(featureTemplatePath, `<!doctype html>
+<html lang="<%= language %>">
+<body>
+    <h1><%= t('emails.FeatureMail.heading') %></h1>
+    <p><%= t('emails.greeting', { name }) %></p>
+    <p><%= featureValue %></p>
+</body>
+</html>`);
+
+test.after(() => {
+    fs.rmSync(featureTemplateDir, { recursive: true, force: true });
+});
+
+registerNotificationType({
+    type: 'FeatureMail',
+    constant: 'FEATURE_MAIL',
+    templatePath: featureTemplatePath,
+    translations: {
+        de: {
+            emails: {
+                FeatureMail: {
+                    subject: 'Feature-Benachrichtigung',
+                    heading: 'Feature-Nachricht',
+                },
+            },
+        },
+    },
+    requiresMessage: true,
+    buildContext: (task) => ({
+        featureValue: JSON.parse(task.custom_message).value,
+    }),
+    buildText: (context) => `${context.name}: ${context.featureValue}`,
+});
 
 test('buildEmail renders localized EJS for custom notifications', async () => {
     const email = await buildEmail({
@@ -75,6 +115,23 @@ test('buildEmail renders selected discounts', async () => {
     assert.match(email.subject, /Angebote/);
     assert.match(email.html, /Testartikel/);
     assert.match(email.html, /1\.50/);
+});
+
+test('features can register notification types, templates, and translations', async () => {
+    const email = await buildEmail({
+        type: 'FeatureMail',
+        name: 'Ada',
+        username: 'ada',
+        email: 'ada@example.com',
+        uuid: 'test-uuid',
+        language: 'de',
+        custom_message: JSON.stringify({ value: 'Feature payload' }),
+    });
+
+    assert.equal(email.subject, 'Feature-Benachrichtigung');
+    assert.equal(email.text, 'Ada: Feature payload');
+    assert.match(email.html, /Feature-Nachricht/);
+    assert.match(email.html, /Feature payload/);
 });
 
 test('sendNotification rejects unsupported types', async () => {

@@ -77,7 +77,6 @@ if (dbMigration === 0) {
 
 ensureFeatureSettings(loadFeatureDefinitions());
 backfillStatistics(); // Backfill statistics data
-startNotificationWorker();
 
 // Redirect root to setup
 app.get('/', async (req, res) => {
@@ -125,6 +124,7 @@ renderer.registerDynamicRoutes();
 const apiv1 = require('@api');
 const images_handler = require('@static_api/images');
 const auth_handler = require('@static_api/auth');
+startNotificationWorker();
 
 app.use('/api/v1', apiv1);
 app.use('/i', images_handler);
