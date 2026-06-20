@@ -1,6 +1,7 @@
 const express = require('ultimate-express');
 const cookieParser = require('cookie-parser');
 const { expressCspHeader, INLINE, NONE, SELF } = require('express-csp-header');
+const useragent = require('express-useragent');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
@@ -35,6 +36,7 @@ app.set('catch async errors', true);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.text({ type: 'text/plain', limit: '50mb' }));
+app.use(useragent.express());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use((req, res, next) => {

@@ -6,7 +6,6 @@ const { addWebtoken } = require('@lib/cache');
 const { verifyRequest } = require('@middleware/verifyRequest');
 const Joi = require('@lib/sanitizer');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
-const useragent = require('express-useragent');
 const crypto = require('node:crypto');
 const bcrypt = require('bcrypt');
 const express = require('ultimate-express');
@@ -46,11 +45,9 @@ router.post('/login', async (req, res) => {
     if (!allowed.result) throw new PermissionsError('NoPermissions', 'app.web.login');
 
     const newtoken = crypto.randomUUID(); // Generate a new token
-    const source = req.headers['user-agent']
-    const UserAgent = useragent.parse(source)
 
     delete user.password_hash; // Remove the password hash from the user object
-    addWebtoken(newtoken, user, Formated_Permissions, UserAgent.browser); // Add the token to the cache and SQLite
+    addWebtoken(newtoken, user, Formated_Permissions, req.useragent?.browser || "unknown", req.ip); // Add the token to the cache and SQLite
 
     return res.json({ token: newtoken, uuid: user.uuid, name: user.name, email: user.email, username: user.username, permissions: Formated_Permissions, language: user.language });
 });

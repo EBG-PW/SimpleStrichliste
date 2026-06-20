@@ -4,7 +4,6 @@ const { getIpOfRequest } = require('@lib/utils');
 const { removeWebtoken, IPLimit, IPCheck } = require('@lib/cache');
 const { InvalidToken, TooManyRequests, PermissionsError } = require('@lib/errors');
 const Joi = require('joi');
-const useragent = require('express-useragent');
 
 /**
  * Async function to verify the request based on the given permission. User data will be added to the request. (req.user)
@@ -16,8 +15,6 @@ const verifyRequest = (permission) => {
         try {
             let UserToken;
             const IP = getIpOfRequest(req);
-            const source = req.headers['user-agent']
-            const UserAgent = useragent.parse(source)
 
             const isBlocked = await IPCheck(IP);
             if (isBlocked.result) throw new TooManyRequests('Too Many Requests', isBlocked.retryIn)
@@ -35,7 +32,7 @@ const verifyRequest = (permission) => {
             await TokenSchema.validateAsync(UserToken);
 
             // Check if the token is valid
-            const WebTokenResponse = await checkWebToken(UserToken, UserAgent.browser);
+            const WebTokenResponse = await checkWebToken(UserToken, req.useragent?.browser || "unknown", IP);
             if (!WebTokenResponse.State) {
                 if (WebTokenResponse.DidExist) {
                     // The token existed, but was invalid for this request. Delete it from the database and cache
@@ -43,7 +40,7 @@ const verifyRequest = (permission) => {
                     // await webtoken.delete(UserToken)
                     removeWebtoken(UserToken);
                 } else {
-                    // The token did not exist, lets add the reuqest IP to the cache to stop brute force attacks and reduce DB stress
+                    // The token did not exist, lets add the request IP to the cache to stop brute force attacks and reduce DB stress
                     const IPLimiter = await IPLimit(IP, 20);
 
                     // If true, then the IP has been in rate limit
