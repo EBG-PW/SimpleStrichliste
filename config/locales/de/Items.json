@@ -13,6 +13,19 @@
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
     "GroupByDay": "Nach Tag gruppieren",
+    "Buyers": {
+        "ButtonLabel": "Käufer anzeigen",
+        "Title": "Käufer von {{item}}",
+        "SearchPlaceholder": "Benutzer suchen...",
+        "Loading": "Käufer werden geladen...",
+        "NoResults": "Keine Käufer gefunden.",
+        "LoadFailed": "Käufer konnten nicht geladen werden.",
+        "Quantity": "{{count}} Mal gekauft",
+        "LastBought": "Zuletzt gekauft: {{date}}",
+        "PageInfo": "Seite {{page}} von {{totalPages}}",
+        "Previous": "Zurück",
+        "Next": "Weiter"
+    },
     "Delete": {
         "ConfirmTitle": "Lösche Artikel",
         "ConfirmMessage": "Möchtest du den Artikel wirklich löschen?"

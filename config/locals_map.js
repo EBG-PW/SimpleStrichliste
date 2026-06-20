@@ -8,6 +8,13 @@ module.exports = {
         "Navbar",
         "AdminUsers"
     ],
+    "/admin/:uuid/itembuyers": [
+        "Admin",
+        "Error",
+        "Page",
+        "Items",
+        "Navbar"
+    ],
     "/admin/:uuid/edituser": [
         "Admin",
         "Error",

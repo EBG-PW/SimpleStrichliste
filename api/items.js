@@ -2,7 +2,7 @@ const { verifyRequest } = require('@middleware/verifyRequest');
 const { parseMultipart } = require('@middleware/parseMultipartForm');
 const { limiter } = require('@middleware/limiter');
 const { checkPermission } = require('@lib/permissions');
-const { createItem, getItemByUUID, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking, updateItemsBought } = require('@lib/sqlite/items');
+const { createItem, getItemByUUID, getItemBuyers, updateItemByUUID, getItemsAndCategories, getTotalInventoryValue, deleteItem, getItemsRestocking, updateItemsBought } = require('@lib/sqlite/items');
 const { checkIfSettingTrue } = require('@lib/sqlite/settings');
 const Joi = require('@lib/sanitizer');
 const { writeImage, deleteImage } = require('@lib/imageStore');
@@ -19,6 +19,12 @@ const PluginVersion = '0.0.1'; //This plugins version
 
 const searchSchema = Joi.object({
     query: Joi.fullysanitizedString().min(1).max(100).default('')
+});
+
+const buyerSearchSchema = Joi.object({
+    search: Joi.fullysanitizedString().allow('').max(100).default(''),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).max(100).default(20),
 });
 
 const newItemSchema = Joi.object({
@@ -73,6 +79,29 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
     }, {});
 
     res.json({ groupedItems, totalInventoryValue });
+});
+
+router.get('/buyers/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
+    const params = await validateUUID.validateAsync(req.params);
+    const query = await buyerSearchSchema.validateAsync(req.query);
+    const item = await getItemByUUID(params.uuid);
+
+    if (!item) return res.status(404).json({ error: 'Item not found' });
+
+    const { buyers, total } = getItemBuyers(params.uuid, query.search, query.page, query.limit);
+    res.json({
+        item: {
+            uuid: item.uuid,
+            name: item.name,
+        },
+        buyers,
+        pagination: {
+            page: query.page,
+            limit: query.limit,
+            total,
+            totalPages: Math.ceil(total / query.limit),
+        },
+    });
 });
 
 router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
