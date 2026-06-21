@@ -21,6 +21,7 @@ const itemStatsSchema = rangeSchema.keys({
 
 const formatDate = (date) => date.toISOString().slice(0, 10);
 
+// Get the start and end date based on the number of days
 const getDateRange = (days) => {
     const end = new Date();
     const start = new Date(end);

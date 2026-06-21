@@ -32,7 +32,7 @@ const verifyRequest = (permission) => {
             await TokenSchema.validateAsync(UserToken);
 
             // Check if the token is valid
-            const WebTokenResponse = await checkWebToken(UserToken, req.useragent?.browser || "unknown", IP);
+            const WebTokenResponse = await checkWebToken(UserToken, req.useragent?.browser || IP);
             if (!WebTokenResponse.State) {
                 if (WebTokenResponse.DidExist) {
                     // The token existed, but was invalid for this request. Delete it from the database and cache

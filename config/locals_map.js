@@ -6,6 +6,7 @@ module.exports = {
         "Setup",
         "Items",
         "Navbar",
+        "Categories",
         "AdminUsers"
     ],
     "/admin/:uuid/itembuyers": [

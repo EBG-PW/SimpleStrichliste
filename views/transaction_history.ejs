@@ -196,7 +196,7 @@
             }
 
             if (newTransactions.length === 0 && currentPage === 1) {
-              transactionsContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t("History.NoTransactions")}</p>`;
+              transactionsContainer.innerHTML = `<p class="text-center text-gray-500">${i18next.t("Items.NoTransactions")}</p>`;
               hasMoreData = false;
               return;
             }
@@ -231,7 +231,7 @@
             currentPage++;
           } catch (error) {
             console.error("Failed to load transactions:", error);
-            transactionsContainer.innerHTML = `<p class="text-center text-red-500">${i18next.t("History.Error")}</p>`;
+            transactionsContainer.innerHTML = `<p class="text-center text-red-500">${i18next.t("Items.HistoryError")}</p>`;
           } finally {
             isLoading = false;
             loadingIndicator.classList.add("hidden");

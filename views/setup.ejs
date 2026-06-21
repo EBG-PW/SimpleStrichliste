@@ -209,29 +209,25 @@
                             <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
                         </div>`;
             } else {
-              if (response.status === 500) ErrorLine.innerHTML = response_json.error;
+              if (response.status === 500) {
+                showMessage(translateApiError(response_json), "error");
+                return;
+              }
               if (typeof response_json.reason === "string") {
-                ErrorLine.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.${response_json.message}`) + "</div>";
+                showMessage(translateApiError(response_json), "error");
                 return;
               }
               const input_name = response_json.reason[0].path[0];
-              const input_type = response_json.reason[0].type;
               for (const key in keys) {
                 document.getElementById(keys[key]).classList.remove("is-invalid");
               }
 
-              ErrorLine.innerHTML =
-                '<div class="alert alert-danger">' +
-                i18next.t(`Error.Joi.${input_type}`, {
-                  field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`),
-                  limit: response_json.reason[0].context?.limit,
-                }) +
-                "</div>";
+              showMessage(translateValidationError(response_json, "Setup.Form"), "error");
               document.getElementById(keys[input_name]).classList.add("is-invalid");
               submitButton.disabled = false;
             }
           } catch (error) {
-            feedbackDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            showMessage(error.message, "error");
             submitButton.disabled = false;
             submitButton.textContent = i18next.t("Setup.Form.Submit");
           }

@@ -27,6 +27,7 @@
         "LoadUser": "Fehler beim Laden der Daten, prüfe die Konsole für Details.",
         "PasswordMismatch": "Die Passwörter stimmen nicht überein.",
         "InvalidRegCode": "Du benötigst einen gültigen Registrierungs-Code um dich zu registrieren. Wende dich an den Administrator.",
+        "RegistrationDisabled": "Die Registrierung ist deaktiviert. Wende dich an den Administrator.",
         "UserExists": "Ein Benutzer mit diesem Benutzernamen oder dieser E-Mail-Adresse existiert bereits."
     }
 }

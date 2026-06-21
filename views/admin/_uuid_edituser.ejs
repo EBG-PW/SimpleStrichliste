@@ -129,23 +129,8 @@
       const confirmPasswordInput = document.getElementById("confirm-password");
       const languageSelect = document.getElementById("language");
       const saveButton = document.getElementById("save-button");
-      const messageBox = document.getElementById("message-box");
       const loadingSpinner = document.getElementById("loading-spinner");
       const formContainer = document.getElementById("profile-form-container");
-
-      /**
-       * Shows a message to the user.
-       * @param {string} text - The message to display.
-       * @param {('success'|'error')} type - The type of message.
-       */
-      function showMessage(text, type = "success") {
-        messageBox.textContent = text;
-        messageBox.className = `mt-4 p-4 rounded-lg ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`;
-        messageBox.classList.remove("hidden");
-        setTimeout(() => {
-          messageBox.classList.add("hidden");
-        }, 4000);
-      }
 
       /**
        * Fetches user data and populates the form fields.
@@ -201,7 +186,7 @@
 
           const response_json = await response.json();
           if (response.ok) {
-            showMessage(i18next.t("Settings.SettingsUpdatedSuccsess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
+            showMessage(i18next.t("Settings.SettingsUpdatedSuccess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
             inputField.classList.add("ring-2", "ring-green-500");
 
               setTimeout(() => {
@@ -209,14 +194,13 @@
             }, 5000);
           } else {
             if (typeof response_json.reason === "string") {
-              showMessage(i18next.t(`Error.${response_json.message}`));
+              showMessage(translateApiError(response_json), "error");
               return;
             }
             const input_name = response_json.reason[0].path[0];
-            const input_type = response_json.reason[0].type;
             document.getElementById(field).classList.remove("is-invalid");
 
-            showMessage(i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }), "error");
+            showMessage(translateValidationError(response_json, "Setup.Form"), "error");
             document.getElementById(field).classList.add("is-invalid");
 
             inputField.classList.add("ring-2", "ring-red-500");

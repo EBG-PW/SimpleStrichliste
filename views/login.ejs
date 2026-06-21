@@ -105,7 +105,7 @@
               }
             }
           } catch (error) {
-            feedbackDiv.textContent = error.message;
+            showMessage(error.message, "error");
             submitButton.disabled = false;
             submitButton.textContent = i18next.t("Login.Submit");
           }

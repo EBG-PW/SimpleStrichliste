@@ -35,7 +35,7 @@
               <h1 class="text-3xl font-bold text-gray-900" data-translate="Items.Edit.Headline"></h1>
               <a
                 href="/admin/<%= encodeURIComponent(params.uuid) %>/itembuyers"
-                class="h-9 w-9 flex flex-shrink-0 items-center justify-center rounded-full bg-white text-gray-700 shadow hover:bg-indigo-50 hover:text-indigo-700 hover:shadow-md transition-colors"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md transition hover:bg-indigo-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 data-translate-title="Items.Buyers.ButtonLabel"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -344,27 +344,18 @@
           });
 
           if (response.ok) {
-            submitButton.classList.remove(...originalButtonClasses);
-            submitButton.classList.add("bg-green-600");
-            submitButton.innerHTML = `<span>${i18next.t("Items.Response.SuccessSave")}</span>`;
+            showMessage(i18next.t("Items.Response.SuccessSave"));
           } else {
             const result = await response.json();
-            submitButton.classList.remove(...originalButtonClasses);
-            submitButton.classList.add("bg-red-600");
-            submitButton.innerHTML = `<span>${result.message || "Error"}</span>`;
+            showMessage(translateApiError(result, "Items.Form"), "error");
           }
         } catch (error) {
           console.error("Submission failed:", error);
-          submitButton.classList.remove(...originalButtonClasses);
-          submitButton.classList.add("bg-red-600");
-          submitButton.innerHTML = `<span>${error.message}</span>`;
+          showMessage(error.message, "error");
         } finally {
-          setTimeout(() => {
-            submitButton.disabled = false;
-            submitButton.classList.remove("bg-green-600", "bg-red-600");
-            submitButton.classList.add(...originalButtonClasses);
-            submitButton.innerHTML = originalButtonHTML;
-          }, 3000);
+          submitButton.disabled = false;
+          submitButton.classList.add(...originalButtonClasses);
+          submitButton.innerHTML = originalButtonHTML;
         }
       }
 

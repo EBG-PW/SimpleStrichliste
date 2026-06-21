@@ -47,7 +47,7 @@ router.post('/login', async (req, res) => {
     const newtoken = crypto.randomUUID(); // Generate a new token
 
     delete user.password_hash; // Remove the password hash from the user object
-    addWebtoken(newtoken, user, Formated_Permissions, req.useragent?.browser || "unknown", req.ip); // Add the token to the cache and SQLite
+    addWebtoken(newtoken, user, Formated_Permissions, req.useragent?.browser || req.ip); // Add the token to the cache and SQLite
 
     return res.json({ token: newtoken, uuid: user.uuid, name: user.name, email: user.email, username: user.username, permissions: Formated_Permissions, language: user.language });
 });

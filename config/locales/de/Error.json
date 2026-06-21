@@ -14,6 +14,8 @@
       "base": "{{field}} muss eine Zahl sein",
       "min": "{{field}} muss größer oder gleich {{limit}} sein",
       "max": "{{field}} muss kleiner oder gleich {{limit}} sein",
+      "positive": "{{field}} muss eine positive Zahl sein",
+      "negative": "{{field}} muss eine negative Zahl sein",
       "integer": "{{field}} muss eine ganze Zahl sein"
     },
     "date": {

@@ -128,15 +128,20 @@
                 throw new Error(i18next.t("Setup.Error.InvalidRegCode"));
               }
 
+              // Forward to /setup if the application is not setup yet
+              if (response.status === 405) {
+                window.location.href = "/setup";
+                return;
+              }
+
               if (response.status === 409) throw new Error(i18next.t("Setup.Error.UserExists"));
 
               if (typeof response_json.reason === "string") {
-                feedbackDiv.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.${response_json.message}`) + "</div>";
+                showMessage(translateApiError(response_json), "error");
                 submitButton.disabled = false;
                 return;
               }
               const input_name = response_json.reason[0].path[0];
-              const input_type = response_json.reason[0].type;
               const keys = {
                 name: "name",
                 email: "email",
@@ -148,12 +153,12 @@
                 document.getElementById(keys[key]).classList.remove("is-invalid");
               }
 
-              feedbackDiv.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Setup.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
+              showMessage(translateValidationError(response_json, "Setup.Form"), "error");
               document.getElementById(keys[input_name]).classList.add("is-invalid");
               submitButton.disabled = false;
             }
           } catch (error) {
-            feedbackDiv.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+            showMessage(error.message, "error");
             submitButton.disabled = false;
           }
         }

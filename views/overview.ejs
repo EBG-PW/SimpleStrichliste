@@ -250,16 +250,6 @@
         }
       }
 
-      const messageBox = document.getElementById("message-box");
-      function showMessage(text, type = "success") {
-        messageBox.textContent = text;
-        messageBox.className = `mt-4 p-4 rounded-lg ${type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`;
-        messageBox.classList.remove("hidden");
-        setTimeout(() => {
-          messageBox.classList.add("hidden");
-        }, 4000);
-      }
-
       document.addEventListener("DOMContentLoaded", () => {
         const mainContainer = document.getElementById("main-content-container");
         const ITEMS_PER_PAGE = 10;

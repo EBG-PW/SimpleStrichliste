@@ -2,6 +2,7 @@
     "PageTitle": "Artikel Verwaltung {{cost, cost}}",
     "HistoryHeader": "Artikelverlauf",
     "Loading": "Lade Artikel...",
+    "NoTransactions": "Keine Transaktionen vorhanden.",
     "NoResults": "Keine Artikel gefunden.",
     "LoadFailed": "Fehler beim Laden der Artikel.",
     "SearchPlaceholder": "Artikel suchen...",
@@ -9,6 +10,7 @@
     "InStock_plural": "{{count}} Stücke auf Lager",
     "PurchaseTitle": "{{count}} x {{name}} gekauft",
     "HistoryAmmount": "{{sign}}{{amount}} €",
+    "HistoryError": "Fehler beim Laden der Transaktionen.",
     "SystemTransaction": "Systemtransaktion",
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
@@ -77,6 +79,9 @@
         "Success": "Artikel erfolgreich erstellt",
         "SuccessSave": "Artikel erfolgreich gespeichert",
         "DBUNIQUE": "Artikel mit diesem Namen existiert bereits",
+        "DiscountFieldsRequired": "Rabattpreis und Ablaufdatum müssen beide angegeben werden.",
+        "DiscountPriceTooHigh": "Der Rabattpreis muss niedriger als der reguläre Preis sein.",
+        "DiscountExpirationPast": "Das Ablaufdatum des Rabatts muss in der Zukunft liegen.",
         "Error": "Fehler",
         "ErrorLoading": "Fehler beim Laden der Daten"
     }

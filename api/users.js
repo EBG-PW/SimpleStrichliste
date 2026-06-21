@@ -75,6 +75,7 @@ router.get('/hasUsers', limiter(10), async (req, res) => {
  * Generate a new Admin User, is only avaible on a empty DB
  */
 router.post('/admin', limiter(20), async (req, res) => {
+    // Disable normal registration if OAuth is enabled
     if (isEBGOAuthEnabled()) {
         return res.status(403).json({ error: 'OAuth registration is enabled' });
     }
@@ -103,8 +104,15 @@ router.post('/admin', limiter(20), async (req, res) => {
  * Create a normal user
  */
 router.post('/', limiter(20), async (req, res) => {
+    // Disable normal registration if OAuth is enabled
     if (isEBGOAuthEnabled()) {
         return res.status(403).json({ error: 'OAuth registration is enabled' });
+    }
+
+    // Do not allow registration if admin did not setup the application yet, forward to /setup
+    const usercount = await countUsers();
+    if (usercount < 1) {
+        return res.status(405).json({ error: 'Application not setup' });
     }
 
     const body = await userSchema.validateAsync(req.body);

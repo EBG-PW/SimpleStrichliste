@@ -475,31 +475,33 @@
             method: "PUT",
             body: formData,
           });
-          if (!response.ok) throw new Error("Failed to update manifest.");
+          if (!response.ok) {
+            const errorData = await response.json();
+            const fields = {
+              APP_NAME: "Name",
+              APP_SHORT_NAME: "ShortName",
+              APP_DESCRIPTION: "AppDescription",
+              APP_BACKGROUND_COLOR: "BackgroundColor",
+              APP_THEME_COLOR: "ThemeColor",
+            };
+            showMessage(translateApiError(errorData, (field) => t(`AdminSettings.Manifest.${fields[field] || field}`)), "error");
+            return;
+          }
 
           if (croppedFaviconBlob) {
             document.getElementById("favicon").value = "";
             croppedFaviconBlob = null;
           }
 
-          submitButton.classList.remove(...originalButtonClasses);
-          submitButton.disabled = false;
-          submitButton.classList.add("bg-green-600");
-          submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Success")}</span>`;
+          showMessage(t("AdminSettings.Manifest.Success"));
           document.getElementById("favicon-preview").src = `/favicon.ico?${Date.now()}`;
         } catch (error) {
-          submitButton.classList.remove(...originalButtonClasses);
-          submitButton.disabled = false;
-          submitButton.classList.add("bg-red-600");
-          submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Error")}</span>`;
+          showMessage(t("AdminSettings.Manifest.Error"), "error");
           console.error("Error saving manifest settings:", error);
         } finally {
-          setTimeout(() => {
-            submitButton.disabled = false;
-            submitButton.classList.remove("bg-green-600", "bg-red-600");
-            submitButton.classList.add(...originalButtonClasses);
-            submitButton.innerHTML = originalButtonHTML;
-          }, 3000);
+          submitButton.disabled = false;
+          submitButton.classList.add(...originalButtonClasses);
+          submitButton.innerHTML = originalButtonHTML;
         }
       }
 
@@ -529,32 +531,32 @@
             method: "PUT",
             body: formData,
           });
-          if (!response.ok) throw new Error("Failed to update low funds warning.");
+          if (!response.ok) {
+            const errorData = await response.json();
+            const fields = {
+              LOW_FUNDS_AMOUNT: "Amount",
+              LOW_FUNDS_RESETTIME: "Resettime",
+              LOW_FUNDS_STRING: "Message",
+            };
+            showMessage(translateApiError(errorData, (field) => t(`AdminSettings.LowFunds.${fields[field] || field}`)), "error");
+            return;
+          }
 
           if (croppedLowFundsBlob) {
             document.getElementById("low-funds-image").value = "";
             croppedLowFundsBlob = null;
           }
 
-          submitButton.classList.remove(...originalButtonClasses);
-          submitButton.disabled = false;
-          submitButton.classList.add("bg-green-600");
-          submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Success")}</span>`;
+          showMessage(t("AdminSettings.LowFunds.Success"));
           document.getElementById("low-funds-preview").src = `/i/static/low-funds?${Date.now()}`;
         } catch (error) {
-          submitButton.classList.remove(...originalButtonClasses);
-          submitButton.disabled = false;
-          submitButton.classList.add("bg-red-600");
-          submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Error")}</span>`;
+          showMessage(t("AdminSettings.LowFunds.Error"), "error");
           console.error("Error saving low funds settings:", error);
         } finally {
-          setTimeout(() => {
-            submitButton.disabled = false;
-            submitButton.classList.remove("bg-green-600", "bg-red-600");
-            submitButton.classList.add(...originalButtonClasses);
-            submitButton.innerHTML = originalButtonHTML;
-            updateLowFundsSettingsState();
-          }, 3000);
+          submitButton.disabled = false;
+          submitButton.classList.add(...originalButtonClasses);
+          submitButton.innerHTML = originalButtonHTML;
+          updateLowFundsSettingsState();
         }
       }
 

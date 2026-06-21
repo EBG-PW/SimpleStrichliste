@@ -269,9 +269,7 @@
           const response_json = await response.json();
 
           if (response.ok) {
-            submitButton.classList.remove(...originalButtonClasses);
-            submitButton.classList.add("bg-green-600");
-            submitButton.innerHTML = `<span>${i18next.t("Items.Response.Success")}</span>`;
+            showMessage(i18next.t("Items.Response.Success"));
 
             createItemForm.reset();
             // After reset, restore the category if it was pre-filled
@@ -288,22 +286,18 @@
             imagePreview.src = "";
             croppedImageBlob = null;
           } else {
-            submitButton.classList.remove(...originalButtonClasses);
-            submitButton.classList.add("bg-red-600");
-            if (response.status === 409) submitButton.innerHTML = `<span>${i18next.t("Items.Response.DBUNIQUE")}</span>`;
-            const input_name = response_json.reason[0].path[0];
-            const input_type = response_json.reason[0].type;
-            submitButton.innerHTML = '<div class="alert alert-danger">' + i18next.t(`Error.Joi.${input_type}`, { field: i18next.t(`Items.Form.${capitalizeFirstLetter(input_name)}`), limit: response_json.reason[0].context?.limit }) + "</div>";
+            const errorMessage = response.status === 409
+              ? i18next.t("Items.Response.DBUNIQUE")
+              : translateApiError(response_json, "Items.Form");
+            showMessage(errorMessage, "error");
           }
         } catch (error) {
           console.error("Submission failed:", error);
+          showMessage(i18next.t("Error.UnknownError"), "error");
         } finally {
-          setTimeout(() => {
-            submitButton.disabled = false;
-            submitButton.classList.remove("bg-green-600", "bg-red-600");
-            submitButton.classList.add(...originalButtonClasses);
-            submitButton.innerHTML = originalButtonHTML;
-          }, 3000);
+          submitButton.disabled = false;
+          submitButton.classList.add(...originalButtonClasses);
+          submitButton.innerHTML = originalButtonHTML;
         }
       }
 

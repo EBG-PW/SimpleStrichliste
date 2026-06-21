@@ -61,21 +61,25 @@ const validateDiscount = (item) => {
     const hasUntil = item.discountUntil !== '' && item.discountUntil !== null && item.discountUntil !== undefined;
 
     if (hasPrice !== hasUntil) {
-        return 'Discount price and expiration must both be set';
+        throw new InvalidRouteInput('Discount price and expiration must both be set')
+            .withBackUrl('none')
+            .setTranslationKey('Items.Response.DiscountFieldsRequired');
     }
     if (hasPrice && item.discountPrice >= item.price) {
-        return 'Discount price must be lower than the regular price';
+        throw new InvalidRouteInput('Discount price must be lower than the regular price')
+            .withBackUrl('none')
+            .setTranslationKey('Items.Response.DiscountPriceTooHigh');
     }
     if (hasUntil && new Date(item.discountUntil).getTime() <= Date.now()) {
-        return 'Discount expiration must be in the future';
+        throw new InvalidRouteInput('Discount expiration must be in the future')
+            .withBackUrl('none')
+            .setTranslationKey('Items.Response.DiscountExpirationPast');
     }
-    return null;
 };
 
 router.post('/', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
     const body = await newItemSchema.validateAsync(req.body);
-    const discountError = validateDiscount(body);
-    if (discountError) return res.status(400).json({ error: discountError });
+    validateDiscount(body);
     const validImage = await verifyBufferIsJPG(req.file.buffer, 512, 512);
     if (!validImage) throw new InvalidRouteInput('Invalid Image');
 
@@ -162,8 +166,7 @@ router.get('/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (r
 router.put('/:uuid', verifyRequest('web.admin.items.write'), parseMultipart(), limiter(10), async (req, res) => {
     const params = await validateUUID.validateAsync(req.params);
     const body = await newItemSchema.validateAsync(req.body);
-    const discountError = validateDiscount(body);
-    if (discountError) return res.status(400).json({ error: discountError });
+    validateDiscount(body);
 
     // Image is only in the request if it was modified
     if (req.file) {

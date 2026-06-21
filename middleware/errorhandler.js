@@ -54,6 +54,7 @@ const errorHandler = (error, req, res, next) => {
     if (log_errors[error.name] && !error.secret_reason) process.log.error(`[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}"`);
     if (log_errors[error.name] && error.secret_reason) process.log.error(`[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}" >> ${error.secret_reason}`);
     if (error.error) console.log(error.error)
+    if (error.translationKey) outError.translationKey = error.translationKey;
     res.status(outError.statusCode);
     if (outError.headers) { res.header(outError.headers.name, outError.headers.value); }
     if (outError.back_url && req.headers['accept'] !== 'application/json') {
@@ -62,11 +63,13 @@ const errorHandler = (error, req, res, next) => {
         ejs.renderFile(path.join(__dirname, '..', 'views', 'error', 'error-xxx.ejs'), outError, (err, str) => {
             if (err) {
                 res.header('Content-Type', 'application/json');
-                res.json({
+                const responseBody = {
                     message: outError.message,
                     info: outError.info,
                     reason: outError.reason,
-                });
+                };
+                if (outError.translationKey) responseBody.translationKey = outError.translationKey;
+                res.json(responseBody);
 
                 throw err;
             } else {
@@ -76,11 +79,13 @@ const errorHandler = (error, req, res, next) => {
         });
     } else {
         res.header('Content-Type', 'application/json');
-        res.json({
+        const responseBody = {
             message: outError.message,
             info: outError.info,
             reason: outError.reason,
-        });
+        };
+        if (outError.translationKey) responseBody.translationKey = outError.translationKey;
+        res.json(responseBody);
     }
 };
 

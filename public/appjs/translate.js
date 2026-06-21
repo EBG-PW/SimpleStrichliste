@@ -112,3 +112,92 @@ const t = (key, options) => {
 const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+let messageTimeout;
+
+/**
+ * Show a consistent toast message on every page.
+ * Existing #message-box elements are reused; otherwise one is created.
+ * @param {String} text
+ * @param {'success'|'error'} type
+ */
+const showMessage = (text, type = 'success') => {
+    let messageBox = document.getElementById('message-box');
+
+    if (!messageBox) {
+        const container = document.createElement('div');
+        container.id = 'message-box-container';
+        container.className = 'fixed bottom-5 right-5 z-[9999] w-full max-w-xs px-4';
+
+        messageBox = document.createElement('div');
+        messageBox.id = 'message-box';
+        messageBox.className = 'hidden';
+
+        container.appendChild(messageBox);
+        document.body.appendChild(container);
+    } else {
+        messageBox.parentElement?.classList.add('z-[9999]');
+    }
+
+    clearTimeout(messageTimeout);
+    messageBox.textContent = text;
+    messageBox.className = `mt-4 rounded-lg p-4 shadow-lg ${
+        type === 'success'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+    }`;
+    messageBox.classList.remove('hidden');
+
+    messageTimeout = setTimeout(() => {
+        messageBox.classList.add('hidden');
+    }, 4000);
+};
+
+/**
+ * Construct a localized message from a Joi validation error response.
+ * @param {Object} errorResponse
+ * @param {String|Function} fieldTranslation
+ * @returns {String|null}
+ */
+const translateValidationError = (errorResponse, fieldTranslation = '') => {
+    if (errorResponse?.message !== 'ValidationError' || !Array.isArray(errorResponse.reason)) return null;
+
+    const detail = errorResponse.reason[0];
+    if (!detail?.type) return null;
+
+    const fieldName = detail.path?.[0] ?? detail.context?.key ?? '';
+    let field = fieldName;
+
+    if (typeof fieldTranslation === 'function') {
+        field = fieldTranslation(fieldName, detail);
+    } else if (fieldTranslation && fieldName) {
+        field = t(`${fieldTranslation}.${capitalizeFirstLetter(String(fieldName))}`);
+    }
+
+    const context = detail.context || {};
+    return t(`Error.Joi.${detail.type}`, {
+        ...context,
+        field,
+        valids: Array.isArray(context.valids) ? context.valids.join(', ') : context.valids,
+    });
+};
+
+/**
+ * Translate a structured API error while retaining its generic English fallback.
+ * @param {Object} errorResponse
+ * @param {String|Function} fieldTranslation
+ * @returns {String}
+ */
+const translateApiError = (errorResponse, fieldTranslation = '') => {
+    if (errorResponse?.translationKey) return t(errorResponse.translationKey);
+
+    const validationMessage = translateValidationError(errorResponse, fieldTranslation);
+    if (validationMessage) return validationMessage;
+
+    const errorKey = errorResponse?.message ? `Error.${errorResponse.message}` : '';
+    if (errorKey && typeof i18next !== 'undefined' && i18next.exists?.(errorKey)) {
+        return t(errorKey);
+    }
+
+    return errorResponse?.message || t('Error.UnknownError');
+};
