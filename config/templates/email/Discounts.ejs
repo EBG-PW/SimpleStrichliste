@@ -17,6 +17,11 @@
             </li>
         <% }) %>
     </ul>
-    <% if (domain) { %><p><a href="<%= domain %>"><%= application %></a></p><% } %>
+    <p><%= t('emails.Discounts.disclaimer') %></p>
+    <p><%- tHtml('emails.footer_subscribe', {
+        application,
+        settingsUrl: `${domain}/settings`,
+        settingsLabel: t('emails.settings')
+    }) %></p>
 </body>
 </html>

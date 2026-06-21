@@ -115,6 +115,36 @@ test('buildEmail renders selected discounts', async () => {
     assert.match(email.subject, /Angebote/);
     assert.match(email.html, /Testartikel/);
     assert.match(email.html, /1\.50/);
+    assert.match(email.html, /<a href="(?:https?:\/\/[^"]+)?\/settings">Einstellungen<\/a>/);
+    assert.doesNotMatch(email.html, /&lt;a href=|Settings\.Settings/);
+});
+
+test('email HTML translations escape interpolated values', async () => {
+    const previousApplication = process.env.APPLICATION;
+    const previousDomain = process.env.DOMAIN;
+    process.env.APPLICATION = '<script>alert("application")</script>';
+    process.env.DOMAIN = 'https://example.com/" onclick="alert(1)';
+
+    try {
+        const email = await buildEmail({
+            type: 'Discounts',
+            name: 'Ada',
+            username: 'ada',
+            email: 'ada@example.com',
+            uuid: 'test-uuid',
+            language: 'de',
+            custom_message: JSON.stringify({ items: [] }),
+        });
+
+        assert.doesNotMatch(email.html, /<script>|onclick="/);
+        assert.match(email.html, /&lt;script&gt;/);
+        assert.match(email.html, /&quot; onclick=&quot;/);
+    } finally {
+        if (previousApplication === undefined) delete process.env.APPLICATION;
+        else process.env.APPLICATION = previousApplication;
+        if (previousDomain === undefined) delete process.env.DOMAIN;
+        else process.env.DOMAIN = previousDomain;
+    }
 });
 
 test('features can register notification types, templates, and translations', async () => {

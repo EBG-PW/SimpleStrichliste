@@ -1,6 +1,8 @@
 {
     "emails": {
         "greeting": "Hallo {{name}},",
+        "settings": "Einstellungen",
+        "footer_subscribe": "Du erhältst diese E-Mail, weil du Benachrichtigungen von {{application}} abonniert hast. Du kannst deine Benachrichtigungseinstellungen in den <a href=\"{{settingsUrl}}\">{{settingsLabel}}</a> anpassen.",
         "RegMail": {
             "subject": "Willkommen bei {{application}}",
             "heading": "Willkommen bei {{application}}",
@@ -17,6 +19,7 @@
             "subject": "Aktuelle Angebote bei {{application}}",
             "heading": "Aktuelle Angebote",
             "body": "Diese Artikel sind aktuell reduziert:",
+            "disclaimer": "Die Angebote gelten bis zum angegebenen Zeitpunkt und nur solange der Vorrat reicht",
             "until": "bis {{date}}",
             "text": "Hallo {{name}},\n\nBei {{application}} gibt es aktuell neue Angebote. Öffne die Anwendung, um sie anzusehen."
         },
