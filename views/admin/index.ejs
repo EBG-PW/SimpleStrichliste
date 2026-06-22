@@ -115,9 +115,8 @@
         </a>
 
         <% Object.entries(features).forEach(([featureName, feature]) => { %>
-          <% if (feature?.enabled) { %>
-            <% const translationKeyBase = feature?.adminCard?.translationKeyBase || feature?.translationKeyBase || `Admin.FeatureCards.${featureName}`; %>
-            <a href="<%= feature?.adminCard?.href || feature?.href || `/admin/${featureName}` %>" class="group block bg-white rounded-xl shadow-lg p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
+          <% const translationKeyBase = feature?.adminCard?.translationKeyBase || feature?.translationKeyBase || `Admin.FeatureCards.${featureName}`; %>
+          <a href="<%= feature?.adminCard?.href || feature?.href || `/admin/${featureName}` %>" class="group block bg-white rounded-xl shadow-lg p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
               <div class="flex justify-between items-start">
                 <h2 class="font-bold text-xl text-gray-800" data-translate="<%= translationKeyBase %>.Title"></h2>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -127,8 +126,7 @@
               <div class="mt-3">
                 <p class="text-sm text-gray-600" data-translate="<%= translationKeyBase %>.Description"></p>
               </div>
-            </a>
-          <% } %>
+          </a>
         <% }); %>
       </div>
     </main>

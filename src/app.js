@@ -14,8 +14,7 @@ const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
 const { getStaticFilePath } = require('@lib/imageStore');
-const { loadFeatureDefinitions, getFeaturePublicFilePath } = require('@lib/features');
-const { ensureFeatureSettings } = require('@lib/sqlite/settings');
+const { getFeaturePublicFilePath } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const { startNotificationWorker } = require('@lib/notifications');
 
@@ -77,7 +76,6 @@ if (dbMigration === 0) {
     }
 }
 
-ensureFeatureSettings(loadFeatureDefinitions());
 backfillStatistics(); // Backfill statistics data
 
 // Redirect root to setup

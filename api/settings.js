@@ -15,8 +15,6 @@ const { verifyBufferIsJPG, verifyBufferIsJPGMaxDimensions, convertToWebp } = req
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const { generateManifest } = require('@lib/manifest');
 const { InvalidRouteInput } = require('@lib/errors');
-const { ViewRenderer } = require('@lib/template');
-const { loadFeatureDefinitions } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const Joi = require('@lib/sanitizer');
 const express = require('ultimate-express');
@@ -35,9 +33,8 @@ const uploadHandler = multer({
     limits: { fileSize: 2 * 1024 * 1024 * 1024 } // 2GB file size limit
 });
 
-// Dynamically generate the schema for toggling settings based on available features
 const getSettingsToggleSchema = () => {
-    const settingKeys = ['USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING', ...Object.keys(loadFeatureDefinitions()).map((featureName) => `feature_${featureName}`)];
+    const settingKeys = ['USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING'];
     if (!isEBGOAuthEnabled()) settingKeys.unshift('REG_CODE_ACTIVE');
 
     return Joi.object({
@@ -70,9 +67,6 @@ router.get('/', verifyRequest('app.admin.settings.read'), limiter(1), async (req
 router.post('/toggle', verifyRequest('app.admin.settings.write'), limiter(1), async (req, res) => {
     const body = await getSettingsToggleSchema().validateAsync(req.body);
     const result = await toggleSetting(body.setting_key);
-    if (body.setting_key.startsWith('feature_')) {
-        new ViewRenderer().flushAllCachesAndRenderStaticPages();
-    }
     return res.json({ success: true, new_value: result });
 });
 

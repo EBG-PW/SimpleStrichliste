@@ -234,29 +234,6 @@
           </form>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Features.Title"></h2>
-          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Features.Description"></p>
-          <div class="space-y-5">
-            <% Object.entries(featureSettingsDefinitions).forEach(([featureName, feature]) => { %>
-              <% const settingKey = `feature_${featureName}`; %>
-              <% const translationKeyBase = feature.settings?.translationKeyBase || feature.settingsTranslationKeyBase || `AdminSettings.Features.${featureName}`; %>
-              <div class="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
-                <div class="flex items-center justify-between gap-4">
-                  <div>
-                    <h3 class="font-semibold text-gray-700" data-translate="<%= translationKeyBase %>.Title"></h3>
-                    <p class="mt-1 text-sm text-gray-600" data-translate="<%= translationKeyBase %>.Description"></p>
-                  </div>
-                  <label for="feature-<%= featureName %>-toggle" class="relative inline-flex shrink-0 items-center cursor-pointer">
-                    <input type="checkbox" value="" onchange="toggleSetting('<%= settingKey %>')" id="feature-<%= featureName %>-toggle" data-feature-toggle="<%= featureName %>" class="sr-only peer" />
-                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                  </label>
-                </div>
-                <span class="sr-only" data-translate="<%= translationKeyBase %>.ToggleLabel"></span>
-              </div>
-            <% }); %>
-          </div>
-        </div>
       </div>
 
       <div id="qr-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
@@ -355,10 +332,6 @@
           });
           const data = await response.json();
           if (data.success) {
-            if (settingKey.startsWith("feature_")) {
-              window.location.reload();
-              return;
-            }
             await getSettings();
             if (!isOAuthEnabled) updateRegCodeButtonsState();
             updateLowFundsSettingsState();
@@ -378,10 +351,6 @@
             regCode = settings.find((s) => s.setting_key === "REG_CODE")?.setting_value || "";
           }
           document.getElementById("user-shoppinglist-toggle").checked = settings.find((s) => s.setting_key === "USER_SHOPPINGLIST_ACTIVE")?.setting_value === "true";
-          document.querySelectorAll("[data-feature-toggle]").forEach((toggle) => {
-            const featureName = toggle.getAttribute("data-feature-toggle");
-            toggle.checked = settings.find((s) => s.setting_key === `feature_${featureName}`)?.setting_value === "true";
-          });
           document.getElementById("db-autovacuum-toggle").checked = settings.find((s) => s.setting_key === "DB_AUTOVACUUM")?.setting_value === "true";
           document.getElementById("low-funds-toggle").checked = settings.find((s) => s.setting_key === "LOW_FUNDS_WARNING")?.setting_value === "true";
           document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";

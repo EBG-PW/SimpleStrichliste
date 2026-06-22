@@ -180,14 +180,13 @@ docker compose up -d
 
 ## Optional Features
 
-Optional features are installed from independent folders in `installed_features`.
+Optional features are installed and enabled by placing independent folders in `installed_features`.
 Each feature folder needs a `feature.json` or `config.json` manifest:
 
 ```json
 {
   "name": "foodorders",
   "version": "0.0.1",
-  "enabledByDefault": false,
   "navbar": {
     "insert": true,
     "href": "/foodorders",
@@ -198,9 +197,6 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
     "href": "/admin/foodorders",
     "translationKeyBase": "Admin.FeatureCards.foodorders"
   },
-  "settings": {
-    "translationKeyBase": "AdminSettings.Features.foodorders"
-  },
   "db": {
     "migrations": [],
     "seeds": []
@@ -208,7 +204,7 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
 }
 ```
 
-On startup the app scans `installed_features/<featureName>`. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
+On startup the app scans `installed_features/<featureName>`. Folder presence enables the feature. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
 
 Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. A top-level `templates` folder is installed into `config/templates`. Feature translations live in:
 

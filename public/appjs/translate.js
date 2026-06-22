@@ -84,9 +84,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             Object.entries(features)
                 .map(([featureName, feature]) => ({
                     name: featureName,
-                    config: typeof feature === 'object' ? feature : { enabled: feature === true },
+                    config: typeof feature === 'object' ? feature : {},
                 }))
-                .filter(({ config }) => config.enabled === true && config.navbar?.insert === true)
+                .filter(({ config }) => config.navbar?.insert === true)
                 .filter(({ config }) => !config.navbar.permission || checkPermission(config.navbar.permission).result)
                 .sort((left, right) => (left.config.navbar.order || 100) - (right.config.navbar.order || 100))
                 .forEach(({ name, config }) => {
