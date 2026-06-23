@@ -284,22 +284,27 @@
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" class="system-log-filter rounded border-gray-300" value="error" checked />
               <span data-translate="AdminSettings.Logs.Levels.Error"></span>
+              <span class="text-xs text-gray-500" data-log-level-count="error"></span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" class="system-log-filter rounded border-gray-300" value="warning" checked />
               <span data-translate="AdminSettings.Logs.Levels.Warning"></span>
+              <span class="text-xs text-gray-500" data-log-level-count="warning"></span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" class="system-log-filter rounded border-gray-300" value="info" checked />
               <span data-translate="AdminSettings.Logs.Levels.Info"></span>
+              <span class="text-xs text-gray-500" data-log-level-count="info"></span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" class="system-log-filter rounded border-gray-300" value="debug" checked />
+              <input type="checkbox" class="system-log-filter rounded border-gray-300" value="debug" />
               <span data-translate="AdminSettings.Logs.Levels.Debug"></span>
+              <span class="text-xs text-gray-500" data-log-level-count="debug"></span>
             </label>
             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" class="system-log-filter rounded border-gray-300" value="system" checked />
               <span data-translate="AdminSettings.Logs.Levels.System"></span>
+              <span class="text-xs text-gray-500" data-log-level-count="system"></span>
             </label>
           </div>
 
@@ -390,12 +395,30 @@
         );
       }
 
+      function getLogLevel(log) {
+        return (log.level || "info").toLowerCase();
+      }
+
+      function renderSystemLogCounts() {
+        const counts = systemLogs.reduce((acc, log) => {
+          const level = getLogLevel(log);
+          acc[level] = (acc[level] || 0) + 1;
+          return acc;
+        }, {});
+
+        document.querySelectorAll("[data-log-level-count]").forEach((element) => {
+          const level = element.dataset.logLevelCount;
+          element.textContent = `(${counts[level] || 0})`;
+        });
+      }
+
       function renderSystemLogs() {
         const listContainer = document.getElementById("system-logs-container");
         const selectedLevels = getSelectedLogLevels();
-        const visibleLogs = systemLogs.filter((log) => selectedLevels.has((log.level || "").toLowerCase()));
+        const visibleLogs = systemLogs.filter((log) => selectedLevels.has(getLogLevel(log)));
 
         listContainer.innerHTML = "";
+        renderSystemLogCounts();
 
         if (!visibleLogs.length) {
           const emptyMessage = document.createElement("p");
@@ -406,7 +429,7 @@
         }
 
         visibleLogs.forEach((log) => {
-          const level = (log.level || "info").toLowerCase();
+          const level = getLogLevel(log);
           const entry = document.createElement("div");
           entry.className = "grid gap-2 border-b border-gray-800 py-1 last:border-b-0 md:grid-cols-[9rem_5rem_1fr]";
 

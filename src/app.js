@@ -8,7 +8,7 @@ const ejs = require('ejs');
 const { ViewRenderer } = require('@lib/template');
 const errorHandler = require('@middleware/errorhandler');
 const { getDBMigration } = require('@lib/sqlite/utils')
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const { dbVersion } = require('@config/application');
 const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
@@ -17,6 +17,7 @@ const { getStaticFilePath } = require('@lib/imageStore');
 const { getFeaturePublicFilePath } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const { startNotificationWorker } = require('@lib/notifications');
+const { rememberExternalLog } = require('@lib/logger');
 
 let options = {};
 
@@ -48,11 +49,57 @@ app.use((req, res, next) => {
 
 let defaultRoute = '/overview';
 const dbMigration = getDBMigration();
+const migrationLogLevels = {
+    E: 'error',
+    W: 'warning',
+    I: 'info',
+    D: 'debug',
+    S: 'system',
+};
+
+function rememberMigrationOutput(output, defaultLevel) {
+    String(output || '').split(/\r?\n/).forEach((line) => {
+        if (!line) return;
+
+        const cleanLine = line.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+        const match = cleanLine.match(/^\[[^\]]+\]\s+\[([^\]]+)\]\s+\[([EWIDS])\]\s?(.*)$/);
+        if (match) {
+            rememberExternalLog(migrationLogLevels[match[2]] || defaultLevel, match[3], match[1]);
+            return;
+        }
+
+        rememberExternalLog(defaultLevel, cleanLine);
+    });
+}
+
+function runMigrationSetup() {
+    const result = spawnSync(process.execPath, ['migrate.js', 'setup'], {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+    });
+
+    if (result.stdout) {
+        process.stdout.write(result.stdout);
+        rememberMigrationOutput(result.stdout, 'info');
+    }
+
+    if (result.stderr) {
+        process.stderr.write(result.stderr);
+        rememberMigrationOutput(result.stderr, 'error');
+    }
+
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+        throw new Error(`Migration process exited with code ${result.status}`);
+    }
+}
+
 if (dbMigration === 0) {
     process.log.system(`No Database found. Entering setup mode`)
     try {
         process.log.system('Running database migration script...');
-        execSync('node migrate.js setup', { stdio: 'inherit' });
+        runMigrationSetup();
         process.log.system('Database migration completed successfully.');
     } catch (error) {
         process.log.error('Failed to run database migration script:');
@@ -67,7 +114,7 @@ if (dbMigration === 0) {
         } else {
             process.log.system('Checking database migrations and seed data...');
         }
-        execSync('node migrate.js setup', { stdio: 'inherit' });
+        runMigrationSetup();
         process.log.system('Database migration completed successfully.');
     } catch (error) {
         process.log.error('Failed to run database migration script:');
