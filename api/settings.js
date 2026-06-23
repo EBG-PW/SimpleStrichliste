@@ -10,6 +10,7 @@ const { getDBSize, vacuumDB } = require('@lib/sqlite/index');
 const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/settings');
 const { countUsers } = require('@lib/sqlite/users');
 const { getSystemStats } = require('@lib/stats');
+const { getMemoryLogs } = require('@lib/logger');
 const { writefavicon, writeImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, verifyBufferIsJPGMaxDimensions, convertToWebp } = require('@lib/utils');
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
@@ -85,6 +86,10 @@ router.get('/stats', verifyRequest('app.admin.stats.read'), limiter(1), async (r
     const dbSize = getDBSize();
     const systemStats = await getSystemStats();
     return res.json({ appversion, dbSize, systemStats });
+});
+
+router.get('/logs', verifyRequest('app.admin.stats.read'), limiter(5), async (req, res) => {
+    return res.json({ logs: getMemoryLogs() });
 });
 
 router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async (req, res) => {

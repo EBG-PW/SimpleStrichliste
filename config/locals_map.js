@@ -125,6 +125,14 @@ module.exports = {
         "Page",
         "AdminSettings"
     ],
+     "/settings": [
+        "Settings",
+        "Error",
+        "Page",
+        "Setup",
+        "Navbar",
+        "Categories"
+    ],
     "/transaction_history": [
         "Items",
         "Error",

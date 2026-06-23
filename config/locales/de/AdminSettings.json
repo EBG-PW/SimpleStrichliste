@@ -11,6 +11,21 @@
     "MemHeapExternalBuffer": "Speicher für C++ | Buffers",
     "Storage": "Speicher"
   },
+  "Logs": {
+    "Button": "Logs anzeigen",
+    "ModalTitle": "Systemlogs",
+    "Filters": "Level",
+    "Loading": "Lade Logs...",
+    "Empty": "Keine Logs fuer die aktuelle Auswahl.",
+    "Error": "Fehler beim Laden der Logs.",
+    "Levels": {
+      "Error": "Error",
+      "Warning": "Warning",
+      "Info": "Info",
+      "Debug": "Debug",
+      "System": "System"
+    }
+  },
   "REGCode": {
     "Title": "Registrierungs Code",
     "Description": "Aktiviere diese Funktion wenn sich nur Benutzer mit diesem Code registrieren sollen.",
