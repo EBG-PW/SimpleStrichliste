@@ -5,6 +5,7 @@ const appRoot = path.join(__dirname, '..');
 const featureConfigDir = path.join(appRoot, 'config', 'features');
 const installedFeaturesDir = path.join(appRoot, 'installed_features');
 const localsMapPath = path.join(appRoot, 'config', 'locals_map.js');
+const { removeLocalsMapEntries: subtractLocalsMapEntries } = require('../lib/features');
 
 const featureName = process.argv[2];
 const removeSource = process.argv.includes('--remove-source');
@@ -55,12 +56,9 @@ const removeLocalsMapEntries = (featureConfig) => {
     delete require.cache[require.resolve(localsMapPath)];
     const localsMap = require(localsMapPath);
 
-    Object.keys(featureLocalsMap).forEach(route => {
-        delete localsMap[route];
-    });
-
-    const sortedMap = Object.keys(localsMap).sort().reduce((result, route) => {
-        result[route] = localsMap[route];
+    const nextLocalsMap = subtractLocalsMapEntries(localsMap, featureLocalsMap);
+    const sortedMap = Object.keys(nextLocalsMap).sort().reduce((result, route) => {
+        result[route] = nextLocalsMap[route];
         return result;
     }, {});
 

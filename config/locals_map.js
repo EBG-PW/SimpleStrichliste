@@ -119,19 +119,19 @@ module.exports = {
         "Error",
         "Page"
     ],
-    "/setup": [
-        "Setup",
-        "Error",
-        "Page",
-        "AdminSettings"
-    ],
-     "/settings": [
+    "/settings": [
         "Settings",
         "Error",
         "Page",
         "Setup",
         "Navbar",
         "Categories"
+    ],
+    "/setup": [
+        "Setup",
+        "Error",
+        "Page",
+        "AdminSettings"
     ],
     "/transaction_history": [
         "Items",
