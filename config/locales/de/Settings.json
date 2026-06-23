@@ -21,6 +21,9 @@
         "TableStatus": "Status",
         "CurrentSession": "Aktuelle Sitzung"
     },
+    "Notifications": {
+        "Headline": "Benachrichtigungen"
+    },
     "DiscountEmails": {
         "Headline": "E-Mails zu Angeboten",
         "Description": "Erhalte eine E-Mail, wenn die Administration neue Rabatte ankündigt.",
