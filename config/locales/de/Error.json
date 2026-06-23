@@ -1,4 +1,5 @@
 {
+  "PageTitle": "Fehler",
   "Joi": {
     "string": {
       "empty": "{{field}} darf nicht leer sein",
