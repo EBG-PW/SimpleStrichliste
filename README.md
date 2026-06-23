@@ -185,6 +185,7 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
 {
   "name": "foodorders",
   "version": "0.0.1",
+  "minCoreVersion": "0.3.0",
   "navbar": {
     "insert": true,
     "href": "/foodorders",
@@ -202,7 +203,7 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
 }
 ```
 
-On startup the app scans `installed_features/<featureName>`. Folder presence enables the feature. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
+On startup the app scans `installed_features/<featureName>`. Folder presence enables the feature. `minCoreVersion` defines the oldest compatible SimpleStrichliste version. Incompatible source versions are skipped and logged without stopping startup or replacing an already installed compatible version. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
 
 Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. A top-level `templates` folder is installed into `config/templates`. Feature page translations live in:
 
