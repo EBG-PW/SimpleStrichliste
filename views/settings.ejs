@@ -105,20 +105,7 @@
         </div>
         <% } %>
 
-        <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
-          <div class="p-8 md:p-12">
-            <div class="flex items-center justify-between gap-6">
-              <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2" data-translate="Settings.DiscountEmails.Headline"></h2>
-                <p class="text-gray-500" data-translate="Settings.DiscountEmails.Description"></p>
-              </div>
-              <label class="relative inline-flex flex-shrink-0 cursor-pointer items-center">
-                <input id="discount-email-toggle" type="checkbox" class="peer sr-only">
-                <div class="h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
-              </label>
-            </div>
-          </div>
-        </div>
+        <div id="notification-settings-container" class="space-y-8"></div>
 
         <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
           <div class="p-8 md:p-12">
@@ -155,7 +142,54 @@
       const formContainer = document.getElementById("profile-form-container");
       const sessionListContainer = document.getElementById("session-list-container");
       const terminateAllButton = document.getElementById("terminate-all-sessions-button");
-      const discountEmailToggle = document.getElementById("discount-email-toggle");
+      const notificationSettingsContainer = document.getElementById("notification-settings-container");
+
+      function renderNotificationSettings(settings) {
+        notificationSettingsContainer.innerHTML = settings.map((notification) => `
+          <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-3xl">
+            <div class="p-8 md:p-12">
+              <div class="flex items-center justify-between gap-6">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900 mb-2">${t(`${notification.translationKeyBase}.Headline`)}</h2>
+                  <p class="text-gray-500">${t(`${notification.translationKeyBase}.Description`)}</p>
+                </div>
+                <label class="relative inline-flex flex-shrink-0 cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    class="notification-toggle peer sr-only"
+                    data-notification-key="${notification.key}"
+                    data-notification-channel="${notification.channel}"
+                    data-translation-key-base="${notification.translationKeyBase}"
+                    ${notification.enabled ? "checked" : ""}
+                  >
+                  <div class="h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+        `).join("");
+
+        document.querySelectorAll(".notification-toggle").forEach((toggle) => {
+          toggle.addEventListener("change", () => updateNotificationPreference(toggle));
+        });
+      }
+
+      async function updateNotificationPreference(toggle) {
+        const enabled = toggle.checked;
+        const key = toggle.dataset.notificationKey;
+        const channel = toggle.dataset.notificationChannel;
+        const translationKeyBase = toggle.dataset.translationKeyBase;
+        const response = await apiFetch(`/api/v1/users/notifications/${key}/${channel}`, {
+          method: "PUT",
+          body: JSON.stringify({ enabled }),
+        });
+        if (response.ok) {
+          showMessage(t(`${translationKeyBase}.Updated`));
+        } else {
+          toggle.checked = !enabled;
+          showMessage(t(`${translationKeyBase}.UpdateFailed`), "error");
+        }
+      }
 
       /**
        * Fetches user data and populates the form fields.
@@ -180,10 +214,7 @@
           nameInput.value = user.name;
           emailInput.value = user.email;
           languageSelect.value = user.language;
-          const discountEmailPreference = user.notifications?.find((preference) =>
-            preference.key === "discount" && preference.type === "email"
-          );
-          discountEmailToggle.checked = discountEmailPreference?.state !== false;
+          renderNotificationSettings(user.notificationSettings || []);
 
           loadingSpinner.classList.add("hidden");
           formContainer.classList.remove("hidden");
@@ -521,19 +552,6 @@
         loadSessions();
         if (!isOAuthEnabled) passwordForm.addEventListener("submit", changePassword);
         terminateAllButton.addEventListener("click", terminateAllOtherSessions);
-        discountEmailToggle.addEventListener("change", async () => {
-          const enabled = discountEmailToggle.checked;
-          const response = await apiFetch("/api/v1/users/notifications/discount/email", {
-            method: "PUT",
-            body: JSON.stringify({ enabled }),
-          });
-          if (response.ok) {
-            showMessage(i18next.t("Settings.DiscountEmails.Updated"));
-          } else {
-            discountEmailToggle.checked = !enabled;
-            showMessage(i18next.t("Settings.DiscountEmails.UpdateFailed"), "error");
-          }
-        });
       });
     </script>
   </body>

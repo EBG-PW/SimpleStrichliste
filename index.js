@@ -8,11 +8,12 @@ const { log } = require('@lib/logger');
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { deepMerge } = require('@lib/utils');
 
 process.log = {};
 process.log = log;
 
-const { installFeatures, featureLocalesDir } = require('@lib/features');
+const { installFeatures } = require('@lib/features');
 installFeatures();
 
 // Render Templates
@@ -21,24 +22,43 @@ installFeatures();
 const localesDir = path.join(__dirname, 'config', 'locales');
 
 let availableLanguages = {};
-let availableFeatureLanguages = {};
 let countryConfig = {};
+
+const mergeLanguageBundles = (target, bundleDir) => {
+    fs.readdirSync(bundleDir, { withFileTypes: true }).forEach(entry => {
+        const entryPath = path.join(bundleDir, entry.name);
+        if (entry.isDirectory()) {
+            mergeLanguageBundles(target, entryPath);
+            return;
+        }
+        if (!entry.name.endsWith('.json')) return;
+
+        deepMerge(target, JSON.parse(fs.readFileSync(entryPath, 'utf8')));
+    });
+};
 
 // Recursive loader for language components
 const loadLanguageComponents = (langDir) => {
     const components = {};
     const files = fs.readdirSync(langDir);
+    const featureBundlesDir = path.join(langDir, 'features');
 
     files.forEach(file => {
         const filePath = path.join(langDir, file);
+        if (filePath === featureBundlesDir) return;
+
         if (fs.lstatSync(filePath).isDirectory()) {
-            components[file] = loadLanguageComponents(filePath); // Recurse into subdirectories
+            components[file] = loadLanguageComponents(filePath);
         } else if (file.endsWith('.json')) {
             const componentName = path.basename(file, '.json');
             const fileContents = fs.readFileSync(filePath, 'utf8');
             components[componentName] = JSON.parse(fileContents);
         }
     });
+
+    if (fs.existsSync(featureBundlesDir)) {
+        mergeLanguageBundles(components, featureBundlesDir);
+    }
 
     return components;
 }
@@ -49,24 +69,12 @@ languages.forEach(langCode => {
     const langDir = path.join(localesDir, langCode);
     if (fs.lstatSync(langDir).isDirectory()) {
         availableLanguages[langCode] = loadLanguageComponents(langDir);
-        const featureLangDir = path.join(featureLocalesDir, langCode);
-        availableFeatureLanguages[langCode] = {};
-        if (fs.existsSync(featureLangDir) && fs.lstatSync(featureLangDir).isDirectory()) {
-            fs.readdirSync(featureLangDir)
-                .filter(file => file.endsWith('.json'))
-                .forEach(file => {
-                    const featureName = path.basename(file, '.json');
-                    const fileContents = fs.readFileSync(path.join(featureLangDir, file), 'utf8');
-                    availableFeatureLanguages[langCode][featureName] = JSON.parse(fileContents);
-                });
-        }
         countryConfig[langCode] = availableLanguages[langCode].LocalLanguages.local;
     }
 });
 
 // Expose globals
 process.availableLanguages = availableLanguages; // Used for template rendering for different languages
-process.availableFeatureLanguages = availableFeatureLanguages; // Feature-owned translations, injected only when enabled
 process.countryConfig = countryConfig; // Used for language dropdowns
 process.localsMap = require('@config/locals_map.js'); // Used for template rendering for different languages
 process.permissions_config = require('@config/permissions.js');

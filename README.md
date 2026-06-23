@@ -60,14 +60,16 @@ SMTP_SECURE=false
 SMTP_USER=notifications@example.com
 SMTP_PASSWORD=change-me
 SMTP_FROM=notifications@example.com
+SMTP_POOL_MAX_CONNECTIONS=1
+SMTP_POOL_MAX_MESSAGES=1000
 EMAIL_MAX_RETRIES=5
 ```
 
-`SMTP_SECURE=true` enables implicit TLS. Port `465` also enables it automatically. Failed sends are retried by the notification worker until `EMAIL_MAX_RETRIES` is reached.
+`SMTP_SECURE=true` enables implicit TLS. Port `465` also enables it automatically. SMTP pooling reuses authenticated connections; one connection can send up to `SMTP_POOL_MAX_MESSAGES` messages before reconnecting. Failed sends are retried by the notification worker until `EMAIL_MAX_RETRIES` is reached.
 
-Email HTML templates live in `config/templates/email/*.ejs`. Their i18next translations live in `config/templates/email/locales/<language>.json`; the recipient's saved language is used with `FALLBACKLANG` as fallback.
+Notification registrations live in `config/notifications/*.js`. Email HTML templates live in `config/templates/email/*.ejs`. Core email translations live in `config/templates/email/locales/<language>.json`; feature translations can use `config/templates/email/locales/<featureName>/<language>.json`. The recipient's saved language is used with `FALLBACKLANG` as fallback.
 
-Features can register additional queued email types while their startup module is loaded:
+Notification definitions are channel-independent. Current channel is `email`; future channels can be added without changing notification callers. Definitions use category `system` or `newsletter`. Newsletter registrations automatically appear in user settings.
 
 Place feature-owned templates inside the feature package:
 
@@ -83,36 +85,32 @@ config/templates/email/FoodOrderReady.ejs
 ```
 
 ```js
-const {
-  registerNotificationType,
-  sendNotification,
-} = require('@lib/notifications');
-
-registerNotificationType({
-  type: 'FoodOrderReady',
-  constant: 'FOOD_ORDER_READY',
-  templatePath: 'config/templates/email/FoodOrderReady.ejs',
-  translations: {
-    de: {
-      emails: {
-        FoodOrderReady: {
-          subject: 'Deine Bestellung ist fertig',
-          heading: 'Bestellung abholbereit',
-        },
+// installed_features/foodorders/config/notifications/foodorders.js
+module.exports = [
+  {
+    type: 'FoodOrderReady',
+    constant: 'FOOD_ORDER_READY',
+    category: 'newsletter',
+    preferenceKey: 'foodorder-ready',
+    translationKeyBase: 'FoodOrders.Notifications.Ready',
+    requiresMessage: true,
+    channels: {
+      email: {
+        templatePath: 'config/templates/email/FoodOrderReady.ejs',
+        buildContext: (task) => ({
+          order: JSON.parse(task.custom_message),
+        }),
+        buildText: (context) => `${context.name}, deine Bestellung ist fertig.`,
       },
     },
   },
-  requiresMessage: true,
-  buildContext: (task) => ({
-    order: JSON.parse(task.custom_message),
-  }),
-  buildText: (context) => `${context.name}, deine Bestellung ist fertig.`,
-});
+];
 
+const { sendNotification } = require('@lib/notifications');
 await sendNotification(userId, 0, 'FoodOrderReady', JSON.stringify(order));
 ```
 
-The type is stored in `email_tasks.type`. `templatePath` may be absolute or relative to the application root. Copied template files are tracked in the feature manifest and removed by the feature uninstaller. Feature API modules are loaded before the email worker starts, so their registrations are available when queued tasks are processed.
+The notification type is stored in `email_tasks.type`; the user preference channel is stored in `user_notifications.type`. `templatePath` may be absolute or relative to the application root. Copied registration, locale, and template files are tracked in the feature manifest and removed by the feature uninstaller. Notification config files are loaded before the email worker starts.
 
 ## OAuth Login
 
@@ -206,16 +204,28 @@ Each feature folder needs a `feature.json` or `config.json` manifest:
 
 On startup the app scans `installed_features/<featureName>`. Folder presence enables the feature. If the feature version is newer than `config/features/<featureName>.json`, or if the installed config does not exist yet, the feature files are copied into the application.
 
-Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. A top-level `templates` folder is installed into `config/templates`. Feature translations live in:
+Supported feature folders include application folders such as `api`, `lib`, `src`, `views`, `public`, and `config`. A top-level `templates` folder is installed into `config/templates`. Feature page translations live in:
 
 ```text
-installed_features/<featureName>/local/<language>/<featureName>.json
+installed_features/<featureName>/locales/<language>/features/<featureName>.json
 ```
 
 and are installed to:
 
 ```text
-config/features/local/<language>/<featureName>.json
+config/locales/<language>/features/<featureName>.json
+```
+
+Feature email translations live in:
+
+```text
+installed_features/<featureName>/templates/email/locales/<featureName>/<language>.json
+```
+
+and are installed to:
+
+```text
+config/templates/email/locales/<featureName>/<language>.json
 ```
 
 Feature public files can also be served from:

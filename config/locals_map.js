@@ -119,14 +119,6 @@ module.exports = {
         "Error",
         "Page"
     ],
-    "/settings": [
-        "Settings",
-        "Error",
-        "Page",
-        "Setup",
-        "Navbar",
-        "Categories"
-    ],
     "/setup": [
         "Setup",
         "Error",

@@ -6,7 +6,13 @@ const { getUserNotifications, setUserNotificationState } = require('@lib/sqlite/
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
-const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
+const {
+    NOTIFICATION_TYPES,
+    NOTIFICATION_CHANNELS,
+    getNewsletterNotifications,
+    canSetNotificationPreference,
+    sendNotification,
+} = require('@lib/notifications');
 const Joi = require('@lib/sanitizer');
 const bcrypt = require('bcrypt');
 const express = require('ultimate-express');
@@ -53,7 +59,7 @@ const notificationStateSchema = Joi.object({
 
 const notificationParamsSchema = Joi.object({
     key: Joi.fullysanitizedString().pattern(/^[a-z0-9_-]+$/).min(1).max(64).required(),
-    type: Joi.fullysanitizedString().valid('email').required()
+    type: Joi.fullysanitizedString().valid(...Object.values(NOTIFICATION_CHANNELS)).required()
 });
 
 const validateUUID = Joi.object({
@@ -132,7 +138,14 @@ router.post('/', limiter(20), async (req, res) => {
 
 router.get('/', verifyRequest('web.user.read'), limiter(1), async (req, res) => {
     const user_data = await getUser(req.user.user_data.id);
-    user_data.notifications = getUserNotifications(req.user.user_data.id);
+    const preferences = getUserNotifications(req.user.user_data.id);
+    user_data.notifications = preferences;
+    user_data.notificationSettings = getNewsletterNotifications().map((definition) => ({
+        ...definition,
+        enabled: preferences.find((preference) =>
+            preference.key === definition.key && preference.type === definition.channel
+        )?.state !== false,
+    }));
     return res.json(user_data)
 });
 
@@ -187,6 +200,9 @@ router.put('/language', verifyRequest('app.user.settings.language.write'), limit
 router.put('/notifications/:key/:type', verifyRequest('app.user.settings.email.write'), limiter(10), async (req, res) => {
     const params = await notificationParamsSchema.validateAsync(req.params);
     const body = await notificationStateSchema.validateAsync(req.body);
+    if (!canSetNotificationPreference(params.key, params.type)) {
+        return res.status(404).json({ error: 'Notification preference not found' });
+    }
     setUserNotificationState(req.user.user_data.id, params.key, params.type, body.enabled);
     return res.json({ message: 'Notification preference updated successfully' });
 });

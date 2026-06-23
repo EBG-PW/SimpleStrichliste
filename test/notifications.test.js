@@ -12,7 +12,11 @@ process.log = process.log || {
 
 const {
     buildEmail,
-    registerNotificationType,
+    NOTIFICATION_CATEGORIES,
+    getNewsletterNotifications,
+    isPermanentEmailError,
+    isSmtpAuthRateLimitError,
+    registerNotification,
     sendNotification,
 } = require('@lib/notifications');
 
@@ -31,25 +35,32 @@ test.after(() => {
     fs.rmSync(featureTemplateDir, { recursive: true, force: true });
 });
 
-registerNotificationType({
+registerNotification({
     type: 'FeatureMail',
     constant: 'FEATURE_MAIL',
-    templatePath: featureTemplatePath,
-    translations: {
-        de: {
-            emails: {
-                FeatureMail: {
-                    subject: 'Feature-Benachrichtigung',
-                    heading: 'Feature-Nachricht',
+    category: NOTIFICATION_CATEGORIES.NEWSLETTER,
+    preferenceKey: 'feature-mail',
+    translationKeyBase: 'Feature.Notifications.Mail',
+    requiresMessage: true,
+    channels: {
+        email: {
+            templatePath: featureTemplatePath,
+            translations: {
+                de: {
+                    emails: {
+                        FeatureMail: {
+                            subject: 'Feature-Benachrichtigung',
+                            heading: 'Feature-Nachricht',
+                        },
+                    },
                 },
             },
+            buildContext: (task) => ({
+                featureValue: JSON.parse(task.custom_message).value,
+            }),
+            buildText: (context) => `${context.name}: ${context.featureValue}`,
         },
     },
-    requiresMessage: true,
-    buildContext: (task) => ({
-        featureValue: JSON.parse(task.custom_message).value,
-    }),
-    buildText: (context) => `${context.name}: ${context.featureValue}`,
 });
 
 test('buildEmail renders localized EJS for custom notifications', async () => {
@@ -162,6 +173,15 @@ test('features can register notification types, templates, and translations', as
     assert.equal(email.text, 'Ada: Feature payload');
     assert.match(email.html, /Feature-Nachricht/);
     assert.match(email.html, /Feature payload/);
+    assert.deepEqual(
+        getNewsletterNotifications().find((notification) => notification.type === 'FeatureMail'),
+        {
+            type: 'FeatureMail',
+            key: 'feature-mail',
+            channel: 'email',
+            translationKeyBase: 'Feature.Notifications.Mail',
+        }
+    );
 });
 
 test('sendNotification rejects unsupported types', async () => {
@@ -183,4 +203,11 @@ test('sendNotification validates small integer priority', async () => {
         sendNotification(1, 32768, 'RegMail'),
         /priority must be a small integer/
     );
+});
+
+test('SMTP authentication errors are permanent and must not be retried', () => {
+    assert.equal(isPermanentEmailError({ code: 'EAUTH' }), true);
+    assert.equal(isPermanentEmailError({ responseCode: 535 }), true);
+    assert.equal(isSmtpAuthRateLimitError(new Error('Invalid login: 535 Too many failed logins')), true);
+    assert.equal(isPermanentEmailError(new Error('Connection timed out')), false);
 });
