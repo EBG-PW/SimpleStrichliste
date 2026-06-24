@@ -23,6 +23,11 @@
         border-color: #2563eb;
         color: #ffffff;
       }
+
+      .stats-tooltip {
+        pointer-events: none;
+        transform: translate(-50%, calc(-100% - 12px));
+      }
     </style>
   </head>
 
@@ -187,6 +192,76 @@
         `).join("");
       }
 
+      function getChartX(labels, margins, plotWidth, index) {
+        return labels.length === 1
+          ? margins.left + plotWidth / 2
+          : margins.left + (plotWidth * index / (labels.length - 1));
+      }
+
+      function getOrCreateTooltip(canvas) {
+        const parent = canvas.parentElement;
+        let tooltip = parent.querySelector(".stats-tooltip");
+        if (!tooltip) {
+          tooltip = document.createElement("div");
+          tooltip.className = "stats-tooltip hidden absolute z-20 max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg";
+          parent.appendChild(tooltip);
+        }
+        return tooltip;
+      }
+
+      function bindChartTooltip(canvas, labels, datasets, revenueDataset, margins, plotWidth, plotHeight) {
+        const tooltip = getOrCreateTooltip(canvas);
+        const allDatasets = revenueDataset ? [...datasets, revenueDataset] : datasets;
+        const formatValue = (dataset, value) => dataset === revenueDataset
+          ? moneyFormatter.format(value)
+          : numberFormatter.format(value);
+
+        canvas.onmousemove = (event) => {
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+
+          if (
+            x < margins.left ||
+            x > margins.left + plotWidth ||
+            y < margins.top ||
+            y > margins.top + plotHeight ||
+            labels.length === 0
+          ) {
+            tooltip.classList.add("hidden");
+            return;
+          }
+
+          const rawIndex = labels.length === 1
+            ? 0
+            : Math.round(((x - margins.left) / plotWidth) * (labels.length - 1));
+          const index = Math.min(Math.max(rawIndex, 0), labels.length - 1);
+          const tooltipX = getChartX(labels, margins, plotWidth, index);
+
+          tooltip.innerHTML = `
+            <div class="mb-1 font-semibold text-gray-100">${labels[index]}</div>
+            <div class="space-y-1">
+              ${allDatasets.map((dataset) => `
+                <div class="flex min-w-0 items-center justify-between gap-4">
+                  <span class="flex min-w-0 items-center gap-2">
+                    <span class="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background:${dataset.color}"></span>
+                    <span class="truncate">${dataset.name}</span>
+                  </span>
+                  <span class="font-mono">${formatValue(dataset, dataset.values[index] || 0)}</span>
+                </div>
+              `).join("")}
+            </div>
+          `;
+          tooltip.style.left = `${tooltipX}px`;
+          tooltip.style.top = `${margins.top + 8}px`;
+          tooltip.classList.remove("hidden");
+        };
+
+        canvas.onmouseleave = () => {
+          tooltip.classList.add("hidden");
+        };
+      }
+
       function drawLineChart(canvasId, legendId, labels, datasets, options = {}) {
         const canvas = document.getElementById(canvasId);
         const ctx = canvas.getContext("2d");
@@ -250,7 +325,7 @@
         ctx.textBaseline = "top";
         labels.forEach((label, index) => {
           if (index % labelStep !== 0 && index !== labels.length - 1) return;
-          const x = labels.length === 1 ? margins.left + plotWidth / 2 : margins.left + (plotWidth * index / (labels.length - 1));
+          const x = getChartX(labels, margins, plotWidth, index);
           ctx.fillText(label, x, margins.top + plotHeight + 14);
         });
 
@@ -260,7 +335,7 @@
           ctx.setLineDash(dashed ? [6, 5] : []);
           ctx.beginPath();
           dataset.values.forEach((value, index) => {
-            const x = labels.length === 1 ? margins.left + plotWidth / 2 : margins.left + (plotWidth * index / (labels.length - 1));
+            const x = getChartX(labels, margins, plotWidth, index);
             const y = margins.top + plotHeight - (plotHeight * value / Math.max(maxValue, 1));
             if (index === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
@@ -273,6 +348,7 @@
         if (revenueDataset) drawDataset(revenueDataset, rightMax, true);
 
         drawLegend(legendId, datasets, revenueDataset);
+        bindChartTooltip(canvas, labels, datasets, revenueDataset, margins, plotWidth, plotHeight);
       }
 
       function seriesFromRows(rows, labels, keyField, nameField, valueField, knownItems = []) {

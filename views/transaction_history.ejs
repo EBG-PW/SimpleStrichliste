@@ -8,6 +8,9 @@
     <script>
       const lang = <%- JSON.stringify(language) %>;
       const features = <%- JSON.stringify(features) %>;
+      const transactionHistoryFormatters = <%- JSON.stringify(Object.fromEntries(Object.entries(features || {})
+        .map(([featureName, feature]) => [featureName, feature?.transactionHistory?.customItemText])
+        .filter(([, formatter]) => formatter?.template && typeof formatter.template === "string"))) %>;
     </script>
     <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
     <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
@@ -113,6 +116,33 @@
           };
         };
 
+        const escapeHTML = (value) => String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+
+        const formatCustomItemText = (value) => {
+          if (!value) return "";
+          try {
+            const payload = JSON.parse(value);
+            const formatter = payload?.feature ? transactionHistoryFormatters[payload.feature] : null;
+            if (formatter?.template) {
+              const formatted = formatter.template.replace(/\{([^}]+)\}/g, (match, expression) => {
+                const keys = expression.split("|").map((key) => key.trim()).filter(Boolean);
+                const replacement = keys.map((key) => payload[key]).find((candidate) => candidate !== undefined && candidate !== null && candidate !== "");
+                return replacement === undefined ? "" : String(replacement);
+              }).replace(/\s+/g, " ").trim();
+
+              if (formatted) return escapeHTML(formatted);
+            }
+          } catch (error) {
+            // Old custom text was stored as plain text.
+          }
+          return escapeHTML(value);
+        };
+
         const createTransactionHTML = (tx) => {
           const { time } = formatTimestamp(tx.transaction_timestamp);
           let totalAmount = tx.price_at_transaction * tx.quantity;
@@ -125,7 +155,7 @@
               transaction_type = "purchase";
               if (tx.custom_item_text) {
                 totalAmount = totalAmount * -1;
-                title = tx.custom_item_text;
+                title = formatCustomItemText(tx.custom_item_text);
               } else {
                 title = i18next.t("Items.SystemTransaction");
               }
@@ -143,8 +173,8 @@
             default:
               transaction_type = "purchase";
               totalAmount = totalAmount * -1; // Invert amount for purchases
-              title = i18next.t("Items.PurchaseTitle", { count: tx.quantity, name: tx.item_name });
-              iconOrImage = `<img src="/i/items/${tx.item_uuid}" alt="${tx.item_name}" class="w-12 h-12 object-cover rounded-full">`;
+              title = escapeHTML(i18next.t("Items.PurchaseTitle", { count: tx.quantity, name: tx.item_name }));
+              iconOrImage = `<img src="/i/items/${encodeURIComponent(tx.item_uuid)}" alt="${escapeHTML(tx.item_name)}" class="w-12 h-12 object-cover rounded-full">`;
           }
 
           const sign = totalAmount > 0 ? "+" : totalAmount < 0 ? "-" : "";
