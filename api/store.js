@@ -5,6 +5,7 @@ const { getUserBalance, getUserFavorites, purchaseItem } = require('@lib/sqlite/
 const { getItemsByCategory, toggleUserFavorite } = require('@lib/sqlite/items');
 const { getSetting } = require('@lib/sqlite/settings');
 const { getCategoryPurchaseLeaderboard } = require('@lib/sqlite/stats');
+const { notifyLowStockIfNeeded } = require('@lib/notifications');
 const gategories_conf = require('@config/categories');
 const Joi = require('@lib/sanitizer');
 const express = require('ultimate-express');
@@ -83,7 +84,10 @@ router.post('/item/:uuid/favorite', verifyRequest('web.user.favorite.write'), li
 router.post('/buy', verifyRequest('web.user.store.write'), limiter(4), async (req, res) => {
     const { uuid, quantity } = await buySchema.validateAsync(req.body);
 
-    await purchaseItem(req.user.user_data.uuid, uuid, quantity, req.user.user_data.id);
+    const result = await purchaseItem(req.user.user_data.uuid, uuid, quantity, req.user.user_data.id);
+    void notifyLowStockIfNeeded(result.previousStock, result.item)
+        .catch((error) => process.log?.error?.(`Low stock notification failed: ${error?.message || error}`));
+
     return res.json({ success: true });
 });
 

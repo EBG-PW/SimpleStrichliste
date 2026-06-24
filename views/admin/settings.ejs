@@ -167,6 +167,41 @@
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Notification.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Notification.Description"></p>
+
+          <div class="space-y-6">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-gray-700" data-translate="AdminSettings.Notification.ErrorReport.ToggleLabel"></span>
+              <label for="error-reports-toggle" class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" onchange="toggleSetting('ERROR_REPORTS_ACTIVE')" id="error-reports-toggle" class="sr-only peer" />
+                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+              </label>
+            </div>
+
+            <div class="border-t pt-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="font-semibold text-gray-700" data-translate="AdminSettings.Notification.LowStock.ToggleLabel"></span>
+                <label for="low-stock-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" value="" onchange="toggleSetting('LOW_STOCK_WARNING')" id="low-stock-toggle" class="sr-only peer" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                </label>
+              </div>
+
+              <form id="low-stock-settings-form" class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                <div class="flex-grow">
+                  <label for="low-stock-percent" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Notification.LowStock.Percent"></label>
+                  <input type="number" name="low-stock-percent" id="low-stock-percent" step="0.01" min="0" max="100" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed" required />
+                </div>
+                <button type="submit" id="low-stock-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                  <span data-translate="AdminSettings.Button.Save"></span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.LowFunds.Title"></h2>
           <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.LowFunds.Description"></p>
           <div class="flex items-center justify-between mb-6">
@@ -199,7 +234,7 @@
                 <img id="low-funds-preview" src="/i/static/low-funds?<%= curentUnixTime %>" alt="Low funds preview" class="h-24 w-24 rounded-lg object-cover" />
                 <input type="file" name="lowFundsImage" id="low-funds-image" accept="image/*" class="block w-full text-sm text-slate-500 disabled:cursor-not-allowed disabled:opacity-50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
                 <button type="submit" id="low-funds-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                  <span data-translate="AdminSettings.LowFunds.Button"></span>
+                  <span data-translate="AdminSettings.Button.Save"></span>
                 </button>
               </div>
             </div>
@@ -244,7 +279,7 @@
                 <img id="favicon-preview" src="/favicon.ico?<%= curentUnixTime %>" alt="Favicon preview" class="h-24 w-24 rounded-full object-cover" />
                 <input type="file" name="favicon" id="favicon" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
                 <button type="submit" id="manifest-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
-                  <span data-translate="AdminSettings.Manifest.Button"></span>
+                  <span data-translate="AdminSettings.Button.Save"></span>
                 </button>
               </div>
             </div>
@@ -495,6 +530,7 @@
             await getSettings();
             if (!isOAuthEnabled) updateRegCodeButtonsState();
             updateLowFundsSettingsState();
+            updateLowStockSettingsState();
           }
         } catch (error) {
           console.error("Error toggling setting:", error);
@@ -513,6 +549,8 @@
           document.getElementById("user-shoppinglist-toggle").checked = settings.find((s) => s.setting_key === "USER_SHOPPINGLIST_ACTIVE")?.setting_value === "true";
           document.getElementById("db-autovacuum-toggle").checked = settings.find((s) => s.setting_key === "DB_AUTOVACUUM")?.setting_value === "true";
           document.getElementById("low-funds-toggle").checked = settings.find((s) => s.setting_key === "LOW_FUNDS_WARNING")?.setting_value === "true";
+          document.getElementById("error-reports-toggle").checked = settings.find((s) => s.setting_key === "ERROR_REPORTS_ACTIVE")?.setting_value === "true";
+          document.getElementById("low-stock-toggle").checked = settings.find((s) => s.setting_key === "LOW_STOCK_WARNING")?.setting_value === "true";
           document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";
           document.getElementById("app-short-name").value = settings.find((s) => s.setting_key === "APP_SHORT_NAME")?.setting_value || "";
           document.getElementById("app-description").value = settings.find((s) => s.setting_key === "APP_DESCRIPTION")?.setting_value || "";
@@ -521,7 +559,9 @@
           document.getElementById("low-funds-amount").value = settings.find((s) => s.setting_key === "LOW_FUNDS_AMOUNT")?.setting_value || "";
           document.getElementById("low-funds-resettime").value = settings.find((s) => s.setting_key === "LOW_FUNDS_RESETTIME")?.setting_value || "";
           document.getElementById("low-funds-string").value = settings.find((s) => s.setting_key === "LOW_FUNDS_STRING")?.setting_value || "";
+          document.getElementById("low-stock-percent").value = settings.find((s) => s.setting_key === "LOW_STOCK_PERCENT")?.setting_value || "20";
           updateLowFundsSettingsState();
+          updateLowStockSettingsState();
         } catch (error) {
           console.error("Error fetching settings:", error);
         }
@@ -586,7 +626,7 @@
         const originalButtonHTML = submitButton.innerHTML;
 
         submitButton.disabled = true;
-        submitButton.innerHTML = `<span>${t("AdminSettings.Manifest.Saving")}</span>`;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Button.Saving")}</span>`;
 
         try {
           const formData = new FormData();
@@ -622,10 +662,10 @@
             croppedFaviconBlob = null;
           }
 
-          showMessage(t("AdminSettings.Manifest.Success"));
+          showMessage(t("AdminSettings.Button.Success"));
           document.getElementById("favicon-preview").src = `/favicon.ico?${Date.now()}`;
         } catch (error) {
-          showMessage(t("AdminSettings.Manifest.Error"), "error");
+          showMessage(t("AdminSettings.Button.Error"), "error");
           console.error("Error saving manifest settings:", error);
         } finally {
           submitButton.disabled = false;
@@ -644,7 +684,7 @@
         const originalButtonHTML = submitButton.innerHTML;
 
         submitButton.disabled = true;
-        submitButton.innerHTML = `<span>${t("AdminSettings.LowFunds.Saving")}</span>`;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Button.Saving")}</span>`;
 
         try {
           const formData = new FormData();
@@ -676,16 +716,53 @@
             croppedLowFundsBlob = null;
           }
 
-          showMessage(t("AdminSettings.LowFunds.Success"));
+          showMessage(t("AdminSettings.Button.Success"));
           document.getElementById("low-funds-preview").src = `/i/static/low-funds?${Date.now()}`;
         } catch (error) {
-          showMessage(t("AdminSettings.LowFunds.Error"), "error");
+          showMessage(t("AdminSettings.Button.Error"), "error");
           console.error("Error saving low funds settings:", error);
         } finally {
           submitButton.disabled = false;
           submitButton.classList.add(...originalButtonClasses);
           submitButton.innerHTML = originalButtonHTML;
           updateLowFundsSettingsState();
+        }
+      }
+
+      async function handleLowStockSubmit(event) {
+        event.preventDefault();
+
+        const submitButton = document.getElementById("low-stock-submit-button");
+        if (submitButton.disabled) return;
+
+        const originalButtonHTML = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Button.Saving")}</span>`;
+
+        try {
+          const response = await apiFetch("/api/v1/settings/lowStock", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              LOW_STOCK_PERCENT: document.getElementById("low-stock-percent").value,
+            }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            showMessage(translateApiError(errorData, (field) => t(`AdminSettings.Notification.LowStock.${field}`)), "error");
+            return;
+          }
+
+          showMessage(t("AdminSettings.Button.Success"));
+        } catch (error) {
+          showMessage(t("AdminSettings.Button.Error"), "error");
+          console.error("Error saving low stock settings:", error);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonHTML;
+          updateLowStockSettingsState();
         }
       }
 
@@ -1020,16 +1097,33 @@
         lowFundsForm.classList.toggle("opacity-50", !isActive);
       }
 
+      function updateLowStockSettingsState() {
+        const lowStockToggle = document.getElementById("low-stock-toggle");
+        const lowStockForm = document.getElementById("low-stock-settings-form");
+        const lowStockInputs = [
+          document.getElementById("low-stock-percent"),
+          document.getElementById("low-stock-submit-button"),
+        ];
+
+        const isActive = lowStockToggle.checked;
+        lowStockInputs.forEach((element) => {
+          element.disabled = !isActive;
+        });
+        lowStockForm.classList.toggle("opacity-50", !isActive);
+      }
+
       document.addEventListener("DOMContentLoaded", async () => {
         await loadSystemStats();
         await getSettings();
         if (!isOAuthEnabled) await updateRegCodeButtonsState();
         updateLowFundsSettingsState();
+        updateLowStockSettingsState();
 
         document.getElementById("favicon").addEventListener("change", handleFaviconSelection);
         document.getElementById("manifest-settings-form").addEventListener("submit", handleManifestSubmit);
         document.getElementById("low-funds-image").addEventListener("change", handleLowFundsImageSelection);
         document.getElementById("low-funds-settings-form").addEventListener("submit", handleLowFundsSubmit);
+        document.getElementById("low-stock-settings-form").addEventListener("submit", handleLowStockSubmit);
         document.querySelectorAll(".system-log-filter").forEach((filter) => {
           filter.addEventListener("change", renderSystemLogs);
         });

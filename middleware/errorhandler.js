@@ -11,7 +11,7 @@ const { log_errors } = require('@config/errors')
  * @param {Next} next 
  */
 const errorHandler = (error, req, res, next) => {
-    if (process.env.LOG_LEVEL == 4) console.error("Global Error Handler:", error)
+    if (process.env.LOG_LEVEL == 4) process.log.debug("Global Error Handler:", error)
     const outError = {
         message: error.message || "",
         info: error.info || "",
@@ -51,8 +51,12 @@ const errorHandler = (error, req, res, next) => {
         outError.statusCode = 429;
     }
 
-    if (log_errors[error.name] && !error.secret_reason) process.log.error(`[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}"`);
-    if (log_errors[error.name] && error.secret_reason) process.log.error(`[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}" >> ${error.secret_reason}`);
+    const logConfig = log_errors[error.name];
+    const logMessage = error.secret_reason
+        ? `[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}" >> ${error.secret_reason}`
+        : `[${outError.statusCode}] ${req.method} "${req.url}" >> ${outError.message} in "${error.path}:${error.fileline}"`;
+    if (logConfig === true) process.log.error(logMessage);
+    if (logConfig === false) process.log.warn(logMessage);
     if (error.error) console.log(error.error)
     if (error.translationKey) outError.translationKey = error.translationKey;
     res.status(outError.statusCode);

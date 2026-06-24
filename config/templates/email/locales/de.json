@@ -23,6 +23,22 @@
             "until": "bis {{date}}",
             "text": "Hallo {{name}},\n\nBei {{application}} gibt es aktuell neue Angebote. Öffne die Anwendung, um sie anzusehen."
         },
+        "ErrorReport": {
+            "subject": "Error Report von {{application}}",
+            "heading": "Error Report",
+            "body": "Heute wurden {{count}} Fehler geloggt."
+        },
+        "LowStock": {
+            "subject": "Geringer Warenbestand: {{itemName}} ({{estimatedDuration}})",
+            "heading": "Geringer Warenbestand",
+            "body": "Ein Artikel ist unter den konfigurierten Warenbestand gefallen.",
+            "item": "Artikel",
+            "stock": "Bestand",
+            "estimate": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt reicht der Bestand noch {{days}} Tage.",
+            "estimateText": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt noch {{days}} Tage.",
+            "noTrend": "Noch kein Verkaufs-Trend vorhanden.",
+            "noTrendText": "Noch kein Verkaufs-Trend vorhanden."
+        },
         "Custom": {
             "subject": "Benachrichtigung von {{application}}",
             "heading": "Benachrichtigung von {{application}}",

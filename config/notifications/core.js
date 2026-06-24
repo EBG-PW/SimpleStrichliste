@@ -57,4 +57,60 @@ module.exports = [
             },
         },
     },
+    {
+        type: 'ErrorReport',
+        constant: 'ERROR_REPORT',
+        category: 'system',
+        requiresMessage: true,
+        channels: {
+            email: {
+                templatePath: path.join(emailTemplateDir, 'ErrorReport.ejs'),
+                buildContext: (task) => ({
+                    errors: JSON.parse(task.custom_message).errors || [],
+                }),
+                buildText: (context) => [
+                    context.t('emails.greeting', { name: context.name }),
+                    '',
+                    context.t('emails.ErrorReport.body', { count: context.errors.length }),
+                    ...context.errors.map((entry) => `[${entry.timestamp}] ${entry.message}`),
+                    '',
+                    context.domain,
+                ].join('\n'),
+            },
+        },
+    },
+    {
+        type: 'LowStock',
+        constant: 'LOW_STOCK',
+        category: 'system',
+        requiresMessage: true,
+        channels: {
+            email: {
+                templatePath: path.join(emailTemplateDir, 'LowStock.ejs'),
+                buildContext: (task) => {
+                    const context = JSON.parse(task.custom_message);
+                    const estimatedDays = context.trend?.estimatedDaysRemaining;
+                    return {
+                        ...context,
+                        itemName: context.item?.name || '',
+                        estimatedDuration: estimatedDays ? `ca. ${estimatedDays} Tage` : 'Trend unbekannt',
+                    };
+                },
+                buildText: (context) => [
+                    context.t('emails.greeting', { name: context.name }),
+                    '',
+                    context.t('emails.LowStock.body'),
+                    `${context.item.name}: ${context.item.stock} / ${context.item.target_stock}`,
+                    context.trend?.averagePerDay > 0
+                        ? context.t('emails.LowStock.estimateText', {
+                            averagePerDay: context.trend.averagePerDay,
+                            days: context.trend.estimatedDaysRemaining,
+                        })
+                        : context.t('emails.LowStock.noTrendText'),
+                    '',
+                    context.domain,
+                ].join('\n'),
+            },
+        },
+    },
 ];

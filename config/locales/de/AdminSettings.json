@@ -37,7 +37,7 @@
     "DefaultError": "Bitte generiere einen neuen Code.",
     "ModalTitle": "Registrierungs QR-Code",
     "ModalDescription": "Gib diesen Code allen Nutzern, scanne ihn mit der Kamera um zur Registrierung zu gelangen."
-},
+  },
   "UserShoppinglist": {
     "Title": "Einkaufslisten für Benutzer",
     "Description": "Aktiviere diese Funktion um Benutzern zu erlauben, die Einkaufsliste nutzen zu können.",
@@ -65,6 +65,23 @@
     "DeleteError": "Fehler beim Löschen des Backups.",
     "DownloadError": "Fehler beim Herunterladen des Backups."
   },
+  "Notification": {
+    "Title": "Benachrichtigungen",
+    "Description": "Aktiviere diese Funktion um Benachrichtigungen zu erhalten, wenn bestimmte Ereignisse auftreten.",
+    "ErrorReport": {
+      "ToggleLabel": "Bei Fehlern"
+    },
+    "LowStock": {
+      "ToggleLabel": "Bei geringem Warenbestand",
+      "Percent": "Trigger in Prozent vom Zielbestand"
+    }
+  },
+  "Button": {
+    "Save": "Speichern",
+    "Saving": "Speichern...",
+    "Success": "Gespeichert",
+    "Error": "Fehler beim Speichern"
+  },
   "Manifest": {
     "Title": "Manifest",
     "Description": "Passe die App-Informationen und das Favicon an.",
@@ -76,11 +93,7 @@
     "Favicon": "Favicon",
     "AdjustFavicon": "Favicon anpassen",
     "Cancel": "Abbrechen",
-    "CropSave": "Zuschneiden und speichern",
-    "Button": "Speichern",
-    "Saving": "Speichern...",
-    "Success": "Gespeichert",
-    "Error": "Fehler beim Speichern"
+    "CropSave": "Zuschneiden und speichern"
   },
   "LowFunds": {
     "Title": "Geringer Kontostand",
@@ -92,11 +105,7 @@
     "Image": "Bild",
     "AdjustImage": "Bild anpassen",
     "Cancel": "Abbrechen",
-    "CropSave": "Zuschneiden und speichern",
-    "Button": "Speichern",
-    "Saving": "Speichern...",
-    "Success": "Gespeichert",
-    "Error": "Fehler beim Speichern"
+    "CropSave": "Zuschneiden und speichern"
   },
   "Restore": {
     "Title": "Daten wiederherstellen",

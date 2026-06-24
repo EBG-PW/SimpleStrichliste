@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="<%= language %>">
+<head>
+    <meta charset="utf-8">
+    <title><%= t('emails.ErrorReport.subject', { application }) %></title>
+</head>
+<body>
+    <p><%= t('emails.greeting', { name }) %></p>
+    <p><%= t('emails.ErrorReport.body', { count: errors.length }) %></p>
+    <ul>
+        <% errors.forEach((entry) => { %>
+            <li>
+                <strong><%= entry.timestamp %></strong>:
+                <pre style="white-space: pre-wrap;"><%= entry.message %></pre>
+            </li>
+        <% }) %>
+    </ul>
+</body>
+</html>

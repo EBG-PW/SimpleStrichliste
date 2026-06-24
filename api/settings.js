@@ -35,7 +35,13 @@ const uploadHandler = multer({
 });
 
 const getSettingsToggleSchema = () => {
-    const settingKeys = ['USER_SHOPPINGLIST_ACTIVE', 'DB_AUTOVACUUM', 'LOW_FUNDS_WARNING'];
+    const settingKeys = [
+        'USER_SHOPPINGLIST_ACTIVE',
+        'DB_AUTOVACUUM',
+        'LOW_FUNDS_WARNING',
+        'ERROR_REPORTS_ACTIVE',
+        'LOW_STOCK_WARNING',
+    ];
     if (!isEBGOAuthEnabled()) settingKeys.unshift('REG_CODE_ACTIVE');
 
     return Joi.object({
@@ -86,6 +92,10 @@ router.get('/stats', verifyRequest('app.admin.stats.read'), limiter(1), async (r
     const dbSize = getDBSize();
     const systemStats = await getSystemStats();
     return res.json({ appversion, dbSize, systemStats });
+});
+
+const settingsLowStockSchema = Joi.object({
+    LOW_STOCK_PERCENT: Joi.number().min(0).max(100).required(),
 });
 
 router.get('/logs', verifyRequest('app.admin.stats.read'), limiter(5), async (req, res) => {
@@ -154,6 +164,12 @@ router.put('/lowFunds', verifyRequest('app.admin.settings.write'), parseMultipar
     await updateSetting('LOW_FUNDS_RESETTIME', body.LOW_FUNDS_RESETTIME.toString());
     await updateSetting('LOW_FUNDS_STRING', body.LOW_FUNDS_STRING);
 
+    res.status(200).json({ success: true });
+});
+
+router.put('/lowStock', verifyRequest('app.admin.settings.write'), limiter(10), async (req, res) => {
+    const body = await settingsLowStockSchema.validateAsync(req.body);
+    await updateSetting('LOW_STOCK_PERCENT', body.LOW_STOCK_PERCENT.toString());
     res.status(200).json({ success: true });
 });
 
