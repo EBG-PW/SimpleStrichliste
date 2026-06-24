@@ -4,6 +4,7 @@ const { PermissionsError, InvalidLogin } = require('@lib/errors');
 const { mergePermissions, checkPermission } = require('@lib/permissions');
 const { addWebtoken } = require('@lib/cache');
 const { verifyRequest } = require('@middleware/verifyRequest');
+const { limiter } = require('@middleware/limiter');
 const Joi = require('@lib/sanitizer');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const crypto = require('node:crypto');
@@ -22,7 +23,7 @@ const loginSchema = Joi.object({
     password: Joi.string().min(8).max(56).required(),
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', limiter(5), async (req, res) => {
     if (isEBGOAuthEnabled()) {
         return res.status(403).json({ message: 'OAuth login is enabled' });
     }
