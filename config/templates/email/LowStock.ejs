@@ -14,7 +14,7 @@
     <% if (trend && trend.averagePerDay > 0) { %>
         <p><%= t('emails.LowStock.estimate', {
             averagePerDay: trend.averagePerDay,
-            days: trend.estimatedDaysRemaining
+            estimatedDuration
         }) %></p>
     <% } else { %>
         <p><%= t('emails.LowStock.noTrend') %></p>

@@ -34,8 +34,8 @@
             "body": "Ein Artikel ist unter den konfigurierten Warenbestand gefallen.",
             "item": "Artikel",
             "stock": "Bestand",
-            "estimate": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt reicht der Bestand noch {{days}} Tage.",
-            "estimateText": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt noch {{days}} Tage.",
+            "estimate": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt reicht der Bestand noch {{estimatedDuration}}.",
+            "estimateText": "Trend: Ø {{averagePerDay}} Stück pro Tag. Geschätzt noch {{estimatedDuration}}.",
             "noTrend": "Noch kein Verkaufs-Trend vorhanden.",
             "noTrendText": "Noch kein Verkaufs-Trend vorhanden."
         },

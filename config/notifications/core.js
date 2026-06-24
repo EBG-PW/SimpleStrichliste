@@ -90,10 +90,13 @@ module.exports = [
                 buildContext: (task) => {
                     const context = JSON.parse(task.custom_message);
                     const estimatedDays = context.trend?.estimatedDaysRemaining;
+                    const estimatedDuration = estimatedDays
+                        ? `ca. ${estimatedDays} ${estimatedDays === 1 ? 'Tag' : 'Tage'}`
+                        : 'Trend unbekannt';
                     return {
                         ...context,
                         itemName: context.item?.name || '',
-                        estimatedDuration: estimatedDays ? `ca. ${estimatedDays} Tage` : 'Trend unbekannt',
+                        estimatedDuration,
                     };
                 },
                 buildText: (context) => [
@@ -104,7 +107,7 @@ module.exports = [
                     context.trend?.averagePerDay > 0
                         ? context.t('emails.LowStock.estimateText', {
                             averagePerDay: context.trend.averagePerDay,
-                            days: context.trend.estimatedDaysRemaining,
+                            estimatedDuration: context.estimatedDuration,
                         })
                         : context.t('emails.LowStock.noTrendText'),
                     '',
