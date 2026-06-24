@@ -15,6 +15,12 @@
     "SystemPurchase": "Kauf von Artikel(n)",
     "AuthorizedBy": "Autorisiert von {{name}} um {{time}}",
     "GroupByDay": "Nach Tag gruppieren",
+    "Refund": "Rückerstatten",
+    "Refunded": "Rückerstattet",
+    "RefundModalTitle": "Rückerstattung bestätigen",
+    "RefundConfirm": "Möchtest du diese Transaktion wirklich rückerstatten?",
+    "RefundSuccess": "Rückerstattung erfolgreich.",
+    "RefundError": "Rückerstattung fehlgeschlagen.",
     "Sale": "Angebot",
     "Discounts": {
         "Manage": "Rabatte benachrichtigen",

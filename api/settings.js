@@ -41,6 +41,7 @@ const getSettingsToggleSchema = () => {
         'LOW_FUNDS_WARNING',
         'ERROR_REPORTS_ACTIVE',
         'LOW_STOCK_WARNING',
+        'AUTO_REFUNDS_ACTIVE',
     ];
     if (!isEBGOAuthEnabled()) settingKeys.unshift('REG_CODE_ACTIVE');
 
@@ -96,6 +97,10 @@ router.get('/stats', verifyRequest('app.admin.stats.read'), limiter(1), async (r
 
 const settingsLowStockSchema = Joi.object({
     LOW_STOCK_PERCENT: Joi.number().min(0).max(100).required(),
+});
+
+const settingsRefundsSchema = Joi.object({
+    AUTO_REFUNDS_MINUTES: Joi.number().integer().min(1).max(10080).required(),
 });
 
 router.get('/logs', verifyRequest('app.admin.stats.read'), limiter(5), async (req, res) => {
@@ -170,6 +175,12 @@ router.put('/lowFunds', verifyRequest('app.admin.settings.write'), parseMultipar
 router.put('/lowStock', verifyRequest('app.admin.settings.write'), limiter(10), async (req, res) => {
     const body = await settingsLowStockSchema.validateAsync(req.body);
     await updateSetting('LOW_STOCK_PERCENT', body.LOW_STOCK_PERCENT.toString());
+    res.status(200).json({ success: true });
+});
+
+router.put('/refunds', verifyRequest('app.admin.settings.write'), limiter(10), async (req, res) => {
+    const body = await settingsRefundsSchema.validateAsync(req.body);
+    await updateSetting('AUTO_REFUNDS_MINUTES', body.AUTO_REFUNDS_MINUTES.toString());
     res.status(200).json({ success: true });
 });
 

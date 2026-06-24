@@ -198,7 +198,31 @@
                 </button>
               </form>
             </div>
+
           </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.Refunds.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="AdminSettings.Refunds.Description"></p>
+
+          <div class="flex items-center justify-between mb-4">
+            <span class="font-semibold text-gray-700" data-translate="AdminSettings.Refunds.ToggleLabel"></span>
+            <label for="auto-refunds-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" onchange="toggleSetting('AUTO_REFUNDS_ACTIVE')" id="auto-refunds-toggle" class="sr-only peer" />
+              <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+
+          <form id="refund-settings-form" class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div class="flex-grow">
+              <label for="auto-refunds-minutes" class="block text-sm font-medium text-gray-700" data-translate="AdminSettings.Refunds.Minutes"></label>
+              <input type="number" name="auto-refunds-minutes" id="auto-refunds-minutes" min="1" max="10080" class="mt-1 block w-full px-4 py-3 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed" required />
+            </div>
+            <button type="submit" id="refund-submit-button" class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-md font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+              <span data-translate="AdminSettings.Button.Save"></span>
+            </button>
+          </form>
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-6">
@@ -531,6 +555,7 @@
             if (!isOAuthEnabled) updateRegCodeButtonsState();
             updateLowFundsSettingsState();
             updateLowStockSettingsState();
+            updateRefundSettingsState();
           }
         } catch (error) {
           console.error("Error toggling setting:", error);
@@ -551,6 +576,7 @@
           document.getElementById("low-funds-toggle").checked = settings.find((s) => s.setting_key === "LOW_FUNDS_WARNING")?.setting_value === "true";
           document.getElementById("error-reports-toggle").checked = settings.find((s) => s.setting_key === "ERROR_REPORTS_ACTIVE")?.setting_value === "true";
           document.getElementById("low-stock-toggle").checked = settings.find((s) => s.setting_key === "LOW_STOCK_WARNING")?.setting_value === "true";
+          document.getElementById("auto-refunds-toggle").checked = settings.find((s) => s.setting_key === "AUTO_REFUNDS_ACTIVE")?.setting_value === "true";
           document.getElementById("app-name").value = settings.find((s) => s.setting_key === "APP_NAME")?.setting_value || "";
           document.getElementById("app-short-name").value = settings.find((s) => s.setting_key === "APP_SHORT_NAME")?.setting_value || "";
           document.getElementById("app-description").value = settings.find((s) => s.setting_key === "APP_DESCRIPTION")?.setting_value || "";
@@ -560,8 +586,10 @@
           document.getElementById("low-funds-resettime").value = settings.find((s) => s.setting_key === "LOW_FUNDS_RESETTIME")?.setting_value || "";
           document.getElementById("low-funds-string").value = settings.find((s) => s.setting_key === "LOW_FUNDS_STRING")?.setting_value || "";
           document.getElementById("low-stock-percent").value = settings.find((s) => s.setting_key === "LOW_STOCK_PERCENT")?.setting_value || "20";
+          document.getElementById("auto-refunds-minutes").value = settings.find((s) => s.setting_key === "AUTO_REFUNDS_MINUTES")?.setting_value || "10";
           updateLowFundsSettingsState();
           updateLowStockSettingsState();
+          updateRefundSettingsState();
         } catch (error) {
           console.error("Error fetching settings:", error);
         }
@@ -763,6 +791,43 @@
           submitButton.disabled = false;
           submitButton.innerHTML = originalButtonHTML;
           updateLowStockSettingsState();
+        }
+      }
+
+      async function handleRefundSubmit(event) {
+        event.preventDefault();
+
+        const submitButton = document.getElementById("refund-submit-button");
+        if (submitButton.disabled) return;
+
+        const originalButtonHTML = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Button.Saving")}</span>`;
+
+        try {
+          const response = await apiFetch("/api/v1/settings/refunds", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              AUTO_REFUNDS_MINUTES: document.getElementById("auto-refunds-minutes").value,
+            }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            showMessage(translateApiError(errorData, (field) => t(`AdminSettings.Refunds.${field}`)), "error");
+            return;
+          }
+
+          showMessage(t("AdminSettings.Button.Success"));
+        } catch (error) {
+          showMessage(t("AdminSettings.Button.Error"), "error");
+          console.error("Error saving refund settings:", error);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonHTML;
+          updateRefundSettingsState();
         }
       }
 
@@ -1112,18 +1177,35 @@
         lowStockForm.classList.toggle("opacity-50", !isActive);
       }
 
+      function updateRefundSettingsState() {
+        const refundToggle = document.getElementById("auto-refunds-toggle");
+        const refundForm = document.getElementById("refund-settings-form");
+        const refundInputs = [
+          document.getElementById("auto-refunds-minutes"),
+          document.getElementById("refund-submit-button"),
+        ];
+
+        const isActive = refundToggle.checked;
+        refundInputs.forEach((element) => {
+          element.disabled = !isActive;
+        });
+        refundForm.classList.toggle("opacity-50", !isActive);
+      }
+
       document.addEventListener("DOMContentLoaded", async () => {
         await loadSystemStats();
         await getSettings();
         if (!isOAuthEnabled) await updateRegCodeButtonsState();
         updateLowFundsSettingsState();
         updateLowStockSettingsState();
+        updateRefundSettingsState();
 
         document.getElementById("favicon").addEventListener("change", handleFaviconSelection);
         document.getElementById("manifest-settings-form").addEventListener("submit", handleManifestSubmit);
         document.getElementById("low-funds-image").addEventListener("change", handleLowFundsImageSelection);
         document.getElementById("low-funds-settings-form").addEventListener("submit", handleLowFundsSubmit);
         document.getElementById("low-stock-settings-form").addEventListener("submit", handleLowStockSubmit);
+        document.getElementById("refund-settings-form").addEventListener("submit", handleRefundSubmit);
         document.querySelectorAll(".system-log-filter").forEach((filter) => {
           filter.addEventListener("change", renderSystemLogs);
         });

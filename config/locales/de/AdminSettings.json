@@ -76,6 +76,13 @@
       "Percent": "Trigger in Prozent vom Zielbestand"
     }
   },
+  "Refunds": {
+    "Title": "Rückerstattungen",
+    "Description": "Erlaube Benutzern, eigene Transaktionen innerhalb eines Zeitfensters automatisch rückerstatten zu lassen.",
+    "ToggleLabel": "Automatische Rückerstattungen",
+    "Minutes": "Zeitfenster in Minuten",
+    "AUTO_REFUNDS_MINUTES": "Zeitfenster in Minuten"
+  },
   "Button": {
     "Save": "Speichern",
     "Saving": "Speichern...",

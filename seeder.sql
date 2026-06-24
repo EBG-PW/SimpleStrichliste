@@ -14,7 +14,9 @@ INSERT OR IGNORE INTO app_settings (setting_key, setting_value) VALUES
 ('LOW_FUNDS_STRING', 'Bitte lade dein Konto auf!'),
 ('ERROR_REPORTS_ACTIVE', 'false'),
 ('LOW_STOCK_WARNING', 'false'),
-('LOW_STOCK_PERCENT', '20');
+('LOW_STOCK_PERCENT', '20'),
+('AUTO_REFUNDS_ACTIVE', 'false'),
+('AUTO_REFUNDS_MINUTES', '10');
 
 INSERT OR IGNORE INTO item_categories (uuid, name, is_active) VALUES
 ('13620506-b9f8-44d7-a9ff-d1b58ddee93f', 'System', 2); -- 2 To Hide it

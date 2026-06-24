@@ -1,6 +1,6 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { getUserTransactionHistory, getAllTransactionHistory, getUserIdByUUID } = require('@lib/sqlite/users');
+const { getUserTransactionHistory, getAllTransactionHistory, getUserIdByUUID, refundTransaction } = require('@lib/sqlite/users');
 const Joi = require('@lib/sanitizer');
 const express = require('ultimate-express');
 const router = new express.Router();
@@ -18,6 +18,10 @@ const paginationSchema = Joi.object({
 
 const userUUIDSchema = Joi.object({
     uuid: Joi.string().uuid().required(),
+});
+
+const transactionIdSchema = Joi.object({
+    id: Joi.number().integer().min(1).required(),
 });
 
 router.get('/', verifyRequest('web.user.transactions.read'), limiter(4), async (req, res) => {
@@ -43,6 +47,28 @@ router.get('/user/:uuid', verifyRequest('web.admin.transactions.read'), limiter(
 
     const transactions = await getUserTransactionHistory(userId, query.limit, query.page, query.groupbyday);
     res.json({ transactions });
+});
+
+router.post('/:id/refund', verifyRequest('web.user.transactions.write'), limiter(2), async (req, res) => {
+    const params = await transactionIdSchema.validateAsync(req.params);
+    const result = refundTransaction(params.id, req.user.user_data.id);
+
+    if (!result.success) {
+        return res.status(result.status || 400).json({ error: result.error || 'Refund failed' });
+    }
+
+    return res.json({ success: true, refundedAmount: result.refundedAmount });
+});
+
+router.post('/admin/:id/refund', verifyRequest('web.admin.transactions.write'), limiter(2), async (req, res) => {
+    const params = await transactionIdSchema.validateAsync(req.params);
+    const result = refundTransaction(params.id, req.user.user_data.id, { force: true });
+
+    if (!result.success) {
+        return res.status(result.status || 400).json({ error: result.error || 'Refund failed' });
+    }
+
+    return res.json({ success: true, refundedAmount: result.refundedAmount });
 });
 
 module.exports = {
