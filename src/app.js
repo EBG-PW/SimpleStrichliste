@@ -5,6 +5,7 @@ const useragent = require('express-useragent');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const { performance } = require('node:perf_hooks');
 const { ViewRenderer } = require('@lib/template');
 const errorHandler = require('@middleware/errorhandler');
 const { getDBMigration } = require('@lib/sqlite/utils')
@@ -13,6 +14,7 @@ const { dbVersion } = require('@config/application');
 const { getManifest } = require('@lib/manifest');
 const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
+const { recordHttpRequestDuration } = require('@lib/sqlite/performanceStats');
 const { getStaticFilePath } = require('@lib/imageStore');
 const { getFeaturePublicFilePath } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
@@ -44,6 +46,30 @@ app.use((req, res, next) => {
         req.body = JSON.parse(req.body);
     }
     req.json = async () => req.body;
+    next();
+});
+
+const getMatchedRouteKey = (req) => {
+    const routePath = req.route?.path;
+    const baseUrl = String(req.baseUrl || '').trim();
+
+    if (typeof routePath === 'string' && routePath.length > 0) {
+        return `${baseUrl}${routePath}` || routePath;
+    }
+
+    if (Array.isArray(routePath) && routePath.length > 0) {
+        return `${baseUrl}${routePath[0]}` || routePath[0];
+    }
+
+    return String(req.originalUrl || req.url || req.path || '/').split('?')[0] || '/';
+};
+
+app.use((req, res, next) => {
+    const startTime = performance.now();
+    res.once('finish', () => {
+        if (!req.route) return;
+        recordHttpRequestDuration(getMatchedRouteKey(req), performance.now() - startTime);
+    });
     next();
 });
 

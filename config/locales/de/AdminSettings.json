@@ -9,10 +9,17 @@
     "MemRss": "Arbeitsspeicher (Gesamt)",
     "MemHeap": "Heap-Speicher (Nutzung/Gesamt)",
     "MemHeapExternalBuffer": "Speicher für C++ | Buffers",
-    "Storage": "Speicher"
+    "Storage": "Speicher",
+    "DBQueryStats": "DB-Query-Statistik",
+    "PageLoadStats": "Seitenlade-Statistik",
+    "HttpRequestStats": "HTTP-Request-Statistik",
+    "Requests": "Messungen",
+    "Routes": "Routen",
+    "NoPerformanceData": "Noch keine Performance-Daten vorhanden."
   },
   "Logs": {
     "Button": "Logs anzeigen",
+    "PerformanceButton": "Performance",
     "ModalTitle": "Systemlogs",
     "Filters": "Level",
     "Loading": "Lade Logs...",

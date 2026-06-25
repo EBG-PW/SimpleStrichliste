@@ -1,0 +1,33 @@
+{
+  "PageTitle": "Performance",
+  "Subtitle": "HTTP-Request-Dauer, DB-Query-Latenz und ein Sankey der API-Routen.",
+  "Summary": {
+    "Title": "Datenbank-Latenz",
+    "Description": "Tageswerte fuer DB-Queries. Die API-Route-Traffic-Grafik ist getrennt darunter.",
+    "DbMin": "Min",
+    "DbAvg": "Avg",
+    "DbP95": "P95",
+    "DbP99": "P99"
+  },
+  "Pages": {
+    "Title": "Top Seiten",
+    "Description": "Per Route gemessene Page-Load-Zeiten fuer die HTML-Seiten.",
+    "Empty": "Noch keine Seitenaufrufe fuer heute vorhanden."
+  },
+  "Sankey": {
+    "Title": "API-Request-Sankey",
+    "Description": "Breite = Anzahl der Requests pro Route-Pfad. Die Struktur folgt dem /api-Baum.",
+    "Empty": "Noch keine API-Requests fuer heute vorhanden.",
+    "Error": "Performance-Daten konnten nicht geladen werden."
+  },
+  "Table": {
+    "Title": "Top API-Routen",
+    "Description": "Antwortzeiten der API-Routen",
+    "Empty": "Noch keine API-Routen fuer heute vorhanden.",
+    "Route": "Route",
+    "Min": "Min",
+    "Avg": "Avg",
+    "P95": "P95",
+    "P99": "P99"
+  }
+}

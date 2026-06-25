@@ -64,12 +64,20 @@
             </svg>
             <h2 class="font-bold text-xl text-gray-800" id="StatsTitle" data-translate="AdminSettings.Stats.Title"></h2>
           </div>
-          <button id="show-system-logs-btn" onclick="showSystemLogsModal()" class="inline-flex items-center justify-center gap-2 bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M9 8h6m2 13H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
-            </svg>
-            <span data-translate="AdminSettings.Logs.Button"></span>
-          </button>
+          <div class="flex flex-wrap gap-2">
+            <button id="show-system-logs-btn" onclick="showSystemLogsModal()" class="inline-flex items-center justify-center gap-2 bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M9 8h6m2 13H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" />
+              </svg>
+              <span data-translate="AdminSettings.Logs.Button"></span>
+            </button>
+            <a href="/admin/performance" class="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-2 font-bold text-cyan-800 transition hover:bg-cyan-100">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5m0 14h16M8 17V9m4 8V7m4 10v-5" />
+              </svg>
+              <span data-translate="AdminSettings.Logs.PerformanceButton"></span>
+            </a>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 text-sm">
@@ -458,6 +466,22 @@
         return (log.level || "info").toLowerCase();
       }
 
+      function formatSystemLogTimestamp(log) {
+        if (Number.isFinite(Number(log.timestampMs))) {
+          return new Intl.DateTimeFormat(t("Page.LangKey"), {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            timeZoneName: "short",
+          }).format(new Date(log.timestampMs));
+        }
+
+        return log.timestamp || "";
+      }
+
       function renderSystemLogCounts() {
         const counts = systemLogs.reduce((acc, log) => {
           const level = getLogLevel(log);
@@ -494,7 +518,7 @@
 
           const timestamp = document.createElement("span");
           timestamp.className = "text-gray-400";
-          timestamp.textContent = log.timestamp || "";
+          timestamp.textContent = formatSystemLogTimestamp(log);
 
           const levelElement = document.createElement("span");
           levelElement.className = `font-bold uppercase ${logLevelClasses[level] || "text-gray-300"}`;
@@ -948,6 +972,7 @@
               storageContainer.appendChild(driveElement);
             });
           }
+
         } catch (error) {
           console.error("Error fetching system stats:", error);
         }

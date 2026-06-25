@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle" data-translate="AdminPerformance.PageTitle"></title>
+    <%- html_content.manifest %>
+    <script>
+      const lang = <%- JSON.stringify(language) %>;
+      const features = <%- JSON.stringify(features) %>;
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+    <style>
+      .metric-card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(249,250,251,0.95));
+      }
+    </style>
+  </head>
+
+  <body class="bg-slate-100 font-sans">
+    <%- html_content.navbar %>
+
+    <main class="container mx-auto p-4 md:p-6">
+      <header class="mb-6 flex items-center gap-4">
+        <a href="/admin/index" aria-label="Go back" class="text-gray-500 hover:text-gray-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900" data-translate="AdminPerformance.PageTitle"></h1>
+          <p class="text-sm text-gray-600 mt-1" data-translate="AdminPerformance.Subtitle"></p>
+        </div>
+      </header>
+
+      <section class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,0.9fr)]">
+        <div class="space-y-6">
+          <div class="rounded-2xl shadow-xl border border-white/60 bg-white/90 p-5 md:p-6 metric-card">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <h2 class="text-xl font-bold text-gray-900" data-translate="AdminPerformance.Summary.Title"></h2>
+                <p class="mt-1 text-sm text-gray-600" data-translate="AdminPerformance.Summary.Description"></p>
+              </div>
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[36rem]">
+                <div class="rounded-xl bg-slate-900 px-4 py-3 text-white">
+                  <div class="text-xs uppercase tracking-wide text-slate-300" data-translate="AdminPerformance.Summary.DbMin"></div>
+                  <div id="db-min" class="mt-1 font-mono text-lg font-semibold">...</div>
+                </div>
+                <div class="rounded-xl bg-slate-900 px-4 py-3 text-white">
+                  <div class="text-xs uppercase tracking-wide text-slate-300" data-translate="AdminPerformance.Summary.DbAvg"></div>
+                  <div id="db-avg" class="mt-1 font-mono text-lg font-semibold">...</div>
+                </div>
+                <div class="rounded-xl bg-slate-900 px-4 py-3 text-white">
+                  <div class="text-xs uppercase tracking-wide text-slate-300" data-translate="AdminPerformance.Summary.DbP95"></div>
+                  <div id="db-p95" class="mt-1 font-mono text-lg font-semibold">...</div>
+                </div>
+                <div class="rounded-xl bg-slate-900 px-4 py-3 text-white">
+                  <div class="text-xs uppercase tracking-wide text-slate-300" data-translate="AdminPerformance.Summary.DbP99"></div>
+                  <div id="db-p99" class="mt-1 font-mono text-lg font-semibold">...</div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 text-sm text-gray-600">
+              <span id="db-samples">...</span>
+              <span class="mx-2">&bull;</span>
+              <span id="api-samples">...</span>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-xl p-4 md:p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 class="text-xl font-bold text-gray-900" data-translate="AdminPerformance.Sankey.Title"></h2>
+                <p class="mt-1 text-sm text-gray-600" data-translate="AdminPerformance.Sankey.Description"></p>
+              </div>
+              <div id="sankey-note" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"></div>
+            </div>
+            <div class="mt-4">
+              <div class="relative h-[560px] w-full">
+                <canvas id="sankey" class="h-full w-full" role="img" aria-label="API Sankey diagram"></canvas>
+                <div id="sankey-empty" class="absolute inset-0 hidden items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="space-y-6">
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-xl p-4 md:p-6">
+            <h2 class="text-lg font-bold text-gray-900" data-translate="AdminPerformance.Pages.Title"></h2>
+            <p class="mt-1 text-sm text-gray-600" data-translate="AdminPerformance.Pages.Description"></p>
+            <div class="mt-4 overflow-hidden rounded-xl border border-slate-200">
+              <div class="grid grid-cols-[minmax(0,1fr)_repeat(4,minmax(5rem,0.8fr))] gap-2 bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+                <div data-translate="AdminPerformance.Table.Route"></div>
+                <div data-translate="AdminPerformance.Table.Min"></div>
+                <div data-translate="AdminPerformance.Table.Avg"></div>
+                <div data-translate="AdminPerformance.Table.P95"></div>
+                <div data-translate="AdminPerformance.Table.P99"></div>
+              </div>
+              <div id="page-routes" class="divide-y divide-slate-100"></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="mt-6 rounded-2xl border border-slate-200 bg-white shadow-xl p-4 md:p-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900" data-translate="AdminPerformance.Table.Title"></h2>
+            <p class="mt-1 text-sm text-gray-600" data-translate="AdminPerformance.Table.Description"></p>
+          </div>
+        </div>
+        <div class="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+          <div class="grid min-w-[76rem] grid-cols-[minmax(30rem,2.6fr)_repeat(4,minmax(8rem,0.7fr))] gap-2 bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200">
+            <div data-translate="AdminPerformance.Table.Route"></div>
+            <div data-translate="AdminPerformance.Table.Min"></div>
+            <div data-translate="AdminPerformance.Table.Avg"></div>
+            <div data-translate="AdminPerformance.Table.P95"></div>
+            <div data-translate="AdminPerformance.Table.P99"></div>
+          </div>
+          <div id="top-routes" class="divide-y divide-slate-100 min-w-[76rem]"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/chart.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/chart.sankey.js?<%= curentUnixTime %>"></script>
+    <script>
+      const state = {
+        performanceStats: null,
+        sankeyChart: null,
+      };
+
+      const colorPalette = [
+        "#0f172a",
+        "#2563eb",
+        "#059669",
+        "#7c3aed",
+        "#dc2626",
+        "#d97706",
+        "#0891b2",
+        "#4f46e5",
+      ];
+
+      const formatMs = (value) => {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return "N/A";
+        return `${number.toFixed(number >= 10 ? 1 : 2)} ms`;
+      };
+
+      const formatCount = (value) => new Intl.NumberFormat(t("Page.LangKey")).format(Number(value) || 0);
+
+      function setText(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.textContent = value;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function renderMetricRows(containerId, rows, emptyLabel, gridClass = "grid grid-cols-[minmax(0,1fr)_repeat(4,minmax(5rem,0.8fr))]") {
+        const container = document.getElementById(containerId);
+        const list = Array.isArray(rows) ? rows : [];
+
+        if (!container) return;
+
+        if (!list.length) {
+          container.innerHTML = `<div class="px-3 py-4 text-sm text-slate-500">${escapeHtml(emptyLabel)}</div>`;
+          return;
+        }
+
+        container.innerHTML = list.map((row) => `
+          <div class="${gridClass} gap-2 px-3 py-2 text-sm">
+            <div class="break-all font-mono text-slate-800" title="${escapeHtml(row.route)}">${escapeHtml(row.route)}</div>
+            <div class="font-mono text-slate-700">${formatMs(row.min_ms)}</div>
+            <div class="font-mono text-slate-700">${formatMs(row.avg_ms)}</div>
+            <div class="font-mono text-slate-700">${formatMs(row.p95_ms)}</div>
+            <div class="font-mono text-slate-700">${formatMs(row.p99_ms)}</div>
+          </div>
+        `).join("");
+      }
+
+      function renderTopRoutes(httpStats) {
+        const topRoutes = [...httpStats]
+          .filter((row) => String(row.route || "").startsWith("/api"))
+          .sort((a, b) => (Number(b.sample_count) || 0) - (Number(a.sample_count) || 0))
+          .slice(0, 12);
+        renderMetricRows(
+          "top-routes",
+          topRoutes,
+          t("AdminPerformance.Table.Empty"),
+          "grid grid-cols-[minmax(30rem,2.6fr)_repeat(4,minmax(8rem,0.7fr))]"
+        );
+      }
+
+      function renderPageRoutes(pageStats) {
+        const topPages = [...pageStats]
+          .sort((a, b) => (Number(b.sample_count) || 0) - (Number(a.sample_count) || 0))
+          .slice(0, 8);
+        renderMetricRows("page-routes", topPages, t("AdminPerformance.Pages.Empty"));
+      }
+
+      function getRouteLabel(route) {
+        const parts = String(route || "").split("/").filter(Boolean);
+        if (!parts.length) return "/";
+        if (parts.length <= 2) return `/${parts.join("/")}`;
+        return parts[parts.length - 1];
+      }
+
+      function buildSankeyData(httpStats) {
+        const routes = [...httpStats]
+          .map((row) => ({
+            route: String(row.route || "").trim(),
+            sample_count: Number(row.sample_count) || 0,
+          }))
+          .filter((row) => row.route.startsWith("/api") && row.sample_count > 0)
+          .sort((a, b) => (b.sample_count - a.sample_count) || a.route.localeCompare(b.route))
+          .slice(0, 24);
+
+        const labels = new Map();
+        const priority = {};
+        const column = {};
+        const totals = new Map();
+        const links = new Map();
+        const nodeSet = new Set();
+
+        const addLink = (from, to, flow) => {
+          if (!links.has(from)) {
+            links.set(from, new Map());
+          }
+          const targets = links.get(from);
+          targets.set(to, (targets.get(to) || 0) + flow);
+        };
+
+        const ensureNode = (node, depth) => {
+          if (!nodeSet.has(node)) {
+            nodeSet.add(node);
+            labels.set(node, node === "/api" ? "/api" : getRouteLabel(node));
+          }
+
+          const currentDepth = Number.isFinite(column[node]) ? column[node] : depth;
+          column[node] = Math.min(currentDepth, depth);
+        };
+
+        routes.forEach(({ route, sample_count }) => {
+          const parts = route.split("/").filter(Boolean);
+          const chain = [];
+
+          if (parts[0] !== "api") {
+            return;
+          }
+
+          chain.push("/api");
+          for (let index = 1; index < parts.length; index += 1) {
+            chain.push(`/api/${parts.slice(1, index + 1).join("/")}`);
+          }
+
+          chain.forEach((node, index) => {
+            ensureNode(node, index);
+            totals.set(node, (totals.get(node) || 0) + sample_count);
+            priority[node] = -(totals.get(node) || 0);
+            if (index > 0) {
+              addLink(chain[index - 1], node, sample_count);
+            }
+          });
+        });
+
+        const sankeyData = [];
+        links.forEach((targets, from) => {
+          targets.forEach((flow, to) => {
+            sankeyData.push({ from, to, flow });
+          });
+        });
+
+        sankeyData.sort((a, b) => (b.flow - a.flow) || a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
+
+        return {
+          sankeyData,
+          labels: Object.fromEntries(labels.entries()),
+          priority,
+          column,
+          routeCount: routes.length,
+        };
+      }
+
+      function destroySankeyChart() {
+        if (state.sankeyChart) {
+          state.sankeyChart.destroy();
+          state.sankeyChart = null;
+        }
+      }
+
+      function setSankeyEmptyState(message) {
+        const emptyState = document.getElementById("sankey-empty");
+        if (!emptyState) return;
+        emptyState.textContent = message;
+        emptyState.classList.remove("hidden");
+        emptyState.classList.add("flex");
+      }
+
+      function clearSankeyEmptyState() {
+        const emptyState = document.getElementById("sankey-empty");
+        if (!emptyState) return;
+        emptyState.textContent = "";
+        emptyState.classList.add("hidden");
+        emptyState.classList.remove("flex");
+      }
+
+      function renderSankey(performanceStats) {
+        const httpStats = Array.isArray(performanceStats?.httpRequestStats) ? performanceStats.httpRequestStats : [];
+        const pageStats = Array.isArray(performanceStats?.pageLoadStats) ? performanceStats.pageLoadStats : [];
+        const sankeyNote = document.getElementById("sankey-note");
+        const canvas = document.getElementById("sankey");
+        const apiStats = httpStats.filter((row) => String(row.route || "").startsWith("/api"));
+
+        destroySankeyChart();
+        renderPageRoutes(pageStats);
+        renderTopRoutes(httpStats);
+
+        if (!sankeyNote || !canvas) return;
+
+        if (!apiStats.length) {
+          sankeyNote.textContent = t("AdminPerformance.Sankey.Empty");
+          clearSankeyEmptyState();
+          setSankeyEmptyState(t("AdminPerformance.Sankey.Empty"));
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+
+        const { sankeyData, labels, priority, column, routeCount } = buildSankeyData(apiStats);
+        sankeyNote.textContent = `${formatCount(routeCount)} API routes`;
+        clearSankeyEmptyState();
+
+        const ctx = canvas.getContext("2d");
+        state.sankeyChart = new Chart(ctx, {
+          type: "sankey",
+          data: {
+            datasets: [{
+              label: t("AdminPerformance.Sankey.Title"),
+              data: sankeyData,
+              labels,
+              priority,
+              column,
+              size: "min",
+              colorMode: "gradient",
+              alpha: 0.6,
+              colorFrom: (context) => colorPalette[(String(context.raw?.from || "").length) % colorPalette.length],
+              colorTo: (context) => colorPalette[(String(context.raw?.to || "").length) % colorPalette.length],
+              hoverColorFrom: (context) => colorPalette[(String(context.raw?.from || "").length) % colorPalette.length],
+              hoverColorTo: (context) => colorPalette[(String(context.raw?.to || "").length) % colorPalette.length],
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+              padding: {
+                left: 16,
+                right: 16,
+                top: 8,
+                bottom: 8,
+              }
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const raw = context.raw || {};
+                    return `${raw.from || ""} -> ${raw.to || ""}: ${formatCount(raw.flow || 0)} requests`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      async function loadPerformance() {
+        const response = await apiFetch("/api/v1/performance?limit=200");
+        if (!response.ok) throw new Error("Failed to load performance stats");
+        const data = await response.json();
+        state.performanceStats = data.performanceStats || null;
+
+        const dbQueryStats = state.performanceStats?.dbQueryStats || null;
+        setText("db-min", formatMs(dbQueryStats?.min_ms));
+        setText("db-avg", formatMs(dbQueryStats?.avg_ms));
+        setText("db-p95", formatMs(dbQueryStats?.p95_ms));
+        setText("db-p99", formatMs(dbQueryStats?.p99_ms));
+        setText("db-samples", `${formatCount(dbQueryStats?.sample_count || 0)} DB queries`);
+        setText("api-samples", `${formatCount((state.performanceStats?.httpRequestStats || []).filter((row) => String(row.route || "").startsWith("/api")).length)} API routes`);
+        renderSankey(state.performanceStats);
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          await loadPerformance();
+        } catch (error) {
+          console.error("Error loading performance stats:", error);
+          setSankeyEmptyState(t("AdminPerformance.Sankey.Error"));
+          setText("sankey-note", t("AdminPerformance.Sankey.Error"));
+        }
+      });
+    </script>
+  </body>
+</html>
