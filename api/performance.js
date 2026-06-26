@@ -10,8 +10,8 @@ const PluginRequirements = [];
 const PluginVersion = '0.0.1';
 
 router.get('/', verifyRequest('app.admin.stats.read'), limiter(1), async (req, res) => {
-    const requestedLimit = Number(req.query?.limit) || 200;
-    const limit = Math.min(Math.max(requestedLimit, 10), 1000);
+    const requestedLimit = Number(req.query?.limit) || 1000;
+    const limit = Math.min(Math.max(requestedLimit, 10), 5000);
     const performanceStats = getPerformanceStats(limit, limit);
     return res.json({ performanceStats });
 });

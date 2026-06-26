@@ -16,13 +16,13 @@
   },
   "Sankey": {
     "Title": "API-Request-Sankey",
-    "Description": "Breite = Anzahl der Requests pro Route-Pfad. Die Struktur folgt dem /api-Baum.",
+    "Description": "Breite = Anzahl der Requests pro Route-Pfad. Die Struktur zeigt API- und Static-API-Routen.",
     "Empty": "Noch keine API-Requests fuer heute vorhanden.",
     "Error": "Performance-Daten konnten nicht geladen werden."
   },
   "Table": {
-    "Title": "Top API-Routen",
-    "Description": "Antwortzeiten der API-Routen",
+    "Title": "API-Routen Performance",
+    "Description": "Alle API- und Static-API-Routen, sortiert nach P99 absteigend.",
     "Empty": "Noch keine API-Routen fuer heute vorhanden.",
     "Route": "Route",
     "Min": "Min",
