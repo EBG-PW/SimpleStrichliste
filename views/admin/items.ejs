@@ -108,6 +108,9 @@
 
       const createItemCard = (item) => {
         const stockColor = item.stock < item.target_stock * 0.25 ? "text-red-500" : item.stock < item.target_stock * 0.5 ? "text-orange-500" : item.stock < item.target_stock * 0.75 ? "text-yellow-500" : "text-green-500";
+        const hasActiveDiscount = Number(item.is_discounted) === 1;
+        const displayPrice = hasActiveDiscount ? Number(item.discount_price) : Number(item.price);
+        const priceColor = hasActiveDiscount ? "text-red-600" : "text-green-600";
         return `
         <a href="/admin/${item.uuid}/edititems" class="block">
             <div class="item-card bg-white rounded-xl shadow-lg p-4 h-full flex items-center gap-4 transition-transform transform hover:scale-105">
@@ -116,7 +119,7 @@
                 <div class="flex-grow flex flex-col min-w-0"> <h3 class="font-bold text-lg text-gray-800 truncate">${item.name}</h3>
                     
                     <div class="mt-2 flex items-baseline gap-4 flex-wrap">
-                        <p class="text-green-600 font-semibold text-md">${item.price.toFixed(2).replace(".", ",")} €</p>
+                        <p class="${priceColor} font-semibold text-md">${displayPrice.toFixed(2).replace(".", ",")} €</p>
                         <p class="text-sm ${stockColor}">Lager: ${item.stock} / ${item.target_stock}</p>
                     </div>
                 </div>
