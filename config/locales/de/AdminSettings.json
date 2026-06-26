@@ -33,6 +33,18 @@
       "System": "System"
     }
   },
+  "Legal": {
+    "Button": "Rechtliche Seiten bearbeiten",
+    "ModalTitle": "Rechtliche Seiten",
+    "ImprintTab": "Impressum",
+    "PrivacyTab": "Datenschutz",
+    "EditorLabel": "HTML-Inhalt",
+    "PreviewLabel": "Vorschau",
+    "MessagePlaceholder": "<h2>Kontakt</h2><p>...</p>",
+    "EmptyPreview": "Keine Vorschau vorhanden.",
+    "imprintHtml": "Impressum",
+    "privacyHtml": "Datenschutz"
+  },
   "REGCode": {
     "Title": "Registrierungs Code",
     "Description": "Aktiviere diese Funktion wenn sich nur Benutzer mit diesem Code registrieren sollen.",

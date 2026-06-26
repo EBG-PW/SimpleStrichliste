@@ -122,6 +122,10 @@ module.exports = {
         "Error",
         "Page"
     ],
+    "/imprint": [
+        "Error",
+        "Page"
+    ],
     "/overview": [
         "Overview",
         "Error",
@@ -132,6 +136,10 @@ module.exports = {
     ],
     "/register": [
         "Setup",
+        "Error",
+        "Page"
+    ],
+    "/privacy": [
         "Error",
         "Page"
     ],

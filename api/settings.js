@@ -16,6 +16,8 @@ const { writefavicon, writeImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, verifyBufferIsJPGMaxDimensions, convertToWebp } = require('@lib/utils');
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
 const { generateManifest } = require('@lib/manifest');
+const { getLegalPages, saveLegalPages } = require('@lib/legalPages');
+const { ViewRenderer } = require('@lib/template');
 const { InvalidRouteInput } = require('@lib/errors');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const Joi = require('@lib/sanitizer');
@@ -104,8 +106,17 @@ const settingsRefundsSchema = Joi.object({
     AUTO_REFUNDS_MINUTES: Joi.number().integer().min(1).max(10080).required(),
 });
 
+const settingsLegalSchema = Joi.object({
+    imprintHtml: Joi.sanitizedString().allow('').max(250000).required(),
+    privacyHtml: Joi.sanitizedString().allow('').max(250000).required(),
+});
+
 router.get('/logs', verifyRequest('app.admin.stats.read'), limiter(5), async (req, res) => {
     return res.json({ logs: getMemoryLogs(), applicationTimeZone: getApplicationTimeZone() });
+});
+
+router.get('/legal', verifyRequest('app.admin.settings.read'), limiter(5), async (req, res) => {
+    return res.json(getLegalPages());
 });
 
 router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async (req, res) => {
@@ -182,6 +193,19 @@ router.put('/lowStock', verifyRequest('app.admin.settings.write'), limiter(10), 
 router.put('/refunds', verifyRequest('app.admin.settings.write'), limiter(10), async (req, res) => {
     const body = await settingsRefundsSchema.validateAsync(req.body);
     await updateSetting('AUTO_REFUNDS_MINUTES', body.AUTO_REFUNDS_MINUTES.toString());
+    res.status(200).json({ success: true });
+});
+
+router.put('/legal', verifyRequest('app.admin.settings.write'), limiter(10), async (req, res) => {
+    const body = await settingsLegalSchema.validateAsync(req.body);
+
+    saveLegalPages({
+        imprintHtml: body.imprintHtml,
+        privacyHtml: body.privacyHtml,
+    });
+
+    ViewRenderer.instance?.flushAllCachesAndRenderStaticPages();
+
     res.status(200).json({ success: true });
 });
 

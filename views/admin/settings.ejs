@@ -40,6 +40,15 @@
       #system-logs-modal-overlay.active #system-logs-modal-content {
         transform: scale(1);
       }
+
+      #legal-modal-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      #legal-modal-overlay.active #legal-modal-content {
+        transform: scale(1);
+      }
     </style>
   </head>
 
@@ -77,6 +86,11 @@
               </svg>
               <span data-translate="AdminSettings.Logs.PerformanceButton"></span>
             </a>
+            <button id="show-legal-editor-btn" onclick="showLegalModal()" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 transition hover:bg-emerald-100" data-translate-title="AdminSettings.Legal.Button" aria-label="Legal">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-7-8 3-7 3 7m-6 0h6m2 0 3-7 3 7m-6 0h6M8 21h8" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -381,6 +395,36 @@
         </div>
       </div>
 
+      <div id="legal-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 invisible opacity-0 transition-opacity duration-300">
+        <div id="legal-modal-content" class="bg-white rounded-xl shadow-2xl p-6 max-w-6xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto relative transform scale-95 transition-transform duration-300">
+          <button onclick="closeLegalModal()" class="absolute top-3 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+          <h2 class="text-2xl font-bold text-gray-800 mb-4 pr-8" data-translate="AdminSettings.Legal.ModalTitle"></h2>
+
+          <div class="mb-4 inline-flex rounded-lg border border-gray-200 bg-gray-100 p-1">
+            <button type="button" id="legal-tab-imprint" onclick="switchLegalDocument('imprint')" class="rounded-md px-4 py-2 text-sm font-semibold transition" data-translate="AdminSettings.Legal.ImprintTab"></button>
+            <button type="button" id="legal-tab-privacy" onclick="switchLegalDocument('privacy')" class="rounded-md px-4 py-2 text-sm font-semibold transition" data-translate="AdminSettings.Legal.PrivacyTab"></button>
+          </div>
+
+          <div class="grid min-h-0 gap-4 lg:grid-cols-2">
+            <div class="min-h-0">
+              <label for="legal-html-editor" class="block text-sm font-semibold text-gray-700" data-translate="AdminSettings.Legal.EditorLabel"></label>
+              <textarea id="legal-html-editor" class="mt-2 block h-[50vh] max-h-[32rem] min-h-[16rem] w-full resize-y rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 lg:h-[58vh]" data-translate-placeholder="AdminSettings.Legal.MessagePlaceholder"></textarea>
+            </div>
+            <div class="min-h-0">
+              <p class="block text-sm font-semibold text-gray-700" data-translate="AdminSettings.Legal.PreviewLabel"></p>
+              <div id="legal-preview" class="prose mt-2 h-[50vh] max-h-[32rem] min-h-[16rem] max-w-none overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-800 lg:h-[58vh]"></div>
+            </div>
+          </div>
+
+          <div class="mt-5 flex justify-end gap-3">
+            <button type="button" onclick="closeLegalModal()" class="rounded-md bg-gray-100 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-200" data-translate="AdminSettings.Manifest.Cancel"></button>
+            <button type="button" id="legal-save-button" onclick="saveLegalSettings()" class="rounded-md bg-indigo-600 px-5 py-2 font-semibold text-white hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+              <span data-translate="AdminSettings.Button.Save"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div id="favicon-cropper-modal" class="cropper-modal-container">
         <div class="cropper-modal-content">
           <h2 class="text-xl font-bold mb-4" data-translate="AdminSettings.Manifest.AdjustFavicon"></h2>
@@ -421,6 +465,11 @@
       let croppedLowFundsBlob = null;
       let systemLogs = [];
       let systemLogTimeZone = <%- JSON.stringify(applicationTimeZone) %>;
+      let activeLegalDocument = "imprint";
+      const legalSettings = {
+        imprint: "",
+        privacy: "",
+      };
 
       const logLevelClasses = {
         error: "text-red-300",
@@ -619,6 +668,19 @@
           updateRefundSettingsState();
         } catch (error) {
           console.error("Error fetching settings:", error);
+        }
+      }
+
+      async function loadLegalSettings() {
+        try {
+          const response = await apiFetch("/api/v1/settings/legal");
+          if (!response.ok) throw new Error("Network response was not ok");
+          const legalPages = await response.json();
+          legalSettings.imprint = legalPages.imprintHtml || "";
+          legalSettings.privacy = legalPages.privacyHtml || "";
+          syncLegalEditor();
+        } catch (error) {
+          console.error("Error fetching legal settings:", error);
         }
       }
 
@@ -855,6 +917,94 @@
           submitButton.disabled = false;
           submitButton.innerHTML = originalButtonHTML;
           updateRefundSettingsState();
+        }
+      }
+
+      function syncLegalEditor() {
+        const editor = document.getElementById("legal-html-editor");
+        if (!editor) return;
+
+        editor.value = legalSettings[activeLegalDocument] || "";
+        updateLegalTabs();
+        renderLegalPreview();
+      }
+
+      function updateLegalTabs() {
+        ["imprint", "privacy"].forEach((documentName) => {
+          const tab = document.getElementById(`legal-tab-${documentName}`);
+          if (!tab) return;
+
+          const isActive = documentName === activeLegalDocument;
+          tab.classList.toggle("bg-white", isActive);
+          tab.classList.toggle("text-gray-900", isActive);
+          tab.classList.toggle("shadow-sm", isActive);
+          tab.classList.toggle("text-gray-600", !isActive);
+        });
+      }
+
+      function renderLegalPreview() {
+        const preview = document.getElementById("legal-preview");
+        if (!preview) return;
+
+        const html = legalSettings[activeLegalDocument] || "";
+        preview.innerHTML = html || `<p class="text-gray-500">${t("AdminSettings.Legal.EmptyPreview")}</p>`;
+      }
+
+      function switchLegalDocument(documentName) {
+        const editor = document.getElementById("legal-html-editor");
+        if (editor) legalSettings[activeLegalDocument] = editor.value;
+        activeLegalDocument = documentName;
+        syncLegalEditor();
+      }
+
+      function showLegalModal() {
+        const modalOverlay = document.getElementById("legal-modal-overlay");
+        modalOverlay.classList.add("active");
+        syncLegalEditor();
+        document.getElementById("legal-html-editor").focus();
+      }
+
+      function closeLegalModal() {
+        const editor = document.getElementById("legal-html-editor");
+        if (editor) legalSettings[activeLegalDocument] = editor.value;
+        document.getElementById("legal-modal-overlay").classList.remove("active");
+      }
+
+      async function saveLegalSettings() {
+        const editor = document.getElementById("legal-html-editor");
+        const submitButton = document.getElementById("legal-save-button");
+        const originalButtonHTML = submitButton.innerHTML;
+        legalSettings[activeLegalDocument] = editor.value;
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<span>${t("AdminSettings.Button.Saving")}</span>`;
+
+        try {
+          const response = await apiFetch("/api/v1/settings/legal", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              imprintHtml: legalSettings.imprint,
+              privacyHtml: legalSettings.privacy,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            showMessage(translateApiError(errorData, (field) => t(`AdminSettings.Legal.${field}`)), "error");
+            return;
+          }
+
+          showMessage(t("AdminSettings.Button.Success"));
+          closeLegalModal();
+        } catch (error) {
+          showMessage(t("AdminSettings.Button.Error"), "error");
+          console.error("Error saving legal settings:", error);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonHTML;
         }
       }
 
@@ -1223,6 +1373,7 @@
       document.addEventListener("DOMContentLoaded", async () => {
         await loadSystemStats();
         await getSettings();
+        await loadLegalSettings();
         if (!isOAuthEnabled) await updateRegCodeButtonsState();
         updateLowFundsSettingsState();
         updateLowStockSettingsState();
@@ -1234,6 +1385,10 @@
         document.getElementById("low-funds-settings-form").addEventListener("submit", handleLowFundsSubmit);
         document.getElementById("low-stock-settings-form").addEventListener("submit", handleLowStockSubmit);
         document.getElementById("refund-settings-form").addEventListener("submit", handleRefundSubmit);
+        document.getElementById("legal-html-editor").addEventListener("input", (event) => {
+          legalSettings[activeLegalDocument] = event.target.value;
+          renderLegalPreview();
+        });
         document.querySelectorAll(".system-log-filter").forEach((filter) => {
           filter.addEventListener("change", renderSystemLogs);
         });
