@@ -1,7 +1,7 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
 const { removeWebtoken, removeWebtokenFromCache } = require('@lib/cache');
-const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
+const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updateUserEmail, updateUserLanguage, updateUserName, updateUserPageSize, updateUserPassword, updateUserUserName } = require('@lib/sqlite/users');
 const { getUserNotifications, setUserNotificationState } = require('@lib/sqlite/userNotifications');
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
@@ -51,6 +51,10 @@ const userPasswordSchema = Joi.object({
 
 const userLanguageSchema = Joi.object({
     language: Joi.fullysanitizedString().min(2).max(2).required()
+});
+
+const userPageSizeSchema = Joi.object({
+    pageSize: Joi.number().integer().valid(5, 10, 20, 50).required()
 });
 
 const notificationStateSchema = Joi.object({
@@ -195,6 +199,15 @@ router.put('/language', verifyRequest('app.user.settings.language.write'), limit
     await updateUserLanguage(user_id, body.language);
     removeWebtokenFromCache(req.authorization);
     return res.json({ message: 'Language updated successfully' });
+});
+
+router.put('/pageSize', verifyRequest('app.user.settings.pageSize.write'), limiter(10), async (req, res) => {
+    const body = await userPageSizeSchema.validateAsync(req.body);
+    const user_id = req.user.user_data.id;
+
+    await updateUserPageSize(user_id, body.pageSize);
+    removeWebtokenFromCache(req.authorization);
+    return res.json({ message: 'Page size updated successfully' });
 });
 
 router.put('/notifications/:key/:type', verifyRequest('app.user.settings.email.write'), limiter(10), async (req, res) => {

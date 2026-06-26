@@ -74,6 +74,15 @@
                     </select>
                   </div>
                 </div>
+                <div>
+                  <label for="pageSize" class="block text-sm font-medium text-gray-700 light:text-gray-200" data-translate="Settings.Form.PageSize"></label>
+                  <select id="pageSize" onchange="updateProfileField(this.id, this.value)" name="pageSize" class="mt-1 block w-full rounded-lg border border-gray-400 bg-gray-100 px-4 py-3 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm light:bg-gray-700 light:border-gray-500 light:text-white">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
               </form>
             </div>
           </div>
@@ -130,6 +139,7 @@
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/appjs/userPreferences.js?<%= curentUnixTime %>"></script>
     <script>
       // --- DOM Elements ---
       const profileForm = document.getElementById("profile-form");
@@ -142,6 +152,7 @@
       const newPasswordInput = document.getElementById("new-password");
       const confirmPasswordInput = document.getElementById("confirm-password");
       const languageSelect = document.getElementById("language");
+      const pageSizeSelect = document.getElementById("pageSize");
       const saveButton = document.getElementById("save-button");
       const loadingSpinner = document.getElementById("loading-spinner");
       const formContainer = document.getElementById("profile-form-container");
@@ -212,6 +223,7 @@
           nameInput.value = user.name;
           emailInput.value = user.email;
           languageSelect.value = user.language;
+          pageSizeSelect.value = normalizePageSize(user.page_size);
           renderNotificationSettings(user.notificationSettings || []);
 
           loadingSpinner.classList.add("hidden");
@@ -249,8 +261,14 @@
               window.location.reload();
               return;
             }
+            if (field === "pageSize") {
+              cachePreferredPageSize(value);
+            }
 
-            showMessage(i18next.t("Settings.SettingsUpdatedSuccess", { Setting: i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`) }));
+            const fieldLabel = field === "pageSize"
+              ? i18next.t("Settings.Form.PageSize")
+              : i18next.t(`Setup.Form.${field.charAt(0).toUpperCase() + field.slice(1)}`);
+            showMessage(i18next.t("Settings.SettingsUpdatedSuccess", { Setting: fieldLabel }));
             inputField.classList.add("ring-2", "ring-green-500");
 
             setTimeout(() => {

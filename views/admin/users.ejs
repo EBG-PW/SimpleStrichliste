@@ -83,15 +83,6 @@
             </div>
             <input type="text" id="search-input" onkeyup="handleSearch(event)" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search for users..." data-translate-placeholder="AdminUsers.SearchPlaceholder" />
           </div>
-          <label class="flex items-center justify-between gap-3 text-sm text-gray-700 md:justify-start">
-            <span data-translate="AdminUsers.Pagination.PageSizeLabel"></span>
-            <select id="page-size-select" onchange="handlePageSizeChange(event)" class="block w-24 rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-            </select>
-          </label>
         </div>
 
         <div class="overflow-x-auto">
@@ -157,6 +148,7 @@
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/appjs/userPreferences.js?<%= curentUnixTime %>"></script>
     <script>
       let searchQuery = "",
         sortColumn = "name",
@@ -167,7 +159,7 @@
       let currentPage = 1,
         totalPages = 1,
         totalUsers = 0;
-      let usersPerPage = 5;
+      let usersPerPage = DEFAULT_PAGE_SIZE;
 
       function formatCurrency(amount) {
         return new Intl.NumberFormat(lang, { style: "currency", currency: "EUR" }).format(amount);
@@ -366,11 +358,6 @@
         goToPage(1);
       }
 
-      function handlePageSizeChange(event) {
-        usersPerPage = parseInt(event.target.value, 10) || 5;
-        goToPage(1);
-      }
-
       function goToPage(pageNumber) {
         if (pageNumber < 1) return;
         currentPage = pageNumber;
@@ -450,7 +437,10 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", fetchUsers);
+      document.addEventListener("DOMContentLoaded", async () => {
+        usersPerPage = await getPreferredPageSize();
+        fetchUsers();
+      });
     </script>
   </body>
 </html>

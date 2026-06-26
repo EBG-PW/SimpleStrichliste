@@ -5,6 +5,14 @@ const { removeWebtoken, IPLimit, IPCheck } = require('@lib/cache');
 const { InvalidToken, TooManyRequests, PermissionsError } = require('@lib/errors');
 const Joi = require('joi');
 
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
+const DEFAULT_PAGE_SIZE = 20;
+
+const normalizePageSize = (value) => {
+    const pageSize = Number.parseInt(value, 10);
+    return PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : DEFAULT_PAGE_SIZE;
+};
+
 /**
  * Async function to verify the request based on the given permission. User data will be added to the request. (req.user)
  * @param {String} permission 
@@ -57,8 +65,12 @@ const verifyRequest = (permission) => {
             }
 
             // Add the user data to the request
+            WebTokenResponse.Data.user_data.page_size = normalizePageSize(WebTokenResponse.Data.user_data.page_size);
             req.user = WebTokenResponse.Data;
             req.authorization = UserToken;
+            req.pagination = {
+                pageSize: WebTokenResponse.Data.user_data.page_size,
+            };
             return next();
 
         } catch (error) {
@@ -72,5 +84,6 @@ const verifyRequest = (permission) => {
 };
 
 module.exports = {
-    verifyRequest
+    verifyRequest,
+    normalizePageSize
 };

@@ -90,8 +90,9 @@
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/appjs/userPreferences.js?<%= curentUnixTime %>"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         const transactionsContainer = document.getElementById("transactions-container");
         const loadingIndicator = document.getElementById("loading-indicator");
         const groupByDayToggle = document.getElementById('groupByDayToggle');
@@ -105,7 +106,7 @@
         }
 
         let currentPage = 1;
-        const ITEMS_PER_PAGE = 20;
+        const itemsPerPage = await getPreferredPageSize();
         let isLoading = false;
         let hasMoreData = true;
         let groupByDay = localStorage.getItem('groupByDay') === 'true';
@@ -286,7 +287,7 @@
             const endpoint = selectedUserUuid
               ? `/api/v1/transactions/user/${encodeURIComponent(selectedUserUuid)}`
               : "/api/v1/transactions/all";
-            const response = await apiFetch(`${endpoint}?page=${currentPage}&limit=${ITEMS_PER_PAGE}&groupbyday=${groupByDay}`);
+            const response = await apiFetch(`${endpoint}?page=${currentPage}&limit=${itemsPerPage}&groupbyday=${groupByDay}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const result = await response.json();
@@ -309,7 +310,7 @@
               return;
             }
 
-            if (newTransactions.length < ITEMS_PER_PAGE) {
+            if (newTransactions.length < itemsPerPage) {
               hasMoreData = false;
             }
 

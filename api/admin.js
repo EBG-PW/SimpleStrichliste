@@ -21,7 +21,7 @@ const getUserDataTableSchema = Joi.object({
   sort: Joi.string().valid('name', 'username', 'user_role', 'balance').default('name'),
   dir: Joi.string().valid('asc', 'desc').default('asc'),
   page: Joi.number().min(1).max(10000).default(1),
-  limit: Joi.number().min(1).max(50).default(5)
+  limit: Joi.number().min(1).max(50).optional()
 });
 
 const updateUserBalanceSchema = Joi.object({
@@ -156,14 +156,15 @@ router.delete('/user/:uuid', verifyRequest('app.admin.users.write'), limiter(10)
 
 router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async (req, res) => {
     const query = await getUserDataTableSchema.validateAsync(req.query);
+    const limit = query.limit || req.pagination.pageSize;
 
-    const users = await getUsers(query.search, query.sort, query.dir, query.page, query.limit);
+    const users = await getUsers(query.search, query.sort, query.dir, query.page, limit);
     const totalUsers = await countUsers(query.search);
 
     const result = {
         data: users,
         pagination: {
-            totalPages: Math.ceil(totalUsers / query.limit),
+            totalPages: Math.ceil(totalUsers / limit),
             totalItems: totalUsers
         }
     }

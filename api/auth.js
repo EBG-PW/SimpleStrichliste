@@ -50,7 +50,7 @@ router.post('/login', limiter(5), async (req, res) => {
     delete user.password_hash; // Remove the password hash from the user object
     addWebtoken(newtoken, user, Formated_Permissions, req.useragent?.browser || req.ip); // Add the token to the cache and SQLite
 
-    return res.json({ token: newtoken, uuid: user.uuid, name: user.name, email: user.email, username: user.username, permissions: Formated_Permissions, language: user.language });
+    return res.json({ token: newtoken, uuid: user.uuid, name: user.name, email: user.email, username: user.username, permissions: Formated_Permissions, language: user.language, pageSize: user.page_size });
 });
 
 router.post('/check', verifyRequest('app.web.login'), async (req, res) => {
@@ -60,7 +60,8 @@ router.post('/check', verifyRequest('app.web.login'), async (req, res) => {
         email: req.user.user_data.email,
         username: req.user.user_data.username,
         permissions: req.user.permissions,
-        language: req.user.user_data.language });
+        language: req.user.user_data.language,
+        pageSize: req.pagination.pageSize });
 });
 
 module.exports = {

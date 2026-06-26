@@ -18,7 +18,7 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const paginationSchema = Joi.object({
-    limit: Joi.number().integer().min(1).max(100).default(10),
+    limit: Joi.number().integer().min(1).max(100).optional(),
     page: Joi.number().integer().min(1).default(1)
 });
 
@@ -64,7 +64,8 @@ router.get('/balance', verifyRequest('web.user.store.read'), limiter(1), async (
 router.get('/categorie/:categoryName', verifyRequest('web.user.items.read'), limiter(1), async (req, res) => {
     const categoryName = await Joi.string().valid(...Object.keys(gategories_conf)).validateAsync(req.params.categoryName);
     const query = await paginationSchema.validateAsync(req.query);
-    const items = await getItemsByCategory(categoryName, query.limit, query.page);
+    const limit = query.limit || req.pagination.pageSize;
+    const items = await getItemsByCategory(categoryName, limit, query.page);
     res.json(items);
 });
 

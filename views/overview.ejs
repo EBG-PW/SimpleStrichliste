@@ -200,6 +200,7 @@
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/appjs/userPreferences.js?<%= curentUnixTime %>"></script>
     <script>
       // ---- Bottom Navigation Bar Class ----
       class BottomNavBar {
@@ -278,9 +279,9 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         const mainContainer = document.getElementById("main-content-container");
-        const ITEMS_PER_PAGE = 10;
+        const itemsPerPage = await getPreferredPageSize();
         let itemCache = {};
 
         let restockingItemsData = [];
@@ -649,7 +650,7 @@
             if (!listElement || listElement.dataset.loading === "true" || listElement.dataset.hasMore === "false") return;
             listElement.dataset.loading = "true";
             try {
-              const response = await apiFetch(`/api/v1/store/categorie/${category}?page=${page}&limit=${ITEMS_PER_PAGE}`);
+              const response = await apiFetch(`/api/v1/store/categorie/${category}?page=${page}&limit=${itemsPerPage}`);
               const items = await response.json();
               items.forEach((item) => (itemCache[item.uuid] = item));
               const sortedItems = sortItems(items);
@@ -659,7 +660,7 @@
                 });
                 listElement.dataset.page = page + 1;
               }
-              if (items.length < ITEMS_PER_PAGE) {
+              if (items.length < itemsPerPage) {
                 listElement.dataset.hasMore = "false";
               }
             } catch (error) {

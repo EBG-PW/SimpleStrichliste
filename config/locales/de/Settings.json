@@ -7,7 +7,8 @@
         "PasswordDescription": "Aktualisiere dein Passwort auf ein neues.",
         "CurrentPassword": "Aktuelles Passwort",
         "NewPassword": "Neues Passwort",
-        "ConfirmPassword": "Passwort bestätigen"
+        "ConfirmPassword": "Passwort bestätigen",
+        "PageSize": "Einträge pro Seite"
     },
     "Button": {
         "Password": "Passwort ändern",

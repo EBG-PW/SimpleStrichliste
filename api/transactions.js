@@ -11,7 +11,7 @@ const PluginRequirements = []; //Put your Requirements and version here <Name, n
 const PluginVersion = '0.0.1'; //This plugins version
 
 const paginationSchema = Joi.object({
-    limit: Joi.number().integer().min(1).max(100).default(10),
+    limit: Joi.number().integer().min(1).max(100).optional(),
     page: Joi.number().integer().min(1).default(1),
     groupbyday: Joi.boolean().default(false),
 });
@@ -26,26 +26,29 @@ const transactionIdSchema = Joi.object({
 
 router.get('/', verifyRequest('web.user.transactions.read'), limiter(4), async (req, res) => {
     const query = await paginationSchema.validateAsync(req.query);
-    const transactions = await getUserTransactionHistory(req.user.user_data.id, query.limit, query.page, query.groupbyday);
+    const limit = query.limit || req.pagination.pageSize;
+    const transactions = await getUserTransactionHistory(req.user.user_data.id, limit, query.page, query.groupbyday);
     res.json({ transactions });
 });
 
 router.get('/all', verifyRequest('web.admin.transactions.read'), limiter(4), async (req, res) => {
     const query = await paginationSchema.validateAsync(req.query);
-    const transactions = await getAllTransactionHistory(query.limit, query.page, query.groupbyday);
+    const limit = query.limit || req.pagination.pageSize;
+    const transactions = await getAllTransactionHistory(limit, query.page, query.groupbyday);
     res.json({ transactions });
 });
 
 router.get('/user/:uuid', verifyRequest('web.admin.transactions.read'), limiter(4), async (req, res) => {
     const params = await userUUIDSchema.validateAsync(req.params);
     const query = await paginationSchema.validateAsync(req.query);
+    const limit = query.limit || req.pagination.pageSize;
     const userId = await getUserIdByUUID(params.uuid);
 
     if (!userId) {
         return res.status(404).json({ error: 'User not found' });
     }
 
-    const transactions = await getUserTransactionHistory(userId, query.limit, query.page, query.groupbyday);
+    const transactions = await getUserTransactionHistory(userId, limit, query.page, query.groupbyday);
     res.json({ transactions });
 });
 

@@ -26,7 +26,7 @@ const searchSchema = Joi.object({
 const buyerSearchSchema = Joi.object({
     search: Joi.fullysanitizedString().allow('').max(100).default(''),
     page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(100).default(20),
+    limit: Joi.number().integer().min(1).max(100).optional(),
 });
 
 const newItemSchema = Joi.object({
@@ -114,11 +114,12 @@ router.get('/grouped', verifyRequest('web.admin.items.read'), limiter(4), async 
 router.get('/buyers/:uuid', verifyRequest('web.admin.items.read'), limiter(4), async (req, res) => {
     const params = await validateUUID.validateAsync(req.params);
     const query = await buyerSearchSchema.validateAsync(req.query);
+    const limit = query.limit || req.pagination.pageSize;
     const item = await getItemByUUID(params.uuid);
 
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
-    const { buyers, total } = getItemBuyers(params.uuid, query.search, query.page, query.limit);
+    const { buyers, total } = getItemBuyers(params.uuid, query.search, query.page, limit);
     res.json({
         item: {
             uuid: item.uuid,
@@ -127,9 +128,9 @@ router.get('/buyers/:uuid', verifyRequest('web.admin.items.read'), limiter(4), a
         buyers,
         pagination: {
             page: query.page,
-            limit: query.limit,
+            limit,
             total,
-            totalPages: Math.ceil(total / query.limit),
+            totalPages: Math.ceil(total / limit),
         },
     });
 });

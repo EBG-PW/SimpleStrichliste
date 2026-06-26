@@ -48,15 +48,16 @@
 
     <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
     <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/appjs/userPreferences.js?<%= curentUnixTime %>"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         const buyersList = document.getElementById("buyers-list");
         const searchInput = document.getElementById("buyer-search");
         const pagination = document.getElementById("pagination");
         const previousButton = document.getElementById("previous-page");
         const nextButton = document.getElementById("next-page");
         const pageInfo = document.getElementById("page-info");
-        const pageSize = 20;
+        const pageSize = await getPreferredPageSize();
         let currentPage = 1;
         let searchTimer;
 

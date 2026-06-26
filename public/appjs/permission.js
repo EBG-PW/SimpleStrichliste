@@ -80,6 +80,7 @@ const checkSession = async () => {
     localStorage.setItem("email", responseData.email);
     localStorage.setItem("permissions", JSON.stringify(responseData.permissions));
     localStorage.setItem("language", responseData.language);
+    localStorage.setItem("pageSize", responseData.pageSize);
 
     if (window.location.href.includes("login")) window.location.href = "/overview";
   } else {
@@ -89,6 +90,7 @@ const checkSession = async () => {
     localStorage.removeItem("email");
     localStorage.removeItem("permissions");
     localStorage.removeItem("language");
+    localStorage.removeItem("pageSize");
     // if(!window.location.href.includes("login") && !window.location.href.includes("register") && !window.location.href.includes("passwordreset")) window.location.href = "/login";
     throw new Error(response.statusText);
   }
@@ -125,4 +127,4 @@ const apiFetch = (url, options = {}) => {
   });
 };
 
-checkSession();
+window.sessionCheckPromise = checkSession();

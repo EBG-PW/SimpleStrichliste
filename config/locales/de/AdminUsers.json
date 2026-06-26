@@ -28,7 +28,6 @@
         "Deleting": "Benutzer wird gelöscht..."
     },
     "Pagination": {
-        "PageSizeLabel": "Pro Seite",
         "PageInfo": "Nutzer {{startUser}} bis {{endUser}} von {{totalUsers}}"
     }
 }
