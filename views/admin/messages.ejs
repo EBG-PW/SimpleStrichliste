@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle" data-translate="AdminUsers.Messages.PageTitle"></title>
+    <%- html_content.manifest %>
+    <script>
+      const lang = <%- JSON.stringify(language) %>;
+      const features = <%- JSON.stringify(features) %>;
+    </script>
+    <script src="<%= domain %>/libjs/i18next.js?<%= curentUnixTime %>"></script>
+    <script src="<%= domain %>/libjs/tailwind.js?<%= curentUnixTime %>"></script>
+  </head>
+  <body class="bg-gray-100">
+    <%- html_content.navbar %>
+
+    <main class="container mx-auto p-4 md:p-6">
+      <header class="mb-6 flex items-center">
+        <a href="/admin/users" aria-label="Go back" class="mr-4 text-gray-500 hover:text-gray-800">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800 md:text-3xl" data-translate="AdminUsers.Messages.PageTitle"></h1>
+      </header>
+
+      <section class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.85fr)]">
+        <div class="rounded-xl bg-white p-6 shadow-lg">
+          <label for="message-input" class="block text-sm font-medium text-gray-700" data-translate="AdminUsers.Messages.MessageLabel"></label>
+          <textarea
+            id="message-input"
+            rows="18"
+            class="mt-2 block min-h-[24rem] w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm leading-6 focus:border-indigo-500 focus:ring-indigo-500"
+            data-translate-placeholder="AdminUsers.Messages.MessagePlaceholder"
+          ></textarea>
+        </div>
+
+        <div class="space-y-6">
+          <div class="rounded-xl bg-white p-6 shadow-lg">
+            <h2 class="text-lg font-semibold text-gray-900" data-translate="AdminUsers.Messages.PreviewTitle"></h2>
+            <iframe id="message-preview" sandbox="" class="mt-4 h-80 w-full rounded-lg border border-gray-200 bg-white"></iframe>
+          </div>
+
+          <div class="rounded-xl bg-white p-6 shadow-lg">
+            <label for="recipient-select" class="block text-sm font-medium text-gray-700" data-translate="AdminUsers.Messages.RecipientLabel"></label>
+            <div class="mt-2 flex flex-col gap-3 sm:flex-row">
+              <select id="recipient-select" class="block min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-3 text-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+              <button id="send-message-button" type="button" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 font-semibold text-white shadow hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span data-translate="AdminUsers.Messages.SendButton"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div id="message-box-container" class="fixed bottom-5 right-5 z-50 w-full max-w-xs">
+        <div id="message-box" class="hidden mt-4 rounded-lg p-4 shadow-lg"></div>
+      </div>
+    </main>
+
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+      <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-gray-900" data-translate="AdminUsers.Messages.ConfirmTitle"></h2>
+        <div class="mt-4 space-y-3 text-sm text-gray-700">
+          <p><span data-translate="AdminUsers.Messages.ConfirmRecipient"></span> <strong id="confirm-recipient"></strong></p>
+          <p><span data-translate="AdminUsers.Messages.ConfirmSystems"></span> <strong id="confirm-systems"></strong></p>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button id="cancel-send-button" type="button" class="rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50" data-translate="AdminUsers.Messages.CancelButton"></button>
+          <button id="confirm-send-button" type="button" class="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50" data-translate="AdminUsers.Messages.ConfirmButton"></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="<%= domain %>/appjs/permission.js?<%= curentUnixTime %>" defer></script>
+    <script src="<%= domain %>/appjs/translate.js?<%= curentUnixTime %>"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const messageInput = document.getElementById("message-input");
+        const previewFrame = document.getElementById("message-preview");
+        const recipientSelect = document.getElementById("recipient-select");
+        const sendButton = document.getElementById("send-message-button");
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmRecipient = document.getElementById("confirm-recipient");
+        const confirmSystems = document.getElementById("confirm-systems");
+        const confirmSendButton = document.getElementById("confirm-send-button");
+        const cancelSendButton = document.getElementById("cancel-send-button");
+        let recipientOptions = [];
+        let messagingSystems = [];
+
+        const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[char]);
+
+        const updatePreview = () => {
+          previewFrame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:system-ui,sans-serif;padding:1rem;line-height:1.5;color:#111827}img{max-width:100%;height:auto}</style></head><body>${messageInput.value}</body></html>`;
+        };
+
+        const createOption = (option) => {
+          const element = document.createElement("option");
+          element.value = `${option.type}:${option.value}`;
+          element.textContent = option.label;
+          element.dataset.count = option.count;
+          element.dataset.type = option.type;
+          element.dataset.rawValue = option.value;
+          return element;
+        };
+
+        const loadRecipients = async () => {
+          const response = await apiFetch("/api/v1/admin/message/recipients");
+          if (!response.ok) throw new Error("Failed to load recipients");
+          const data = await response.json();
+          messagingSystems = data.messagingSystems || [];
+          recipientOptions = [
+            { ...data.all, label: `${i18next.t("AdminUsers.Messages.AllUsers")} (${data.all.count})` },
+            ...data.groups.map((group) => ({
+              ...group,
+              label: `${i18next.t("AdminUsers.Messages.GroupPrefix")} ${group.label} (${group.count})`,
+            })),
+            ...data.users.map((user) => ({
+              ...user,
+              label: `${user.label} (@${user.username})`,
+            })),
+          ];
+
+          recipientSelect.replaceChildren();
+          const allGroup = document.createElement("optgroup");
+          allGroup.label = i18next.t("AdminUsers.Messages.AllGroup");
+          allGroup.appendChild(createOption(recipientOptions[0]));
+          recipientSelect.appendChild(allGroup);
+
+          const groupOptions = document.createElement("optgroup");
+          groupOptions.label = i18next.t("AdminUsers.Messages.GroupsGroup");
+          recipientOptions.filter((option) => option.type === "group").forEach((option) => groupOptions.appendChild(createOption(option)));
+          recipientSelect.appendChild(groupOptions);
+
+          const userOptions = document.createElement("optgroup");
+          userOptions.label = i18next.t("AdminUsers.Messages.UsersGroup");
+          recipientOptions.filter((option) => option.type === "user").forEach((option) => userOptions.appendChild(createOption(option)));
+          recipientSelect.appendChild(userOptions);
+        };
+
+        const getSelectedTarget = () => {
+          const selected = recipientSelect.selectedOptions[0];
+          if (!selected) return null;
+          return {
+            type: selected.dataset.type,
+            value: selected.dataset.rawValue,
+            label: selected.textContent,
+            count: Number(selected.dataset.count) || 0,
+          };
+        };
+
+        const openConfirmModal = () => {
+          const target = getSelectedTarget();
+          if (!target || !messageInput.value.trim()) {
+            showMessage(i18next.t("AdminUsers.Messages.ValidationError"), "error");
+            return;
+          }
+          confirmRecipient.textContent = `${target.label} (${target.count})`;
+          confirmSystems.textContent = messagingSystems.map((system) => system === "email" ? "Email" : system).join(", ");
+          confirmModal.classList.remove("hidden");
+          confirmModal.classList.add("flex");
+        };
+
+        const closeConfirmModal = () => {
+          confirmModal.classList.add("hidden");
+          confirmModal.classList.remove("flex");
+        };
+
+        const sendMessage = async () => {
+          const target = getSelectedTarget();
+          if (!target) return;
+          confirmSendButton.disabled = true;
+          try {
+            const response = await apiFetch("/api/v1/admin/message/send", {
+              method: "POST",
+              body: JSON.stringify({
+                target: { type: target.type, value: target.value },
+                message: messageInput.value,
+              }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Send failed");
+            closeConfirmModal();
+            showMessage(i18next.t("AdminUsers.Messages.SendSuccess", { count: result.queued }));
+          } catch (error) {
+            showMessage(i18next.t("AdminUsers.Messages.SendFailed"), "error");
+          } finally {
+            confirmSendButton.disabled = false;
+          }
+        };
+
+        messageInput.addEventListener("input", updatePreview);
+        sendButton.addEventListener("click", openConfirmModal);
+        cancelSendButton.addEventListener("click", closeConfirmModal);
+        confirmModal.addEventListener("click", (event) => {
+          if (event.target === confirmModal) closeConfirmModal();
+        });
+        confirmSendButton.addEventListener("click", sendMessage);
+
+        updatePreview();
+        loadRecipients().catch(() => {
+          recipientSelect.innerHTML = `<option>${escapeHTML(i18next.t("AdminUsers.Messages.LoadFailed"))}</option>`;
+          sendButton.disabled = true;
+        });
+      });
+    </script>
+  </body>
+</html>

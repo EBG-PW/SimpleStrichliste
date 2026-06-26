@@ -68,6 +68,14 @@ module.exports = {
         "Categories",
         "Items"
     ],
+    "/admin/messages": [
+        "Admin",
+        "Error",
+        "Page",
+        "Setup",
+        "Navbar",
+        "AdminUsers"
+    ],
     "/admin/performance": [
         "Admin",
         "Error",

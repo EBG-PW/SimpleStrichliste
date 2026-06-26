@@ -1,8 +1,8 @@
 const { verifyRequest } = require('@middleware/verifyRequest');
 const { limiter } = require('@middleware/limiter');
-const { countUsers, countTransactions, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
+const { countUsers, countTransactions, getMessageRecipientUsers, getUserByUUID, getUsers, updateBalance, setBalance, updateUserUserNameByUUID, updateUserNameByUUID, updateUserEmailByUUID, updateUserLanguageByUUID, updateUserGroupByUUID, softDeleteUserByUUID } = require('@lib/sqlite/users');
 const { removeWebtoken } = require('@lib/cache');
-const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
+const { NOTIFICATION_CHANNELS, NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const { countCategories } = require('@lib/sqlite/categories');
 const { countItems } = require('@lib/sqlite/items');
 const package = require('../package.json');
@@ -55,6 +55,29 @@ const userLanguageSchema = Joi.object({
 const userGroupCheck = Joi.object({
     userGroup: Joi.string().valid(...Object.keys(process.permissions_config.groups)).required(),
 });
+
+const messageTargetSchema = Joi.object({
+    type: Joi.string().valid('all', 'group', 'user').required(),
+    value: Joi.when('type', {
+        switch: [
+            { is: 'all', then: Joi.string().valid('all').default('all') },
+            { is: 'group', then: Joi.string().valid(...Object.keys(process.permissions_config.groups)).required() },
+            { is: 'user', then: Joi.string().uuid().required() },
+        ],
+    }),
+});
+
+const messageSendSchema = Joi.object({
+    target: messageTargetSchema.required(),
+    message: Joi.sanitizedString().min(1).max(10000).required(),
+});
+
+const getMessageRecipientSelection = (target) => {
+    const users = getMessageRecipientUsers();
+    if (target.type === 'all') return users;
+    if (target.type === 'group') return users.filter((user) => user.user_role === target.value);
+    return users.filter((user) => user.uuid === target.value);
+};
 
 /**
  * Returns an overview of the admin dashboard
@@ -169,6 +192,60 @@ router.get('/users', verifyRequest('app.admin.overview.read'), limiter(1), async
         }
     }
     res.json(result);
+});
+
+router.get('/message/recipients', verifyRequest('app.admin.messages.read'), limiter(1), async (req, res) => {
+    const users = getMessageRecipientUsers();
+    const groupCounts = users.reduce((counts, user) => {
+        counts[user.user_role] = (counts[user.user_role] || 0) + 1;
+        return counts;
+    }, {});
+
+    return res.json({
+        messagingSystems: [NOTIFICATION_CHANNELS.EMAIL],
+        all: {
+            type: 'all',
+            value: 'all',
+            label: 'All users',
+            count: users.length,
+        },
+        groups: Object.keys(process.permissions_config.groups).map((group) => ({
+            type: 'group',
+            value: group,
+            label: group,
+            count: groupCounts[group] || 0,
+        })),
+        users: users.map((user) => ({
+            type: 'user',
+            value: user.uuid,
+            label: user.name,
+            username: user.username,
+            email: user.email,
+            group: user.user_role,
+            count: 1,
+        })),
+    });
+});
+
+router.post('/message/send', verifyRequest('app.admin.messages.write'), limiter(1), async (req, res) => {
+    const body = await messageSendSchema.validateAsync(req.body);
+    const recipients = getMessageRecipientSelection(body.target);
+
+    if (recipients.length === 0) {
+        return res.status(400).json({ error: 'No recipients selected' });
+    }
+
+    const tasks = [];
+    for (const recipient of recipients) {
+        tasks.push(await sendNotification(recipient.id, 0, NOTIFICATION_TYPES.ADMIN_MESSAGE, body.message, recipient));
+    }
+
+    return res.json({
+        success: true,
+        recipients: recipients.length,
+        messagingSystems: [NOTIFICATION_CHANNELS.EMAIL],
+        queued: tasks.filter((task) => task.email).length,
+    });
 });
 
 module.exports = {

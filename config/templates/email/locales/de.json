@@ -43,6 +43,11 @@
             "subject": "Benachrichtigung von {{application}}",
             "heading": "Benachrichtigung von {{application}}",
             "text": "Hallo {{name}},\n\n{{message}}"
+        },
+        "AdminMessage": {
+            "subject": "Nachricht von {{application}}",
+            "heading": "Nachricht von {{application}}",
+            "text": "Hallo {{name}},\n\n{{message}}"
         }
     }
 }

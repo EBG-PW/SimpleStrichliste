@@ -1,4 +1,5 @@
 const path = require('node:path');
+const sanitizeHtml = require('sanitize-html');
 
 const emailTemplateDir = path.join(__dirname, '..', 'templates', 'email');
 
@@ -26,6 +27,22 @@ module.exports = [
         requiresMessage: true,
         channels: {
             email: { templatePath: path.join(emailTemplateDir, 'Custom.ejs') },
+        },
+    },
+    {
+        type: 'AdminMessage',
+        constant: 'ADMIN_MESSAGE',
+        category: 'system',
+        requiresMessage: true,
+        channels: {
+            email: {
+                templatePath: path.join(emailTemplateDir, 'AdminMessage.ejs'),
+                buildText: (context) => [
+                    context.t('emails.greeting', { name: context.name }),
+                    '',
+                    sanitizeHtml(context.message, { allowedTags: [], allowedAttributes: {} }),
+                ].join('\n'),
+            },
         },
     },
     {

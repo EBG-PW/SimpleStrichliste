@@ -29,5 +29,27 @@
     },
     "Pagination": {
         "PageInfo": "Nutzer {{startUser}} bis {{endUser}} von {{totalUsers}}"
+    },
+    "Messages": {
+        "PageTitle": "Nachricht senden",
+        "MessageLabel": "Nachricht",
+        "MessagePlaceholder": "HTML-Nachricht eingeben, z. B. <p>Hallo zusammen</p>",
+        "PreviewTitle": "Vorschau",
+        "RecipientLabel": "Empfänger",
+        "SendButton": "Senden",
+        "ConfirmTitle": "Nachricht senden?",
+        "ConfirmRecipient": "Empfänger:",
+        "ConfirmSystems": "Nachrichtensysteme:",
+        "ConfirmButton": "Bestätigen und senden",
+        "CancelButton": "Abbrechen",
+        "AllUsers": "Alle Nutzer",
+        "AllGroup": "Alle",
+        "GroupsGroup": "Nutzergruppen",
+        "UsersGroup": "Nutzer",
+        "GroupPrefix": "Gruppe",
+        "ValidationError": "Bitte Empfänger und Nachricht angeben.",
+        "LoadFailed": "Empfänger konnten nicht geladen werden.",
+        "SendSuccess": "{{count}} Nachricht(en) wurden in die Warteschlange gelegt.",
+        "SendFailed": "Nachricht konnte nicht gesendet werden."
     }
 }
