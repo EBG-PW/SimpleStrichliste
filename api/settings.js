@@ -11,6 +11,7 @@ const { getSettings, toggleSetting, updateSetting } = require('@lib/sqlite/setti
 const { countUsers } = require('@lib/sqlite/users');
 const { getSystemStats } = require('@lib/stats');
 const { getMemoryLogs } = require('@lib/logger');
+const { getApplicationTimeZone } = require('@lib/timezone');
 const { writefavicon, writeImage } = require('@lib/imageStore');
 const { verifyBufferIsJPG, verifyBufferIsJPGMaxDimensions, convertToWebp } = require('@lib/utils');
 const { getBackups, createBackup, restoreBackup } = require('@lib/backup');
@@ -104,7 +105,7 @@ const settingsRefundsSchema = Joi.object({
 });
 
 router.get('/logs', verifyRequest('app.admin.stats.read'), limiter(5), async (req, res) => {
-    return res.json({ logs: getMemoryLogs() });
+    return res.json({ logs: getMemoryLogs(), applicationTimeZone: getApplicationTimeZone() });
 });
 
 router.post('/vacuumdb', verifyRequest('app.admin.db.write'), limiter(1), async (req, res) => {

@@ -48,7 +48,7 @@ module.exports = [
                     ...context.discountItems.map((item) =>
                         `${item.name}: ${Number(item.discount_price).toFixed(2)} € ` +
                         `(${context.t('emails.Discounts.until', {
-                            date: new Date(item.discount_until).toLocaleString(context.language),
+                            date: context.formatDateTime(item.discount_until),
                         })})`
                     ),
                     '',

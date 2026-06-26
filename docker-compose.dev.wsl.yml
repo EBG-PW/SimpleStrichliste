@@ -8,6 +8,7 @@ services:
     environment:
       - APPLICATION=Strichliste
       - DOMAIN=http://localhost:3000
+      - APPLICATION_TIMEZONE=Europe/Berlin # IANA timezone used for app-rendered dates
       - FALLBACKLANG=de
       - LOG_LEVEL=4
       - LOG_TYPE=console

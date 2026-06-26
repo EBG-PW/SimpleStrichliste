@@ -13,7 +13,7 @@
                 <strong><%= item.name %></strong>:
                 <s><%= Number(item.original_price).toFixed(2) %> €</s>
                 <%= Number(item.discount_price).toFixed(2) %> €
-                (<%= t('emails.Discounts.until', { date: new Date(item.discount_until).toLocaleString(language) }) %>)
+                (<%= t('emails.Discounts.until', { date: formatDateTime(item.discount_until) }) %>)
             </li>
         <% }) %>
     </ul>

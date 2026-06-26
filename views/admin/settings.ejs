@@ -420,6 +420,7 @@
       let lowFundsCropper;
       let croppedLowFundsBlob = null;
       let systemLogs = [];
+      let systemLogTimeZone = <%- JSON.stringify(applicationTimeZone) %>;
 
       const logLevelClasses = {
         error: "text-red-300",
@@ -475,6 +476,7 @@
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
+            timeZone: systemLogTimeZone,
             timeZoneName: "short",
           }).format(new Date(log.timestampMs));
         }
@@ -546,6 +548,7 @@
           if (!response.ok) throw new Error("Network response was not ok");
           const data = await response.json();
           systemLogs = data.logs || [];
+          systemLogTimeZone = data.applicationTimeZone || systemLogTimeZone;
           renderSystemLogs();
         } catch (error) {
           console.error("Error fetching system logs:", error);

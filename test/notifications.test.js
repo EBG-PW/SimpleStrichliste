@@ -130,6 +130,46 @@ test('buildEmail renders selected discounts', async () => {
     assert.doesNotMatch(email.html, /&lt;a href=|Settings\.Settings/);
 });
 
+test('buildEmail formats discount dates in application timezone', async () => {
+    const previousTimeZone = process.env.APPLICATION_TIMEZONE;
+    process.env.APPLICATION_TIMEZONE = 'Europe/Berlin';
+    const discountUntil = '2030-01-01T12:00:00.000Z';
+    const expectedDate = new Intl.DateTimeFormat('de', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'Europe/Berlin',
+    }).format(new Date(discountUntil));
+
+    try {
+        const email = await buildEmail({
+            type: 'Discounts',
+            name: 'Ada',
+            username: 'ada',
+            email: 'ada@example.com',
+            uuid: 'test-uuid',
+            language: 'de',
+            custom_message: JSON.stringify({
+                items: [{
+                    name: 'Testartikel',
+                    original_price: 2.5,
+                    discount_price: 1.5,
+                    discount_until: discountUntil,
+                }],
+            }),
+        });
+
+        assert.equal(email.html.includes(expectedDate), true);
+        assert.equal(email.text.includes(expectedDate), true);
+    } finally {
+        if (previousTimeZone === undefined) delete process.env.APPLICATION_TIMEZONE;
+        else process.env.APPLICATION_TIMEZONE = previousTimeZone;
+    }
+});
+
 test('email HTML translations escape interpolated values', async () => {
     const previousApplication = process.env.APPLICATION;
     const previousDomain = process.env.DOMAIN;

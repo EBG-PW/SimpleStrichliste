@@ -42,6 +42,7 @@ Common settings:
 ```env
 APPLICATION=Strichliste
 DOMAIN=http://localhost:3000
+APPLICATION_TIMEZONE=Europe/Berlin
 FALLBACKLANG=de
 PORT=3000
 BINDIP=0.0.0.0
@@ -50,6 +51,7 @@ WebTokenDurationH=9600
 ```
 
 `DOMAIN` must match the public URL users open in their browser. This matters for generated links, static assets, manifests, and OAuth callbacks.
+`APPLICATION_TIMEZONE` must be an IANA timezone such as `Europe/Berlin`; it is used for application-rendered timestamps like system logs and notification emails.
 
 Email notifications use an SQLite-backed queue. Configure an SMTP server with:
 
