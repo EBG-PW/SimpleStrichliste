@@ -6,8 +6,17 @@ const useragent = require('express-useragent');
 const { addWebtoken } = require('@lib/cache');
 const { OAuthError, PermissionsError } = require('@lib/errors');
 const { checkPermission, mergePermissions } = require('@lib/permissions');
-const { countUsers, createAdminUser, createUser, findUserByEmail } = require('@lib/sqlite/users');
+const {
+    countUsers,
+    createAdminUser,
+    createUser,
+    findUserByEmail,
+    updateUserLanguage,
+    updateUserName,
+    updateUserUserName,
+} = require('@lib/sqlite/users');
 const { getEBGOAuthConfig, isEBGOAuthEnabled } = require('@lib/oauth');
+const { getRuntimeFeatureRegistrationHooks } = require('@lib/features');
 const { NOTIFICATION_TYPES, sendNotification } = require('@lib/notifications');
 const Joi = require('@lib/sanitizer');
 
@@ -16,14 +25,82 @@ const router = new express.Router();
 /**
  * Validates that the local OAuth start endpoint receives no user-controlled query data.
  */
-const oauthStartQuerySchema = Joi.object({}).unknown(false);
+const oauthStartQuerySchema = Joi.object({
+    state: Joi.string().hex().length(32),
+}).unknown(false);
 
 /**
  * Validates the expected query parameters from the OAuth provider callback, rejecting any unexpected data.
  */
 const oauthCallbackQuerySchema = Joi.object({
     code: Joi.string().alphanum().length(128).required(),
+    state: Joi.string().hex().length(32),
 }).unknown(false);
+
+const oauthRegistrationContextSchema = Joi.object({
+    features: Joi.object().unknown(true).default({}),
+});
+
+const pendingOAuthRegistrationContexts = new Map();
+const pendingOAuthRegistrationContextTtlMs = 15 * 60 * 1000;
+const oauthRegistrationStateCookie = 'oauth_registration_state';
+
+const prunePendingOAuthRegistrationContexts = () => {
+    const now = Date.now();
+    for (const [state, context] of pendingOAuthRegistrationContexts.entries()) {
+        if (context.expiresAt <= now) pendingOAuthRegistrationContexts.delete(state);
+    }
+};
+
+const validateRegistrationFeaturePayloads = async (body) => {
+    const results = [];
+    for (const descriptor of getRuntimeFeatureRegistrationHooks()) {
+        const hook = require(descriptor.filePath);
+        if (typeof hook.validateRegistration !== 'function') continue;
+        const payload = body.features?.[descriptor.payloadKey];
+        results.push({
+            descriptor,
+            hook,
+            data: await hook.validateRegistration(payload, { Joi, body }),
+        });
+    }
+    return results;
+};
+
+const runRegistrationFeatureHooks = async (userId, body, featureResults) => {
+    for (const featureResult of featureResults) {
+        if (typeof featureResult.hook.afterUserCreated !== 'function') continue;
+        await featureResult.hook.afterUserCreated({
+            userId,
+            body,
+            data: featureResult.data,
+            sendNotification,
+            NOTIFICATION_TYPES,
+        });
+    }
+};
+
+const createPendingOAuthRegistrationContext = async (body) => {
+    prunePendingOAuthRegistrationContexts();
+    const contextBody = await oauthRegistrationContextSchema.validateAsync(body || {});
+    const featureResults = await validateRegistrationFeaturePayloads(contextBody);
+    const state = crypto.randomBytes(16).toString('hex');
+    pendingOAuthRegistrationContexts.set(state, {
+        body: contextBody,
+        featureResults,
+        expiresAt: Date.now() + pendingOAuthRegistrationContextTtlMs,
+    });
+    return state;
+};
+
+const consumePendingOAuthRegistrationContext = (state) => {
+    if (!state) return null;
+    prunePendingOAuthRegistrationContexts();
+    const context = pendingOAuthRegistrationContexts.get(state);
+    pendingOAuthRegistrationContexts.delete(state);
+    if (!context) throw new OAuthError('OAuth registration context expired').withStatus(400);
+    return context;
+};
 
 /**
  * Parses a provider response that may be JSON or urlencoded form data.
@@ -127,6 +204,11 @@ const getUsernameFromEmail = (email) => {
     return cleanUsername(`${localPart}_${compactDomain}`);
 };
 
+const normalizeLanguage = (value) => {
+    const language = String(value || '').trim().slice(0, 2).toLowerCase();
+    return /^[a-z]{2}$/.test(language) ? language : null;
+};
+
 /**
  * Normalizes provider-specific user profile fields into the local user shape.
  * @param {Object} oauthUser Raw OAuth provider user profile.
@@ -134,17 +216,60 @@ const getUsernameFromEmail = (email) => {
  * @throws {OAuthError} If the provider does not provide an email address.
  */
 const normalizeOAuthUser = (oauthUser) => {
-    const email = oauthUser.email || oauthUser.mail || oauthUser.user_email;
+    const email = getOAuthEmail(oauthUser);
     if (!email) throw new OAuthError('OAuth user email missing');
 
-    const username = getUsernameFromEmail(email);
+    const username = cleanUsername(
+        oauthUser.username ||
+        oauthUser.preferred_username ||
+        oauthUser.nickname ||
+        getUsernameFromEmail(email)
+    );
+    const name = [
+        oauthUser.first_name || oauthUser.given_name,
+        oauthUser.last_name || oauthUser.family_name,
+    ].filter(Boolean).join(' ') ||
+        oauthUser.name ||
+        oauthUser.realname ||
+        oauthUser.display_name ||
+        oauthUser.full_name ||
+        oauthUser.user_realname ||
+        username;
 
     return {
         email,
         username,
-        name: oauthUser.name || oauthUser.realname || oauthUser.display_name || oauthUser.full_name || oauthUser.user_realname || username,
+        name,
+        language: normalizeLanguage(oauthUser.language || oauthUser.locale || oauthUser.lang),
     };
 };
+
+const syncExistingOAuthUser = async (existingUser, normalizedUser) => {
+    if (existingUser.name !== normalizedUser.name) {
+        await updateUserName(existingUser.id, normalizedUser.name);
+        existingUser.name = normalizedUser.name;
+    }
+
+    if (existingUser.username !== normalizedUser.username) {
+        try {
+            await updateUserUserName(existingUser.id, normalizedUser.username);
+            existingUser.username = normalizedUser.username;
+        } catch (error) {
+            if (error.code !== 'SQLITE_CONSTRAINT_UNIQUE') throw error;
+        }
+    }
+
+    if (normalizedUser.language && existingUser.language !== normalizedUser.language) {
+        await updateUserLanguage(existingUser.id, normalizedUser.language);
+        existingUser.language = normalizedUser.language;
+    }
+
+    return existingUser;
+};
+
+const hasRegistrationFeatureHooks = () => getRuntimeFeatureRegistrationHooks().length > 0;
+
+const getOAuthEmail = (oauthUser) => oauthUser.email || oauthUser.mail || oauthUser.user_email;
 
 /**
  * Finds an existing local user by OAuth email or creates one.
@@ -153,12 +278,23 @@ const normalizeOAuthUser = (oauthUser) => {
  * @returns {Promise<Object>} Local user row with password_hash still present for deletion before session storage.
  * @throws {OAuthError} If user creation fails.
  */
-const findOrCreateOAuthUser = async (oauthUser) => {
+const findOrCreateOAuthUser = async (oauthUser, registrationContext = null) => {
     const normalizedUser = normalizeOAuthUser(oauthUser);
     const existingUser = await findUserByEmail(normalizedUser.email);
-    if (existingUser) return existingUser;
+    if (existingUser) {
+        const syncedUser = await syncExistingOAuthUser(existingUser, normalizedUser);
+        if (registrationContext) {
+            await runRegistrationFeatureHooks(syncedUser.id, registrationContext.body, registrationContext.featureResults);
+        }
+        return syncedUser;
+    }
 
+    // If no existing user is found. The first user created becomes admin.
     const firstUser = await countUsers() === 0;
+    if (!registrationContext && hasRegistrationFeatureHooks()) {
+        throw new OAuthError('OAuth registration requires feature registration data').withStatus(403);
+    }
+
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), parseInt(process.env.SALTROUNDS, 10));
 
     let userId;
@@ -168,6 +304,7 @@ const findOrCreateOAuthUser = async (oauthUser) => {
             normalizedUser.email,
             normalizedUser.username,
             passwordHash,
+            normalizedUser.language,
         );
     } else {
         userId = await createUser(
@@ -175,10 +312,14 @@ const findOrCreateOAuthUser = async (oauthUser) => {
             normalizedUser.email,
             normalizedUser.username,
             passwordHash,
+            normalizedUser.language,
         );
     }
 
     await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
+    if (registrationContext) {
+        await runRegistrationFeatureHooks(userId, registrationContext.body, registrationContext.featureResults);
+    }
     const createdUser = await findUserByEmail(normalizedUser.email);
     if (!createdUser) throw new OAuthError('OAuth user creation failed');
     return createdUser;
@@ -244,8 +385,23 @@ const renderOAuthCompletePage = (session) => {
 
 router.get('/oauth', async (req, res) => {
     if (!isEBGOAuthEnabled()) throw new OAuthError('OAuth is not enabled');
-    await oauthStartQuerySchema.validateAsync(req.query || {});
-    res.redirect(getEBGOAuthConfig().authorizeUrl);
+    const query = await oauthStartQuerySchema.validateAsync(req.query || {});
+    const authorizeUrl = new URL(getEBGOAuthConfig().authorizeUrl);
+    if (query.state) {
+        authorizeUrl.searchParams.set('state', query.state);
+        res.cookie(oauthRegistrationStateCookie, query.state, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: pendingOAuthRegistrationContextTtlMs,
+        });
+    }
+    res.redirect(authorizeUrl.toString());
+});
+
+router.post('/oauth/registration-context', async (req, res) => {
+    if (!isEBGOAuthEnabled()) throw new OAuthError('OAuth is not enabled');
+    const state = await createPendingOAuthRegistrationContext(req.body);
+    return res.json({ redirectUrl: `/auth/oauth?state=${state}` });
 });
 
 router.get('/oauth/callback', async (req, res) => {
@@ -260,7 +416,14 @@ router.get('/oauth/callback', async (req, res) => {
         : await fetchToken(query.code);
 
     const oauthUser = await fetchOAuthUser(tokenData);
-    const user = await findOrCreateOAuthUser(oauthUser);
+    const registrationState = query.state || req.cookies?.[oauthRegistrationStateCookie];
+    if (registrationState) res.clearCookie(oauthRegistrationStateCookie);
+    if (!registrationState && hasRegistrationFeatureHooks()) {
+        const email = getOAuthEmail(oauthUser);
+        if (!email || !await findUserByEmail(email)) return res.redirect('/register');
+    }
+    const registrationContext = consumePendingOAuthRegistrationContext(registrationState);
+    const user = await findOrCreateOAuthUser(oauthUser, registrationContext);
     const session = await createSessionForUser(req, user);
 
     res.header('Content-Type', 'text/html');

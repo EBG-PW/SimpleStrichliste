@@ -18,6 +18,7 @@
         "PasswordRepeat": "Passwort wiederholen",
         "Language": "Sprache",
         "Submit": "Erstelle Account",
+        "OAuthSubmit": "Mit EBG registrieren",
         "Balance": "Kontostand",
         "RegCode": "Registrierungs-Code",
         "UserGroup": "Benutzergruppe"

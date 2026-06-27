@@ -16,7 +16,7 @@ const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
 const { recordHttpRequestDuration } = require('@lib/sqlite/performanceStats');
 const { getStaticFilePath } = require('@lib/imageStore');
-const { getFeaturePublicFilePath, getRuntimeFeatureViewDirs } = require('@lib/features');
+const { getFeaturePublicFilePath, getRuntimeFeatureRegistrationHooks, getRuntimeFeatureViewDirs } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const { startNotificationWorker } = require('@lib/notifications');
 const { rememberExternalLog } = require('@lib/logger');
@@ -132,7 +132,7 @@ if (dbMigration === 0) {
         console.error(error);
         process.exit(1);
     }
-    defaultRoute = isEBGOAuthEnabled() ? '/login' : '/setup';
+    defaultRoute = isEBGOAuthEnabled() && getRuntimeFeatureRegistrationHooks().length > 0 ? '/register' : (isEBGOAuthEnabled() ? '/login' : '/setup');
 } else {
     try {
         if (dbMigration < dbVersion) {
@@ -154,7 +154,7 @@ backfillStatistics(); // Backfill statistics data
 // Redirect root to setup
 app.get('/', async (req, res) => {
     // Reset to overview when a user was created
-    if (defaultRoute === '/setup' || defaultRoute === '/login') {
+    if (defaultRoute === '/setup' || defaultRoute === '/login' || defaultRoute === '/register') {
         const currentUserCount = await countUsers();
         if (currentUserCount > 0) {
             defaultRoute = '/overview';

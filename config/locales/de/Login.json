@@ -5,6 +5,7 @@
     "Username": "Benutzername",
     "Password": "Passwort",
     "Submit": "Anmelden",
+    "OAuthSubmit": "Mit EBG anmelden",
     "Register": "Jetzt registrieren",
     "RegisterText": "Noch keinen Account?",
     "Submitting": "Anmeldung läuft...",
