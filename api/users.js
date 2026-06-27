@@ -5,6 +5,7 @@ const { countUsers, createUser, createAdminUser, getUser, getUserPassword, updat
 const { getUserNotifications, setUserNotificationState } = require('@lib/sqlite/userNotifications');
 const { getAllUserSessions, deleteAllWebtokensForUser } = require('@lib/sqlite/webtokens');
 const { checkIfSettingTrue, getSetting } = require('@lib/sqlite/settings');
+const { getRuntimeFeatureRegistrationHooks } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const {
     NOTIFICATION_TYPES,
@@ -31,6 +32,38 @@ const userSchema = Joi.object({
     username: Joi.fullysanitizedString().min(3).max(30).required(),
     password: Joi.string().min(8).max(56).required(),
 });
+
+const registrationUserSchema = userSchema.keys({
+    features: Joi.object().unknown(true).default({}),
+});
+
+const validateRegistrationFeaturePayloads = async (body) => {
+    const results = [];
+    for (const descriptor of getRuntimeFeatureRegistrationHooks()) {
+        const hook = require(descriptor.filePath);
+        if (typeof hook.validateRegistration !== 'function') continue;
+        const payload = body.features?.[descriptor.payloadKey];
+        results.push({
+            descriptor,
+            hook,
+            data: await hook.validateRegistration(payload, { Joi, body }),
+        });
+    }
+    return results;
+};
+
+const runRegistrationFeatureHooks = async (userId, body, featureResults) => {
+    for (const featureResult of featureResults) {
+        if (typeof featureResult.hook.afterUserCreated !== 'function') continue;
+        await featureResult.hook.afterUserCreated({
+            userId,
+            body,
+            data: featureResult.data,
+            sendNotification,
+            NOTIFICATION_TYPES,
+        });
+    }
+};
 
 const userNameSchema = Joi.object({
     name: Joi.fullysanitizedString().min(1).max(100).required(),
@@ -90,16 +123,19 @@ router.post('/admin', limiter(20), async (req, res) => {
         return res.status(403).json({ error: 'OAuth registration is enabled' });
     }
 
-    const body = await userSchema.validateAsync(req.body);
     const usercount = await countUsers();
     if (usercount > 0) {
         return res.status(409).json({ error: 'Not available' });
     }
 
+    const body = await registrationUserSchema.validateAsync(req.body);
+    const featureResults = await validateRegistrationFeaturePayloads(body);
+
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
     try {
         const userId = await createAdminUser(body.name, body.email, body.username, password_hash);
         await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
+        await runRegistrationFeatureHooks(userId, body, featureResults);
         return res.status(201).json({ message: 'Admin user created successfully' });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -125,7 +161,8 @@ router.post('/', limiter(20), async (req, res) => {
         return res.status(405).json({ error: 'Application not setup' });
     }
 
-    const body = await userSchema.validateAsync(req.body);
+    const body = await registrationUserSchema.validateAsync(req.body);
+    const featureResults = await validateRegistrationFeaturePayloads(body);
 
     if (await checkIfSettingTrue('REG_CODE_ACTIVE')) {
         const regCode = await getSetting('REG_CODE');
@@ -137,6 +174,7 @@ router.post('/', limiter(20), async (req, res) => {
     const password_hash = await bcrypt.hash(body.password, parseInt(process.env.SALTROUNDS));
     const userId = await createUser(body.name, body.email, body.username, password_hash);
     await sendNotification(userId, 0, NOTIFICATION_TYPES.REG_MAIL);
+    await runRegistrationFeatureHooks(userId, body, featureResults);
     return res.status(201).json({ message: 'User created successfully' });
 });
 

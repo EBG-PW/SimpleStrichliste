@@ -117,12 +117,12 @@ module.exports = {
         "Navbar",
         "AdminUsers"
     ],
-    "/login": [
-        "Login",
+    "/imprint": [
         "Error",
         "Page"
     ],
-    "/imprint": [
+    "/login": [
+        "Login",
         "Error",
         "Page"
     ],
@@ -134,12 +134,12 @@ module.exports = {
         "Categories",
         "Items"
     ],
-    "/register": [
-        "Setup",
+    "/privacy": [
         "Error",
         "Page"
     ],
-    "/privacy": [
+    "/register": [
+        "Setup",
         "Error",
         "Page"
     ],

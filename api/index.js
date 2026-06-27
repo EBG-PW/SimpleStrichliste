@@ -1,10 +1,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('ultimate-express');
+const { getRuntimeFeatureApiModules } = require('@lib/features');
 const router = new express.Router();
 
 const plugins = [];
 const Preplugins = [];
+const runtimeApiModules = getRuntimeFeatureApiModules();
+
+const getPluginRoute = (name) => name.endsWith('_api') ? name.slice(0, -4) : name;
 
 // Helper: Remove elements from array
 Array.prototype.remove = function () {
@@ -48,6 +52,11 @@ fs.readdirSync(__dirname).remove('index.js').forEach(file => {
   Preplugins.push(`${mod.PluginName}|${mod.PluginVersion}`);
 });
 
+runtimeApiModules.forEach(({ filePath }) => {
+  const mod = require(filePath);
+  Preplugins.push(`${mod.PluginName}|${mod.PluginVersion}`);
+});
+
 // 2. Load plugins with dependencies resolved
 fs.readdirSync(__dirname).remove('index.js').forEach(file => {
   if (!file.endsWith('.js')) return;
@@ -81,9 +90,10 @@ fs.readdirSync(__dirname).remove('index.js').forEach(file => {
     }
 
     // Register plugin
-    router.use(`/${name}`, mod.router);
+    const route = `/${getPluginRoute(name)}`;
+    router.use(route, mod.router);
     plugins.push({
-      route: `/${name}`,
+      route,
       name: mod.PluginName,
       version: mod.PluginVersion,
       docs: mod.PluginDocs || '',
@@ -94,6 +104,43 @@ fs.readdirSync(__dirname).remove('index.js').forEach(file => {
     process.log.system(`Loaded API Plugin ${mod.PluginName}@${mod.PluginVersion}`);
   } catch (e) {
     process.log.error(`Failed to load plugin ${file}: ${e.message}`);
+  }
+});
+
+runtimeApiModules.forEach(({ featureName, filePath, route }) => {
+  try {
+    const mod = require(filePath);
+    const code = fs.readFileSync(filePath, 'utf8');
+    const routes = extractRoutePermissionsFromCode(code);
+
+    if (!mod.PluginName || !mod.PluginVersion || !mod.router) {
+      process.log.error(`Skipped runtime API feature ${featureName} due to missing exports`);
+      return;
+    }
+
+    let failedReq = false;
+    mod.PluginRequirements?.forEach(req => {
+      if (!Preplugins.includes(req)) failedReq = true;
+    });
+
+    if (failedReq) {
+      process.log.error(`Runtime API feature ${featureName} missing required: ${mod.PluginRequirements}`);
+      return;
+    }
+
+    router.use(route, mod.router);
+    plugins.push({
+      route,
+      name: mod.PluginName,
+      version: mod.PluginVersion,
+      docs: mod.PluginDocs || '',
+      author: mod.PluginAuthor || '',
+      routes,
+    });
+
+    process.log.system(`Loaded runtime API feature ${mod.PluginName}@${mod.PluginVersion}`);
+  } catch (e) {
+    process.log.error(`Failed to load runtime API feature ${featureName}: ${e.message}`);
   }
 });
 

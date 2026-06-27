@@ -133,6 +133,13 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <% Object.entries(features || {}).filter(([featureName, feature]) => feature.settingsCard || feature.adminCard).forEach(([featureName, feature]) => { const card = feature.settingsCard || feature.adminCard; %>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="<%= card.translationKeyBase %>.Title"></h2>
+          <p class="text-gray-600 text-sm mb-4" data-translate="<%= card.translationKeyBase %>.Description"></p>
+          <a href="<%= card.href %>" class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 font-bold text-white transition hover:bg-indigo-700" data-translate="<%= card.translationKeyBase %>.Button"></a>
+        </div>
+        <% }) %>
         <% if (!ebgOAuth.enabled) { %>
         <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="font-bold text-xl text-gray-800 mb-2" data-translate="AdminSettings.REGCode.Title"></h2>

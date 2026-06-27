@@ -32,6 +32,89 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const setupContainer = document.getElementById("setup-container");
+        const setupFeatureHandlers = [];
+
+        function loadScript(src) {
+          return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = `${src}?<%= curentUnixTime %>`;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load ${src}`));
+            document.head.appendChild(script);
+          });
+        }
+
+        async function loadSetupRegistrationFeatures() {
+          const root = document.getElementById("setup-feature-root");
+          for (const [featureName, feature] of Object.entries(features || {})) {
+            if (!feature.registration?.script) continue;
+            await loadScript(feature.registration.script);
+            const handler = window.SimpleStrichlisteRegistrationFeatures?.[featureName];
+            if (!handler || typeof handler.collect !== "function") continue;
+            if (typeof handler.mountStandalone === "function") {
+              setupContainer.innerHTML = `<div id="setup-feature-standalone"></div>${renderRestoreMarkup()}`;
+              const container = document.getElementById("setup-feature-standalone");
+              await handler.mountStandalone({
+                container,
+                feature,
+                setupMode: true,
+                t: (key, options) => i18next.t(key, options),
+                submitRegistration: submitAdminRegistration,
+              });
+              attachRestoreFormListeners();
+              return true;
+            }
+            const container = document.createElement("div");
+            root.appendChild(container);
+            if (typeof handler.mount === "function") {
+              await handler.mount({ container, feature, t: (key, options) => i18next.t(key, options) });
+            }
+            setupFeatureHandlers.push({ featureName, payloadKey: feature.registration.payloadKey || featureName, handler });
+          }
+          return false;
+        }
+
+        async function collectSetupFeatures() {
+          const payload = {};
+          for (const setupFeature of setupFeatureHandlers) {
+            payload[setupFeature.payloadKey] = await setupFeature.handler.collect();
+          }
+          return payload;
+        }
+
+        function renderAdminCreated() {
+          setupContainer.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                            <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.AdminUserCreated")}</h1>
+                            <p class="text-gray-600 mt-2">${i18next.t("Setup.AdminUserCreatedDescription")}</p>
+                            <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
+                        </div>`;
+        }
+
+        async function submitAdminRegistration(payload) {
+          const response = await fetch("/api/v1/users/admin", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const response_json = await response.json();
+          if (response.ok) {
+            renderAdminCreated();
+            return { ok: true, response, body: response_json };
+          }
+
+          if (response.status === 500) throw new Error(translateApiError(response_json));
+          if (response.status === 409) throw new Error(i18next.t("Setup.NoAvailable"));
+          if (typeof response_json.reason === "string") throw new Error(translateApiError(response_json));
+
+          const error = new Error(translateValidationError(response_json, "Setup.Form"));
+          error.status = response.status;
+          error.body = response_json;
+          throw error;
+        }
 
         /**
          * Checks if any users exist, if no users are found setup is displayed.
@@ -48,6 +131,7 @@
               renderNotAvailable();
             } else {
               renderSetupForm();
+              loadSetupRegistrationFeatures().catch((error) => showMessage(error.message, "error"));
             }
           } catch (error) {
             console.error("Error checking user status:", error);
@@ -68,6 +152,67 @@
                     <h1 class="text-2xl font-bold text-gray-800">${i18next.t("Setup.NoAvailable")}</h1>
                     <p class="text-gray-600 mt-2">${i18next.t("Setup.NoAvailableDescription")}</p>
                 </div>`;
+        }
+
+        function renderRestoreMarkup() {
+          return `
+                    <div class="relative my-8">
+                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center">
+                            <span class="bg-white px-3 text-base font-semibold leading-6 text-gray-900">${i18next.t("Setup.Or")}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <h3 class="text-xl font-bold text-gray-800 text-center">${i18next.t("AdminSettings.Restore.Title")}</h3>
+
+                        <form id="restore-form" enctype="multipart/form-data">
+                            <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                                <input type="file" id="backupFile" name="backupFile" class="hidden" accept=".zip" />
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m0 0l-8-8m8 8v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="mt-2 text-gray-600 text-sm">
+                                    <span class="font-medium text-blue-600">${i18next.t("AdminSettings.Restore.DragFile")}</span>
+                                    ${i18next.t("AdminSettings.Restore.OrClick")}
+                                </p>
+                                <p id="file-name" class="text-sm text-gray-500 mt-2"></p>
+                            </div>
+
+                            <button type="submit" id="restore-backup-btn" class="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50">
+                                ${i18next.t("AdminSettings.Restore.Button")}
+                            </button>
+                            <div id="restore-status" class="mt-4 text-sm text-center"></div>
+                        </form>
+                    </div>`;
+        }
+
+        function attachRestoreFormListeners() {
+          const restoreForm = document.getElementById("restore-form");
+          const dropzone = document.getElementById("dropzone");
+          const fileInput = document.getElementById("backupFile");
+          if (!restoreForm || !dropzone || !fileInput) return;
+
+          dropzone.addEventListener("click", () => fileInput.click());
+          dropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropzone.classList.add("dropzone-active");
+          });
+          dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("dropzone-active");
+          });
+          dropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropzone.classList.remove("dropzone-active");
+            if (e.dataTransfer.files.length) {
+              fileInput.files = e.dataTransfer.files;
+              updateFileName();
+            }
+          });
+          fileInput.addEventListener("change", updateFileName);
+          restoreForm.addEventListener("submit", handleRestoreFormSubmit);
         }
 
         /**
@@ -98,71 +243,18 @@
                             <input type="password" id="password" name="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div id="ErrorLine"></div>
+                        <div id="setup-feature-root" class="space-y-3"></div>
                         <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             ${i18next.t("Setup.Form.Submit")}
                         </button>
                     </form>
                     <div id="form-feedback" class="mt-4 text-center"></div>
-
-                    <div class="relative my-8">
-                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                            <div class="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div class="relative flex justify-center">
-                            <span class="bg-white px-3 text-base font-semibold leading-6 text-gray-900">${i18next.t("Setup.Or")}</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800 text-center">${i18next.t("AdminSettings.Restore.Title")}</h3>
-                        
-                        <form id="restore-form" enctype="multipart/form-data">
-                            <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
-                                <input type="file" id="backupFile" name="backupFile" class="hidden" accept=".zip" />
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m0 0l-8-8m8 8v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <p class="mt-2 text-gray-600 text-sm">
-                                    <span class="font-medium text-blue-600">${i18next.t("AdminSettings.Restore.DragFile")}</span>
-                                    ${i18next.t("AdminSettings.Restore.OrClick")}
-                                </p>
-                                <p id="file-name" class="text-sm text-gray-500 mt-2"></p>
-                            </div>
-
-                            <button type="submit" id="restore-backup-btn" class="mt-6 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50">
-                                ${i18next.t("AdminSettings.Restore.Button")}
-                            </button>
-                            <div id="restore-status" class="mt-4 text-sm text-center"></div>
-                        </form>
-                    </div>
+                    ${renderRestoreMarkup()}
                 </div>`;
 
           // Attach event listeners to the newly created forms
           document.getElementById("setup-form").addEventListener("submit", handleFormSubmit);
-
-          // --- Restore Form Listeners ---
-          const restoreForm = document.getElementById("restore-form");
-          const dropzone = document.getElementById("dropzone");
-          const fileInput = document.getElementById("backupFile");
-
-          dropzone.addEventListener("click", () => fileInput.click());
-          dropzone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropzone.classList.add("dropzone-active");
-          });
-          dropzone.addEventListener("dragleave", () => {
-            dropzone.classList.remove("dropzone-active");
-          });
-          dropzone.addEventListener("drop", (e) => {
-            e.preventDefault();
-            dropzone.classList.remove("dropzone-active");
-            if (e.dataTransfer.files.length) {
-              fileInput.files = e.dataTransfer.files;
-              updateFileName();
-            }
-          });
-          fileInput.addEventListener("change", updateFileName);
-          restoreForm.addEventListener("submit", handleRestoreFormSubmit);
+          attachRestoreFormListeners();
         }
 
         /**
@@ -186,47 +278,21 @@
           feedbackDiv.innerHTML = "";
 
           try {
-            const response = await fetch("/api/v1/users/admin", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
+            await submitAdminRegistration({
                 name: form.name.value,
                 email: form.email.value,
                 username: form.username.value,
                 password: form.password.value,
-              }),
+                features: await collectSetupFeatures(),
             });
-
-            const response_json = await response.json();
-
-            if (response.ok) {
-              setupContainer.innerHTML = `
-                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                            <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.AdminUserCreated")}</h1>
-                            <p class="text-gray-600 mt-2">${i18next.t("Setup.AdminUserCreatedDescription")}</p>
-                            <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">${i18next.t("Setup.GoToLogin", "Go to Login")}</a>
-                        </div>`;
-            } else {
-              if (response.status === 500) {
-                showMessage(translateApiError(response_json), "error");
-                return;
-              }
-              if (typeof response_json.reason === "string") {
-                showMessage(translateApiError(response_json), "error");
-                return;
-              }
-              const input_name = response_json.reason[0].path[0];
-              for (const key in keys) {
-                document.getElementById(keys[key]).classList.remove("is-invalid");
-              }
-
-              showMessage(translateValidationError(response_json, "Setup.Form"), "error");
-              document.getElementById(keys[input_name]).classList.add("is-invalid");
-              submitButton.disabled = false;
-            }
           } catch (error) {
+            const input_name = error.body?.reason?.[0]?.path?.[0];
+            for (const key in keys) {
+              document.getElementById(keys[key]).classList.remove("is-invalid");
+            }
+            if (keys[input_name]) {
+              document.getElementById(keys[input_name]).classList.add("is-invalid");
+            }
             showMessage(error.message, "error");
             submitButton.disabled = false;
             submitButton.textContent = i18next.t("Setup.Form.Submit");

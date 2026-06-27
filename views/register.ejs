@@ -17,7 +17,7 @@
     <main class="flex-grow flex flex-col items-center justify-center p-4">
       <div id="reg-container" class="w-full max-w-md">
         <div class="text-gray-500">
-          <div class="bg-white rounded-xl shadow-lg p-8">
+          <div id="registration-card" class="<% if (Object.values(features || {}).some((feature) => feature.registration?.takeover)) { %>hidden <% } %>bg-white rounded-xl shadow-lg p-8">
             <div class="text-center mb-8">
               <h1 class="text-2xl font-bold text-gray-800" data-translate="Setup.WelcomeUser"></h1>
               <p class="text-gray-600 mt-2" data-translate="Setup.WelcomeDescriptionUser"></p>
@@ -52,6 +52,7 @@
                 <label for="reg_code" class="block text-sm font-medium text-gray-700 hidden" data-translate="Setup.Form.RegCode"></label>
                 <input type="text" id="reg_code" name="reg_code" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 hidden" />
               </div>
+              <div id="registration-feature-root" class="space-y-3"></div>
               <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-translate="Setup.Form.Submit"></button>
             </form>
             <div id="form-feedback" class="mt-4 text-center"></div>
@@ -68,6 +69,7 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const regContainer = document.getElementById("reg-container");
+        const registrationFeatureHandlers = [];
 
         const urlParams = new URLSearchParams(window.location.search);
         const regCodeFromUrl = urlParams.get("REGCODE");
@@ -76,8 +78,114 @@
           regCodeInput.value = regCodeFromUrl;
         }
 
+        function loadScript(src) {
+          return new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = `${src}?<%= curentUnixTime %>`;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load ${src}`));
+            document.head.appendChild(script);
+          });
+        }
+
+        async function loadRegistrationFeatures() {
+          const root = document.getElementById("registration-feature-root");
+          for (const [featureName, feature] of Object.entries(features || {})) {
+            if (!feature.registration?.script) continue;
+            await loadScript(feature.registration.script);
+            const handler = window.SimpleStrichlisteRegistrationFeatures?.[featureName];
+            if (!handler || typeof handler.collect !== "function") continue;
+            if (typeof handler.mountStandalone === "function") {
+              document.getElementById("registration-card").classList.add("hidden");
+              regContainer.className = "w-full max-w-md";
+              const container = document.createElement("div");
+              regContainer.appendChild(container);
+              await handler.mountStandalone({
+                container,
+                feature,
+                regCode: regCodeInput.value,
+                t: (key, options) => i18next.t(key, options),
+                submitRegistration,
+              });
+              return true;
+            }
+            const container = document.createElement("div");
+            root.appendChild(container);
+            if (typeof handler.mount === "function") {
+              await handler.mount({ container, feature, t: (key, options) => i18next.t(key, options) });
+            }
+            registrationFeatureHandlers.push({ featureName, payloadKey: feature.registration.payloadKey || featureName, handler });
+          }
+          return false;
+        }
+
+        async function collectRegistrationFeatures() {
+          const payload = {};
+          for (const registrationFeature of registrationFeatureHandlers) {
+            payload[registrationFeature.payloadKey] = await registrationFeature.handler.collect();
+          }
+          return payload;
+        }
+
+        async function submitRegistration(payload) {
+          const response = await fetch("/api/v1/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const response_json = await response.json();
+
+          if (response.ok) {
+            regContainer.innerHTML = `
+              <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.UserCreated")}</h1>
+                <p class="text-gray-600 mt-2">${i18next.t("Setup.UserCreatedDescription")}</p>
+                <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Zum Login</a>
+              </div>`;
+            return { ok: true, response, body: response_json };
+          }
+
+          if (response.status === 500) throw new Error(i18next.t("Error.UnknownError"));
+          if (response.status === 403) {
+            const error = new Error(i18next.t("Setup.Error.InvalidRegCode"));
+            error.status = 403;
+            throw error;
+          }
+          if (response.status === 405) {
+            window.location.href = "/setup";
+            return { ok: false, response, body: response_json };
+          }
+          if (response.status === 409) {
+            const error = new Error(i18next.t("Setup.Error.UserExists"));
+            error.status = 409;
+            throw error;
+          }
+          if (typeof response_json.reason === "string") {
+            const error = new Error(translateApiError(response_json));
+            error.status = response.status;
+            throw error;
+          }
+          const error = new Error(translateValidationError(response_json, "Setup.Form"));
+          error.status = response.status;
+          error.body = response_json;
+          throw error;
+        }
+
         // Attach event listener to the form
-        document.getElementById("reg-form").addEventListener("submit", handleFormSubmit);
+        loadRegistrationFeatures()
+          .catch((error) => {
+            document.getElementById("registration-card").classList.remove("hidden");
+            showMessage(error.message, "error");
+          })
+          .then((handled) => {
+            if (!handled) {
+              document.getElementById("registration-card").classList.remove("hidden");
+              document.getElementById("reg-form").addEventListener("submit", handleFormSubmit);
+            }
+          });
 
         /**
          * Handles the submission of the reg form.
@@ -95,30 +203,18 @@
             if (form.password.value !== form["password-repeat"].value) {
               throw new Error(i18next.t("Setup.Error.PasswordMismatch"));
             }
-            const response = await fetch("/api/v1/users", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
+            const result = await submitRegistration({
                 name: form.name.value,
                 email: form.email.value,
                 username: form.username.value,
                 password: form.password.value,
                 reg_code: form.reg_code.value,
-              }),
+                features: await collectRegistrationFeatures(),
             });
 
-            const response_json = await response.json();
-
-            if (response.ok) {
-              regContainer.innerHTML = `
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
-                  <h1 class="text-2xl font-bold text-green-600">${i18next.t("Setup.UserCreated")}</h1>
-                  <p class="text-gray-600 mt-2">${i18next.t("Setup.UserCreatedDescription")}</p>
-                  <a href="/login" class="mt-4 inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Zum Login</a>
-                </div>`;
-            } else {
+            if (!result.ok) {
+              const response = result.response;
+              const response_json = result.body;
               if (response.status === 500) throw new Error(i18next.t("Error.UnknownError"));
 
               if (response.status === 403) {
@@ -158,6 +254,11 @@
               submitButton.disabled = false;
             }
           } catch (error) {
+            if (error.status === 403) {
+              const regCodeLabel = document.querySelector('label[for="reg_code"]');
+              regCodeLabel.classList.remove("hidden");
+              regCodeInput.classList.remove("hidden");
+            }
             showMessage(error.message, "error");
             submitButton.disabled = false;
           }

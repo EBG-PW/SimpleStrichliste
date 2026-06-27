@@ -13,7 +13,12 @@ const { deepMerge } = require('@lib/utils');
 process.log = {};
 process.log = log;
 
-const { installFeatures } = require('@lib/features');
+const {
+    installFeatures,
+    getRuntimeFeatureLocaleDirs,
+    getRuntimeFeatureLocalsMap,
+    mergeLocalsMapEntries,
+} = require('@lib/features');
 installFeatures();
 
 // Render Templates
@@ -73,10 +78,27 @@ languages.forEach(langCode => {
     }
 });
 
+getRuntimeFeatureLocaleDirs().forEach(({ directory, componentName }) => {
+    fs.readdirSync(directory, { withFileTypes: true }).forEach(entry => {
+        if (!entry.isDirectory()) return;
+        if (!availableLanguages[entry.name]) return;
+        const languageDirectory = path.join(directory, entry.name);
+        if (componentName) {
+            if (!availableLanguages[entry.name][componentName]) availableLanguages[entry.name][componentName] = {};
+            mergeLanguageBundles(availableLanguages[entry.name][componentName], languageDirectory);
+            return;
+        }
+        mergeLanguageBundles(availableLanguages[entry.name], languageDirectory);
+    });
+});
+
 // Expose globals
 process.availableLanguages = availableLanguages; // Used for template rendering for different languages
 process.countryConfig = countryConfig; // Used for language dropdowns
-process.localsMap = require('@config/locals_map.js'); // Used for template rendering for different languages
+process.localsMap = mergeLocalsMapEntries(
+    require('@config/locals_map.js'),
+    getRuntimeFeatureLocalsMap()
+); // Used for template rendering for different languages
 process.permissions_config = require('@config/permissions.js');
 
 (async () => {

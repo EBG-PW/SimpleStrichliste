@@ -16,7 +16,7 @@ const { countUsers } = require('@lib/sqlite/users');
 const { backfillStatistics } = require('@lib/sqlite/stats');
 const { recordHttpRequestDuration } = require('@lib/sqlite/performanceStats');
 const { getStaticFilePath } = require('@lib/imageStore');
-const { getFeaturePublicFilePath } = require('@lib/features');
+const { getFeaturePublicFilePath, getRuntimeFeatureViewDirs } = require('@lib/features');
 const { isEBGOAuthEnabled } = require('@lib/oauth');
 const { startNotificationWorker } = require('@lib/notifications');
 const { rememberExternalLog } = require('@lib/logger');
@@ -190,6 +190,9 @@ const renderer = new ViewRenderer(app, path.join(__dirname, '..', 'views'));
 
 // Register the static routes and overwrite some filename paths internaly
 renderer.registerStaticRoutes(path.join(__dirname, '..', 'views'), ["error-xxx.ejs", "navbar.ejs", "footer.ejs", "manifest.ejs"], {});
+getRuntimeFeatureViewDirs().forEach(({ directory, routes }) => {
+    renderer.registerStaticRoutes(directory, ["error-xxx.ejs", "navbar.ejs", "footer.ejs", "manifest.ejs"], routes, directory);
+});
 
 // Register the dynamic routes
 renderer.registerDynamicRoutes();
