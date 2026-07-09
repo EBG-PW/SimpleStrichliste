@@ -265,6 +265,13 @@ const manifestIconTypes = {
     'icon-512.png': 'image/png'
 };
 
+const appleTouchIconAliases = [
+    '/apple-touch-icon.png',
+    '/apple-touch-icon-precomposed.png',
+    '/apple-touch-icon-120x120.png',
+    '/apple-touch-icon-120x120-precomposed.png',
+];
+
 const sendStaticStorageFile = (res, relativePath, contentType) => {
     const filePath = getStaticFilePath(relativePath, { fallbackToPublic: true });
     res.header('Content-Type', contentType);
@@ -272,8 +279,29 @@ const sendStaticStorageFile = (res, relativePath, contentType) => {
     res.send(fs.readFileSync(filePath));
 };
 
+const sendNotFoundResponse = (req, res) => {
+    res.status(404);
+    if (req.accepts('html')) {
+        ejs.renderFile(path.join(__dirname, '..', 'views', 'error', 'error-xxx.ejs'), { statusCode: 404, message: "Page not found", info: "Request can not be served", reason: "The requested page was not found", domain: process.env.DOMAIN, back_url: process.env.DOMAIN, curentUnixTime: new Date().getTime() }, (err, str) => {
+            if (err) throw err;
+            res.header('Content-Type', 'text/html');
+            res.send(str);
+        });
+    } else {
+        res.header('Content-Type', 'application/json');
+        res.json({ message: "Page not found", info: "Request can not be served", reason: "The requested page was not found" });
+
+    }
+};
+
 app.get('/favicon.ico', (req, res) => {
     sendStaticStorageFile(res, 'favicon.ico', 'image/x-icon');
+});
+
+appleTouchIconAliases.forEach((alias) => {
+    app.get(alias, (req, res) => {
+        sendStaticStorageFile(res, path.join('icons', 'icon-192.png'), 'image/png');
+    });
 });
 
 app.get('/icons/:filename', (req, res) => {
@@ -336,23 +364,12 @@ app.get('/*', (req, res) => {
         if (fs.existsSync(resolvedPath)) {
             file_to_send = resolvedPath;
         } else {
-            throw new Error(`File not found - ${filePath}`);
+            return sendNotFoundResponse(req, res);
         }
         res.send(fs.readFileSync(file_to_send));
     } catch (error) {
         process.log.error(error)
-        res.status(404);
-        if (req.accepts('html')) {
-            ejs.renderFile(path.join(__dirname, '..', 'views', 'error', 'error-xxx.ejs'), { statusCode: 404, message: "Page not found", info: "Request can not be served", reason: "The requested page was not found", domain: process.env.DOMAIN, back_url: process.env.DOMAIN, curentUnixTime: new Date().getTime() }, (err, str) => {
-                if (err) throw err;
-                res.header('Content-Type', 'text/html');
-                res.send(str);
-            });
-        } else {
-            res.header('Content-Type', 'application/json');
-            res.json({ message: "Page not found", info: "Request can not be served", reason: "The requested page was not found" });
-
-        }
+        sendNotFoundResponse(req, res);
     };
 });
 
