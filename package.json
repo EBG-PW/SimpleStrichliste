@@ -33,7 +33,7 @@
     "url": "git+https://github.com/Public-Transport-Nuremberg/SimpleStrichliste.git"
   },
   "engines": {
-    "node": "20.x || 22.x || 23.x || 24.x"
+    "node": "22.x || 23.x || 24.x"
   },
   "keywords": [],
   "author": "",
