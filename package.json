@@ -12,6 +12,13 @@
     "migrate:seed": "node migrate.js seed",
     "feature:uninstall": "node tools/uninstallFeature.js"
   },
+  "allowScripts": {
+    "bcrypt": true,
+    "better-sqlite3": true,
+    "megahash": true,
+    "sharp": true,
+    "ultimate-express": true
+  },
   "_moduleAliases": {
     "@src": "./src",
     "@lib": "./lib",
