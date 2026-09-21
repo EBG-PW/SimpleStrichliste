@@ -161,7 +161,7 @@
       </div>
     </div>
 
-    <div id="low-funds-popup-wrapper" class="fixed inset-0 z-[70] invisible opacity-0 flex items-center justify-center p-4">
+    <div id="low-funds-popup-wrapper" class="fixed inset-0 z-[70] invisible opacity-0 flex items-center justify-center p-4" style="visibility: hidden; opacity: 0" aria-hidden="true">
       <div id="low-funds-popup-backdrop" class="absolute inset-0 bg-black bg-opacity-60"></div>
       <div id="low-funds-popup" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <img id="low-funds-popup-image" src="" alt="Low funds warning" class="w-full max-h-[70vh] object-contain bg-gray-100" />
@@ -287,7 +287,8 @@
         let restockingItemsData = [];
         let lowFundsSettings = null;
         let lowFundsDismissed = false;
-        const lowFundsDismissedUntilKey = "LOW_FUNDS_WARNING_DISMISSED_UNTIL";
+        const lowFundsDismissedUntilKey = `LOW_FUNDS_WARNING_DISMISSAL:${localStorage.getItem("uuid") || "anonymous"}`;
+        const getLowFundsSettingsSignature = (settings) => JSON.stringify([settings.amount, settings.resettime, settings.message]);
         let currentLeaderboardCategory = null;
         let currentLeaderboardRange = "week";
 
@@ -307,21 +308,26 @@
           lowFundsDismissed = true;
           const resettime = parseInt(lowFundsSettings?.resettime || "0", 10);
           const dismissedUntil = Number.isFinite(resettime) && resettime > 0 ? Date.now() + resettime * 60 * 60 * 1000 : Date.now();
-          localStorage.setItem(lowFundsDismissedUntilKey, dismissedUntil.toString());
-          lowFundsPopupWrapper.classList.add("opacity-0");
-          lowFundsPopupWrapper.addEventListener(
-            "transitionend",
-            () => {
-              lowFundsPopupWrapper.classList.add("invisible");
-            },
-            { once: true },
+          localStorage.setItem(
+            lowFundsDismissedUntilKey,
+            JSON.stringify({ until: dismissedUntil, settings: getLowFundsSettingsSignature(lowFundsSettings) }),
           );
+          lowFundsPopupWrapper.classList.add("opacity-0");
+          lowFundsPopupWrapper.style.opacity = "0";
+          lowFundsPopupWrapper.setAttribute("aria-hidden", "true");
+          window.setTimeout(() => {
+            lowFundsPopupWrapper.classList.add("invisible");
+            lowFundsPopupWrapper.style.visibility = "hidden";
+          }, 300);
         };
 
         const openLowFundsPopup = () => {
           document.getElementById("low-funds-popup-image").src = `/i/static/low-funds?${Date.now()}`;
           document.getElementById("low-funds-popup-message").textContent = lowFundsSettings.message;
           lowFundsPopupWrapper.classList.remove("invisible", "opacity-0");
+          lowFundsPopupWrapper.style.visibility = "visible";
+          lowFundsPopupWrapper.style.opacity = "1";
+          lowFundsPopupWrapper.setAttribute("aria-hidden", "false");
         };
 
         const updateLowFundsWarning = (balance, settings = lowFundsSettings) => {
@@ -338,13 +344,20 @@
             return;
           }
 
-          const dismissedUntil = parseInt(localStorage.getItem(lowFundsDismissedUntilKey) || "0", 10);
-          if (dismissedUntil > Date.now()) {
+          let dismissal = null;
+          try {
+            dismissal = JSON.parse(localStorage.getItem(lowFundsDismissedUntilKey) || "null");
+          } catch {
+            localStorage.removeItem(lowFundsDismissedUntilKey);
+          }
+
+          const dismissalMatchesSettings = dismissal?.settings === getLowFundsSettingsSignature(lowFundsSettings);
+          if (dismissalMatchesSettings && dismissal.until > Date.now()) {
             lowFundsDismissed = true;
             return;
           }
 
-          if (dismissedUntil > 0) {
+          if (dismissal) {
             localStorage.removeItem(lowFundsDismissedUntilKey);
             lowFundsDismissed = false;
           }
@@ -610,10 +623,11 @@
             try {
               const response = await apiFetch(`/api/v1/store/overview`);
               const data = await response.json();
-              const sortedFavorites = sortItems(data.favorites);
-              data.favorites.forEach((item) => (itemCache[item.uuid] = item));
               document.getElementById("balance-display").textContent = t("Overview.Balance", { price: data.balance.toFixed(2).replace(".", ",") });
               updateLowFundsWarning(data.balance, data.lowFunds);
+
+              const sortedFavorites = sortItems(data.favorites);
+              data.favorites.forEach((item) => (itemCache[item.uuid] = item));
               overviewItemsGrid.innerHTML = "";
               sortedFavorites.forEach((item) => {
                 favoriteItems.push(item.uuid);

@@ -49,7 +49,7 @@ router.get('/overview', verifyRequest('web.user.store.read'), limiter(2), async 
     ]);
     const lowFunds = {
         enabled: lowFundsWarning === 'true',
-        amount: parseFloat(lowFundsAmount || '0') / 100,
+        amount: parseFloat(lowFundsAmount || '0'),
         resettime: parseInt(lowFundsResettime || '0', 10),
         message: lowFundsString || ''
     };
